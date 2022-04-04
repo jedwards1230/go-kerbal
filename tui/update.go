@@ -11,11 +11,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		cmd = b.handleKeys(msg)
-		cmds = append(cmds, cmd)
-
-		return b, tea.Batch(cmds...)
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -33,6 +28,11 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		return b, nil
+	case tea.KeyMsg:
+		cmd = b.handleKeys(msg)
+		cmds = append(cmds, cmd)
+
+		return b, tea.Batch(cmds...)
 	}
 
 	cmds = append(cmds, cmd)
@@ -64,6 +64,9 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			b.selected = b.cursor
 		}
+		b.checkPrimaryViewportBounds()
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 	}
 	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
 

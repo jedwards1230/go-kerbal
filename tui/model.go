@@ -11,15 +11,16 @@ import (
 
 type Bubble struct {
 	//appConfig         config.Config
-	primaryViewport   viewport.Model
-	secondaryViewport viewport.Model
-	modList           []module.ModuleVersion
-	keyMap            KeyMap
-	cursor            int
-	width             int
-	height            int
-	ready             bool
-	selected          int
+	primaryViewport     viewport.Model
+	secondaryViewport   viewport.Model
+	modList             []module.ModuleVersion
+	keyMap              KeyMap
+	cursor              int
+	width               int
+	height              int
+	ready               bool
+	loadingScreenActive bool
+	selected            int
 }
 
 func InitialModel() Bubble {

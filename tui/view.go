@@ -5,11 +5,13 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
+	"github.com/muesli/reflow/truncate"
 )
 
 func (b Bubble) View() string {
 	var primaryBox string
 	var secondaryBox string
+
 	primaryBoxBorder := lipgloss.NormalBorder()
 	secondaryBoxBorder := lipgloss.NormalBorder()
 
@@ -33,6 +35,7 @@ func (b Bubble) View() string {
 			primaryBox,
 			secondaryBox,
 		),
+		b.statusBarView(),
 	)
 
 	return view
@@ -50,7 +53,7 @@ func (b Bubble) modListView() string {
 		if i == b.selected {
 			checked = "x"
 		}
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, mod)
+		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, mod.Name)
 	}
 
 	return lipgloss.NewStyle().
@@ -60,12 +63,11 @@ func (b Bubble) modListView() string {
 }
 
 func (b Bubble) modInfoView() string {
-	// construct list
 	s := "\n  Mod \n\n"
 
 	if b.selected >= 0 {
 		mod := b.modList[b.selected]
-		s += fmt.Sprintf("Name: %s\n\nAuthor: %s\n", mod.Name, mod.Author)
+		s += fmt.Sprintf("Name: %s\n\nAuthor: %s\n\nIdentifier: %s", mod.Name, mod.Author, mod.Identifier)
 
 		s += "\nPress q to quit.\n\n"
 	}
@@ -74,4 +76,47 @@ func (b Bubble) modInfoView() string {
 		Width(b.secondaryViewport.Width).
 		Height(b.secondaryViewport.Height).
 		Render(s)
+}
+
+func (b Bubble) statusBarView() string {
+	var status string
+
+	status = fmt.Sprintf("cursor: %v, selected: %v", b.cursor, b.selected)
+
+	width := lipgloss.Width
+	selectedFileName := b.modList[b.cursor].Name
+	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.modList))
+
+	selectedFileStyle := constants.BoldTextStyle.Copy()
+
+	selectedFileColumn := selectedFileStyle.
+		Padding(0, 1).
+		Height(constants.StatusBarHeight).
+		Render(truncate.StringWithTail(selectedFileName, 30, "..."))
+
+	fileCountStyle := constants.BoldTextStyle.Copy()
+
+	fileCountColumn := fileCountStyle.
+		Align(lipgloss.Right).
+		Padding(0, 1).
+		Height(constants.StatusBarHeight).
+		Render(fileCount)
+
+	statusStyle := constants.BoldTextStyle.Copy()
+
+	statusColumn := statusStyle.
+		Padding(0, 1).
+		Height(constants.StatusBarHeight).
+		Width(b.width - width(selectedFileColumn) - width(fileCountColumn)).
+		Render(truncate.StringWithTail(
+			status,
+			uint(b.width-width(selectedFileColumn)-width(fileCountColumn)-3),
+			"..."),
+		)
+
+	return lipgloss.JoinHorizontal(lipgloss.Top,
+		selectedFileColumn,
+		statusColumn,
+		fileCountColumn,
+	)
 }
