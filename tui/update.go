@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 )
@@ -11,27 +12,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		// These keys should exit the program.
-		case "ctrl+c", "q":
-			return b, tea.Quit
-		// The "up" and "k" keys move the cursor up
-		case "up", "k":
-			b.cursor--
-			b.checkPrimaryViewportBounds()
-		// The "down" and "j" keys move the cursor down
-		case "down", "j":
-			b.cursor++
-			b.checkPrimaryViewportBounds()
-		// The "enter" key and the spacebar (a literal space) toggle
-		// the selected state for the item that the cursor is pointing at.
-		case "enter", " ":
-			if b.selected == b.cursor {
-				b.selected = -1
-			} else {
-				b.selected = b.cursor
-			}
-		}
+		cmd = b.handleKeys(msg)
+		cmds = append(cmds, cmd)
+
+		return b, tea.Batch(cmds...)
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -40,6 +24,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
 		b.secondaryViewport.Width = (msg.Width / 2) - b.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.secondaryViewport.Height = msg.Height - constants.StatusBarHeight - b.secondaryViewport.Style.GetVerticalFrameSize()
+
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 
 		if !b.ready {
 			b.ready = true
@@ -51,6 +38,38 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	return b, tea.Batch(cmds...)
+}
+
+// handleKeys handles all keypresses.
+func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
+	var cmds []tea.Cmd
+	var cmd tea.Cmd
+
+	switch {
+	case key.Matches(msg, b.keyMap.Quit):
+		return tea.Quit
+	case key.Matches(msg, b.keyMap.Down):
+		b.cursor++
+		b.checkPrimaryViewportBounds()
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
+	case key.Matches(msg, b.keyMap.Up):
+		b.cursor--
+		b.checkPrimaryViewportBounds()
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
+	case key.Matches(msg, b.keyMap.Space):
+		if b.selected == b.cursor {
+			b.selected = -1
+		} else {
+			b.selected = b.cursor
+		}
+	}
+	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
+
+	cmds = append(cmds, cmd)
+
+	return tea.Batch(cmds...)
 }
 
 // checkPrimaryViewportBounds handles wrapping of the filetree and

@@ -14,6 +14,7 @@ type Bubble struct {
 	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
 	modList           []module.ModuleVersion
+	keyMap            KeyMap
 	cursor            int
 	width             int
 	height            int
@@ -44,6 +45,7 @@ func InitialModel() Bubble {
 		secondaryViewport: svp,
 		modList:           registry.BuildRegistry(),
 		selected:          -1,
+		keyMap:            DefaultKeyMap(),
 	}
 }
 

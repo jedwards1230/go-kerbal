@@ -8,9 +8,6 @@ import (
 )
 
 func (b Bubble) View() string {
-	b.primaryViewport.SetContent(b.modListView())
-	b.secondaryViewport.SetContent(b.modInfoView())
-
 	var primaryBox string
 	var secondaryBox string
 	primaryBoxBorder := lipgloss.NormalBorder()

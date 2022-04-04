@@ -2,8 +2,6 @@ package tui
 
 import "github.com/charmbracelet/bubbles/key"
 
-const spacebar = " "
-
 // KeyMap defines the keybindings for the viewport. Note that you don't
 // necessary need to use keybindings at all; the viewport can be controlled
 // programmatically with methods like Model.LineDown(1). See the GoDocs for
@@ -12,6 +10,7 @@ type KeyMap struct {
 	Quit                key.Binding
 	Down                key.Binding
 	Up                  key.Binding
+	Space               key.Binding
 	Left                key.Binding
 	Right               key.Binding
 	Preview             key.Binding
@@ -51,77 +50,8 @@ func DefaultKeyMap() KeyMap {
 		Up: key.NewBinding(
 			key.WithKeys("up", "k"),
 		),
-		Left: key.NewBinding(
-			key.WithKeys("left", "h"),
-		),
-		Right: key.NewBinding(
-			key.WithKeys("right", "l"),
-		),
-		Preview: key.NewBinding(
-			key.WithKeys("p"),
-		),
-		GotoBottom: key.NewBinding(
-			key.WithKeys("G"),
-		),
-		HomeShortcut: key.NewBinding(
-			key.WithKeys("~"),
-		),
-		RootShortcut: key.NewBinding(
-			key.WithKeys("/"),
-		),
-		ToggleHidden: key.NewBinding(
-			key.WithKeys("."),
-		),
-		ShowDirectoriesOnly: key.NewBinding(
-			key.WithKeys("S"),
-		),
-		ShowFilesOnly: key.NewBinding(
-			key.WithKeys("s"),
-		),
-		CopyPathToClipboard: key.NewBinding(
-			key.WithKeys("y"),
-		),
-		Zip: key.NewBinding(
-			key.WithKeys("Z"),
-		),
-		Unzip: key.NewBinding(
-			key.WithKeys("U"),
-		),
-		NewFile: key.NewBinding(
-			key.WithKeys("n"),
-		),
-		NewDirectory: key.NewBinding(
-			key.WithKeys("N"),
-		),
-		Delete: key.NewBinding(
-			key.WithKeys("ctrl+d"),
-		),
-		Move: key.NewBinding(
-			key.WithKeys("M"),
-		),
-		Enter: key.NewBinding(
-			key.WithKeys("enter"),
-		),
-		Edit: key.NewBinding(
-			key.WithKeys("E"),
-		),
-		Copy: key.NewBinding(
-			key.WithKeys("C"),
-		),
-		Find: key.NewBinding(
-			key.WithKeys("ctrl+f"),
-		),
-		Rename: key.NewBinding(
-			key.WithKeys("R"),
-		),
-		Escape: key.NewBinding(
-			key.WithKeys("esc"),
-		),
-		ShowLogs: key.NewBinding(
-			key.WithKeys("O"),
-		),
-		ToggleBox: key.NewBinding(
-			key.WithKeys("tab"),
+		Space: key.NewBinding(
+			key.WithKeys(" "),
 		),
 	}
 }
