@@ -20,13 +20,13 @@ type Bubble struct {
 	modList           []datacollector.Ckan
 	help              help.Bubble
 	keyMap            KeyMap
-	loadingMsg        string
 	ready             bool
 	loading           bool
 	cursor            int
 	width             int
 	height            int
 	selected          int
+	//loadingMsg        string
 }
 
 func InitialModel() Bubble {
