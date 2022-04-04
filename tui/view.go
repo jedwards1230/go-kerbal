@@ -88,14 +88,12 @@ func (b Bubble) statusBarView() string {
 	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.modList))
 
 	selectedFileStyle := constants.BoldTextStyle.Copy()
-
 	selectedFileColumn := selectedFileStyle.
 		Padding(0, 1).
 		Height(constants.StatusBarHeight).
-		Render(truncate.StringWithTail(selectedFileName, 30, "..."))
+		Render(truncate.StringWithTail(selectedFileName, 50, "..."))
 
 	fileCountStyle := constants.BoldTextStyle.Copy()
-
 	fileCountColumn := fileCountStyle.
 		Align(lipgloss.Right).
 		Padding(0, 1).
@@ -103,7 +101,6 @@ func (b Bubble) statusBarView() string {
 		Render(fileCount)
 
 	statusStyle := constants.BoldTextStyle.Copy()
-
 	statusColumn := statusStyle.
 		Padding(0, 1).
 		Height(constants.StatusBarHeight).

@@ -26,8 +26,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !b.ready {
 			b.ready = true
 		}
-
-		return b, nil
 	case tea.KeyMsg:
 		cmd = b.handleKeys(msg)
 		cmds = append(cmds, cmd)

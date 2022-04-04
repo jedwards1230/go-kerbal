@@ -6,21 +6,21 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 	"github.com/jedwards1230/go-kerbal/registry"
-	"github.com/jedwards1230/go-kerbal/registry/module"
+	"github.com/jedwards1230/go-kerbal/registry/datacollector"
 )
 
 type Bubble struct {
 	//appConfig         config.Config
-	primaryViewport     viewport.Model
-	secondaryViewport   viewport.Model
-	modList             []module.ModuleVersion
-	keyMap              KeyMap
-	cursor              int
-	width               int
-	height              int
-	ready               bool
-	loadingScreenActive bool
-	selected            int
+	primaryViewport   viewport.Model
+	secondaryViewport viewport.Model
+	modList           []datacollector.Ckan
+	keyMap            KeyMap
+	cursor            int
+	width             int
+	height            int
+	ready             bool
+	//loading           bool
+	selected int
 }
 
 func InitialModel() Bubble {
@@ -51,6 +51,5 @@ func InitialModel() Bubble {
 }
 
 func (b Bubble) Init() tea.Cmd {
-	// Just return `nil`, which means "no I/O right now, please."
 	return nil
 }

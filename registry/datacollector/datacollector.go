@@ -8,12 +8,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/jedwards1230/go-kerbal/registry/module"
 )
 
-func GetAvailableMods() []module.ModuleVersion {
-	modList := []module.ModuleVersion{}
+func GetAvailableMods() []Ckan {
+	modList := []Ckan{}
 	idList := make(map[string]bool)
 	var filesToScan []string
 
@@ -50,7 +48,7 @@ func findFilePaths(root, ext string) []string {
 	return pathList
 }
 
-func parseCKAN(filePath string) module.ModuleVersion {
+func parseCKAN(filePath string) Ckan {
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println(err)
@@ -58,15 +56,15 @@ func parseCKAN(filePath string) module.ModuleVersion {
 	defer file.Close()
 
 	// parse ckan data
-	var result module.ModuleVersion
+	var Ckan Ckan
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Fatal(err)
-		return result
+		return Ckan
 	} else {
-		json.Unmarshal(byteValue, &result)
+		json.Unmarshal(byteValue, &Ckan)
 	}
 
-	return result
+	return Ckan
 
 }
