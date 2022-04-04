@@ -10,10 +10,15 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
+	if b.loading {
+		b.primaryViewport.SetContent(b.loadingView())
+	}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
+		b.help.Width = msg.Width
 
 		b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
 		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()

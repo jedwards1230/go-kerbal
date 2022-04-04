@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/tui"
+	"github.com/jedwards1230/go-kerbal/core/tui"
 )
 
 func Execute() {

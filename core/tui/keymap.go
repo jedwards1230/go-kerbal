@@ -43,15 +43,19 @@ func DefaultKeyMap() KeyMap {
 	return KeyMap{
 		Quit: key.NewBinding(
 			key.WithKeys("ctrl+c", "q"),
+			key.WithHelp("q", "quit"),
 		),
 		Down: key.NewBinding(
 			key.WithKeys("down", "j"),
+			key.WithHelp("↓/j", "move down"),
 		),
 		Up: key.NewBinding(
 			key.WithKeys("up", "k"),
+			key.WithHelp("↑/k", "move up"),
 		),
 		Space: key.NewBinding(
 			key.WithKeys(" "),
+			key.WithHelp("spacebar", "select"),
 		),
 	}
 }
