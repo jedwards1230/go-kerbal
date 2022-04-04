@@ -18,7 +18,7 @@ type Bubble struct {
 	width             int
 	height            int
 	ready             bool
-	selected          map[int]struct{}
+	selected          int
 }
 
 func InitialModel() Bubble {
@@ -43,7 +43,7 @@ func InitialModel() Bubble {
 		primaryViewport:   pvp,
 		secondaryViewport: svp,
 		modList:           registry.BuildRegistry(),
-		selected:          make(map[int]struct{}),
+		selected:          -1,
 	}
 }
 

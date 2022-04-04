@@ -11,7 +11,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// Cool, what was the actual key pressed?
 		switch msg.String() {
 		// These keys should exit the program.
 		case "ctrl+c", "q":
@@ -27,11 +26,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			_, ok := b.selected[b.cursor]
-			if ok {
-				delete(b.selected, b.cursor)
+			if b.selected == b.cursor {
+				b.selected = -1
 			} else {
-				b.selected[b.cursor] = struct{}{}
+				b.selected = b.cursor
 			}
 		}
 	case tea.WindowSizeMsg:
@@ -42,9 +40,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
 		b.secondaryViewport.Width = (msg.Width / 2) - b.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.secondaryViewport.Height = msg.Height - constants.StatusBarHeight - b.secondaryViewport.Style.GetVerticalFrameSize()
-
-		b.primaryViewport.SetContent(b.modListView())
-		b.secondaryViewport.SetContent(b.modListView())
 
 		if !b.ready {
 			b.ready = true

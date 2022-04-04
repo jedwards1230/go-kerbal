@@ -9,7 +9,7 @@ import (
 
 func (b Bubble) View() string {
 	b.primaryViewport.SetContent(b.modListView())
-	b.secondaryViewport.SetContent(b.modListView())
+	b.secondaryViewport.SetContent(b.modInfoView())
 
 	var primaryBox string
 	var secondaryBox string
@@ -50,12 +50,28 @@ func (b Bubble) modListView() string {
 			cursor = ">"
 		}
 		checked := " "
-		if _, ok := b.selected[i]; ok {
+		if i == b.selected {
 			checked = "x"
 		}
 		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, mod)
 	}
-	s += "\nPress q to quit.\n\n"
+
+	return lipgloss.NewStyle().
+		Width(b.secondaryViewport.Width).
+		Height(b.secondaryViewport.Height).
+		Render(s)
+}
+
+func (b Bubble) modInfoView() string {
+	// construct list
+	s := "\n  Mod \n\n"
+
+	if b.selected >= 0 {
+		mod := b.modList[b.selected]
+		s += fmt.Sprintf("Name: %s\n\nAuthor: %s\n", mod.Name, mod.Author)
+
+		s += "\nPress q to quit.\n\n"
+	}
 
 	return lipgloss.NewStyle().
 		Width(b.secondaryViewport.Width).
