@@ -11,32 +11,42 @@ import (
 func (b Bubble) View() string {
 	var primaryBox string
 	var secondaryBox string
+	var view string
 
 	primaryBoxBorder := lipgloss.NormalBorder()
-	secondaryBoxBorder := lipgloss.NormalBorder()
-
 	b.primaryViewport.Style = lipgloss.NewStyle().
 		PaddingLeft(constants.BoxPadding).
 		PaddingRight(constants.BoxPadding).
 		Border(primaryBoxBorder)
-
-	b.secondaryViewport.Style = lipgloss.NewStyle().
-		PaddingLeft(constants.BoxPadding).
-		PaddingRight(constants.BoxPadding).
-		Border(secondaryBoxBorder)
-
 	primaryBox = b.primaryViewport.View()
-	secondaryBox = b.secondaryViewport.View()
 
-	view := lipgloss.JoinVertical(
-		lipgloss.Top,
-		lipgloss.JoinHorizontal(
+	if !b.loading {
+		secondaryBoxBorder := lipgloss.NormalBorder()
+		b.secondaryViewport.Style = lipgloss.NewStyle().
+			PaddingLeft(constants.BoxPadding).
+			PaddingRight(constants.BoxPadding).
+			Border(secondaryBoxBorder)
+		secondaryBox = b.secondaryViewport.View()
+
+		view = lipgloss.JoinVertical(
 			lipgloss.Top,
-			primaryBox,
-			secondaryBox,
-		),
-		b.statusBarView(),
-	)
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				primaryBox,
+				secondaryBox,
+			),
+			b.statusBarView(),
+		)
+	} else {
+		view = lipgloss.JoinVertical(
+			lipgloss.Top,
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				primaryBox,
+			),
+			b.statusBarView(),
+		)
+	}
 
 	return view
 }
@@ -63,13 +73,22 @@ func (b Bubble) modListView() string {
 }
 
 func (b Bubble) modInfoView() string {
-	s := "\n  Mod \n\n"
-
+	s := ""
 	if b.selected >= 0 {
-		mod := b.modList[b.selected]
-		s += fmt.Sprintf("Name: %s\n\nAuthor: %s\n\nIdentifier: %s", mod.Name, mod.Author, mod.Identifier)
+		var mod = b.modList[b.selected]
 
-		s += "\nPress q to quit.\n\n"
+		s += "\nMod\n\n"
+		s += fmt.Sprintf(
+			"Name: %s\n\n"+
+				"Identifier: %s\n\n"+
+				"Author: %s\n\n"+
+				"Version: %s\n\n"+
+				"Abstract: %s\n\n",
+			mod.Name,
+			mod.Identifier,
+			mod.Author,
+			mod.Version,
+			mod.Abstract)
 	}
 
 	return lipgloss.NewStyle().
@@ -78,10 +97,12 @@ func (b Bubble) modInfoView() string {
 		Render(s)
 }
 
-func (b Bubble) statusBarView() string {
-	var status string
+func (b Bubble) loadingView() string {
+	return ""
+}
 
-	status = fmt.Sprintf("cursor: %v, selected: %v", b.cursor, b.selected)
+func (b Bubble) statusBarView() string {
+	var status = fmt.Sprintf("cursor: %v, selected: %v", b.cursor, b.selected)
 
 	width := lipgloss.Width
 	selectedFileName := b.modList[b.cursor].Name

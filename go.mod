@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/knipferrc/fm v0.13.5
+	github.com/muesli/reflow v0.3.0
 	github.com/spf13/viper v1.10.1
 )
 
@@ -31,7 +32,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
