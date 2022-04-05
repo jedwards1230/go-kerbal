@@ -19,14 +19,14 @@ type Ckan struct {
 	Download      string                 `json:"download" binding:"required"`
 	License       string                 `json:"license" binding:"required"`
 	Epoch         string                 `json:"epoch"`
-	VersionKspMax string                 `json:"ksp_version_max"`
-	VersionKspMin string                 `json:"ksp_version_min"`
 	Resources     resource               `json:"resources"`
 	Tags          map[string]interface{} `json:"tags"`
 	Depends       map[string]interface{} `json:"depends"`
 	Conflicts     map[string]interface{} `json:"conflicts"`
 	raw           map[string]interface{}
 	Version       *version.Version
+	VersionKspMax *version.Version
+	VersionKspMin *version.Version
 	Authors       []string
 }
 
@@ -38,12 +38,34 @@ type resource struct {
 }
 
 func (c *Ckan) init() error {
-	err := c.cleanVersion()
+	err := c.cleanVersions()
+	if err != nil {
+		return err
+	}
 
 	return err
 }
 
-func (c *Ckan) cleanVersion() error {
+func (c *Ckan) cleanVersions() error {
+	err := c.cleanModVersion()
+	if err != nil {
+		return err
+	}
+
+	kspMax := c.raw["ksp_version_max"]
+	if kspMax != nil {
+		c.VersionKspMax, err = cleanKspVersion(kspMax.(string))
+	}
+
+	kspMin := c.raw["ksp_version_min"]
+	if kspMin != nil {
+		c.VersionKspMax, err = cleanKspVersion(kspMin.(string))
+	}
+
+	return err
+}
+
+func (c *Ckan) cleanModVersion() error {
 	rawVersion := c.raw["version"].(string)
 	re := regexp.MustCompile(`\d+(\.\d+)+`)
 
@@ -77,4 +99,33 @@ func (c *Ckan) cleanVersion() error {
 
 	c.Version = newVersion
 	return nil
+}
+
+func cleanKspVersion(rawVersion string) (*version.Version, error) {
+	var v *version.Version
+
+	newVersion, err := version.NewVersion(rawVersion)
+	if err != nil {
+		re := regexp.MustCompile(`\d+(\.\d+)+`)
+		rawVersion = fmt.Sprint(re.FindAllString(rawVersion, -1))
+
+		if strings.Contains(rawVersion, "[") {
+			rawVersion = strings.ReplaceAll(rawVersion, "[", "")
+		}
+		if strings.Contains(rawVersion, "]") {
+			rawVersion = strings.ReplaceAll(rawVersion, "]", "")
+		}
+
+		fixedVersion, err := version.NewVersion(rawVersion)
+		if err != nil {
+			// TODO: Better version cleaning
+			/* log.Printf("BAD VERSION: %v", err)
+			log.Printf("raw: %v", c.raw["version"].(string))
+			log.Printf("final: %s\n", rawVersion) */
+			return v, err
+		}
+		return fixedVersion, nil
+	}
+
+	return newVersion, nil
 }

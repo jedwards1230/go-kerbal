@@ -27,7 +27,7 @@ func GetAvailableMods() []Ckan {
 		if mod.Version != nil {
 			// check if mod ID has been tracked already
 			if idList[mod.Identifier] {
-				for i, stored := range modList {
+				/* for i, stored := range modList {
 					if stored.Identifier == mod.Identifier {
 						if stored.Version.LessThan(mod.Version) {
 							log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
@@ -37,7 +37,7 @@ func GetAvailableMods() []Ckan {
 							log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
 						}
 					}
-				}
+				} */
 				// TODO: handle storing older versions of mod
 			} else {
 				modList = append(modList, mod)

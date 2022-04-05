@@ -83,13 +83,19 @@ func (b Bubble) modInfoView() string {
 				"Identifier: %s\n\n"+
 				"Author: %s\n\n"+
 				"Version: %s\n\n"+
+				"KSP Max Version: %s\n\n"+
+				"KSP Min Version: %s\n\n"+
 				"Abstract: %s\n\n"+
+				"License: %s\n\n"+
 				"Download: %s\n\n",
 			mod.Name,
 			mod.Identifier,
 			mod.Author,
 			mod.Version,
+			mod.VersionKspMax,
+			mod.VersionKspMin,
 			mod.Abstract,
+			mod.License,
 			mod.Download)
 	} else {
 		s += b.help.View()
