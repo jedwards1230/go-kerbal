@@ -98,8 +98,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 // checkPrimaryViewportBounds handles wrapping of the filetree and
 // scrolling of the viewport.
 func (b *Bubble) checkPrimaryViewportBounds() {
-	top := b.primaryViewport.YOffset
-	bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 1
+	top := b.primaryViewport.YOffset - 3
+	bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 4
 
 	if b.cursor < top {
 		b.primaryViewport.LineUp(1)
@@ -110,7 +110,7 @@ func (b *Bubble) checkPrimaryViewportBounds() {
 	if b.cursor > len(b.modList)-1 {
 		b.primaryViewport.GotoTop()
 		b.cursor = 0
-	} else if b.cursor < top {
+	} else if b.cursor < 0 {
 		b.primaryViewport.GotoBottom()
 		b.cursor = len(b.modList) - 1
 	}

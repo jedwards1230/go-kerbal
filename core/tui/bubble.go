@@ -85,5 +85,9 @@ func InitialModel() Bubble {
 
 func (b Bubble) Init() tea.Cmd {
 	cmd := b.getAvailableModsCmd()
+
+	b.primaryViewport.SetContent(b.modListView())
+	b.secondaryViewport.SetContent(b.modInfoView())
+
 	return cmd
 }
