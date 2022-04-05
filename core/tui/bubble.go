@@ -15,13 +15,13 @@ type Bubble struct {
 	//appConfig         config.Config
 	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
-	loadingViewport   viewport.Model
+	splashViewport    viewport.Model
 	modList           []datacollector.Ckan
 	help              help.Bubble
 	keyMap            KeyMap
 	status            string
 	ready             bool
-	loading           bool
+	splashScreen      bool
 	cursor            int
 	width             int
 	height            int
@@ -37,29 +37,29 @@ func InitialModel() Bubble {
 	primaryBoxBorderColor := theme.ActiveBoxBorderColor
 	secondaryBoxBorder := lipgloss.NormalBorder()
 	secondaryBoxBorderColor := theme.InactiveBoxBorderColor
-	loadingBoxBorder := lipgloss.NormalBorder()
-	loadingBoxBorderColor := theme.InactiveBoxBorderColor
+	splashBoxBorder := lipgloss.NormalBorder()
+	splashBoxBorderColor := theme.InactiveBoxBorderColor
 
-	pvp := viewport.New(0, 0)
-	pvp.Style = lipgloss.NewStyle().
+	primaryVP := viewport.New(0, 0)
+	primaryVP.Style = lipgloss.NewStyle().
 		PaddingLeft(constants.BoxPadding).
 		PaddingRight(constants.BoxPadding).
 		Border(primaryBoxBorder).
 		BorderForeground(primaryBoxBorderColor)
 
-	svp := viewport.New(0, 0)
-	svp.Style = lipgloss.NewStyle().
+	secondaryVP := viewport.New(0, 0)
+	secondaryVP.Style = lipgloss.NewStyle().
 		PaddingLeft(constants.BoxPadding).
 		PaddingRight(constants.BoxPadding).
 		Border(secondaryBoxBorder).
 		BorderForeground(secondaryBoxBorderColor)
 
-	lvp := viewport.New(0, 0)
-	lvp.Style = lipgloss.NewStyle().
+	splashVP := viewport.New(0, 0)
+	splashVP.Style = lipgloss.NewStyle().
 		PaddingLeft(constants.BoxPadding).
 		PaddingRight(constants.BoxPadding).
-		Border(loadingBoxBorder).
-		BorderForeground(loadingBoxBorderColor)
+		Border(splashBoxBorder).
+		BorderForeground(splashBoxBorderColor)
 
 	h := help.New(
 		theme.DefaultTextColor,
@@ -73,11 +73,12 @@ func InitialModel() Bubble {
 		})
 
 	return Bubble{
-		primaryViewport:   pvp,
-		secondaryViewport: svp,
-		loadingViewport:   lvp,
+		primaryViewport:   primaryVP,
+		secondaryViewport: secondaryVP,
+		splashViewport:    splashVP,
 		help:              h,
 		selected:          -1,
+		splashScreen:      true,
 		status:            "Initializing",
 		keyMap:            DefaultKeyMap(),
 	}
@@ -86,8 +87,7 @@ func InitialModel() Bubble {
 func (b Bubble) Init() tea.Cmd {
 	cmd := b.getAvailableModsCmd()
 
-	b.primaryViewport.SetContent(b.modListView())
-	b.secondaryViewport.SetContent(b.modInfoView())
+	b.splashViewport.SetContent(b.loadingView())
 
 	return cmd
 }

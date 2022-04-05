@@ -13,29 +13,28 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case getAvailableModsMsg:
 		b.modList = msg
-		b.status = "Mod list updated"
+		//b.status = "Mod list updated"
 		b.checkPrimaryViewportBounds()
-		b.loading = false
+		b.splashScreen = false
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
 		b.help.Width = msg.Width
 
-		if false {
-			b.primaryViewport.Width = msg.Width - b.primaryViewport.Style.GetHorizontalFrameSize()
-			b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
-			b.primaryViewport.SetContent(b.loadingView())
-		} else {
-			b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
-			b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
-			b.secondaryViewport.Width = (msg.Width / 2) - b.secondaryViewport.Style.GetHorizontalFrameSize()
-			b.secondaryViewport.Height = msg.Height - constants.StatusBarHeight - b.secondaryViewport.Style.GetVerticalFrameSize()
+		b.splashViewport.Width = msg.Width - b.primaryViewport.Style.GetHorizontalFrameSize()
+		b.splashViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
+		b.splashViewport.SetContent(b.loadingView())
 
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
-		}
+		b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
+		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
+		b.secondaryViewport.Width = (msg.Width / 2) - b.secondaryViewport.Style.GetHorizontalFrameSize()
+		b.secondaryViewport.Height = msg.Height - constants.StatusBarHeight - b.secondaryViewport.Style.GetVerticalFrameSize()
+
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 
 		if !b.ready {
 			b.ready = true
@@ -84,7 +83,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.secondaryViewport.SetContent(b.modInfoView())
 	case key.Matches(msg, b.keyMap.One):
 		b.status = "Getting mod list"
-		b.loading = true
+		b.splashScreen = true
 		cmd = b.getAvailableModsCmd()
 		cmds = append(cmds, cmd)
 	}

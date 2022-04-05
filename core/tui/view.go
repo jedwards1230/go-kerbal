@@ -9,18 +9,36 @@ import (
 )
 
 func (b Bubble) View() string {
-	var primaryBox string
-	var secondaryBox string
 	var view string
 
-	primaryBoxBorder := lipgloss.NormalBorder()
-	b.primaryViewport.Style = lipgloss.NewStyle().
-		PaddingLeft(constants.BoxPadding).
-		PaddingRight(constants.BoxPadding).
-		Border(primaryBoxBorder)
-	primaryBox = b.primaryViewport.View()
+	if b.splashScreen {
+		var splashBox string
 
-	if true {
+		splashBoxBorder := lipgloss.NormalBorder()
+		b.splashViewport.Style = lipgloss.NewStyle().
+			PaddingLeft(constants.BoxPadding).
+			PaddingRight(constants.BoxPadding).
+			Border(splashBoxBorder)
+		splashBox = b.splashViewport.View()
+
+		view = lipgloss.JoinVertical(
+			lipgloss.Top,
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				splashBox,
+			),
+			b.statusBarView(),
+		)
+	} else {
+		var primaryBox string
+		var secondaryBox string
+
+		primaryBoxBorder := lipgloss.NormalBorder()
+		b.primaryViewport.Style = lipgloss.NewStyle().
+			PaddingLeft(constants.BoxPadding).
+			PaddingRight(constants.BoxPadding).
+			Border(primaryBoxBorder)
+		primaryBox = b.primaryViewport.View()
 		secondaryBoxBorder := lipgloss.NormalBorder()
 		b.secondaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
@@ -34,15 +52,6 @@ func (b Bubble) View() string {
 				lipgloss.Top,
 				primaryBox,
 				secondaryBox,
-			),
-			b.statusBarView(),
-		)
-	} else {
-		view = lipgloss.JoinVertical(
-			lipgloss.Top,
-			lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				primaryBox,
 			),
 			b.statusBarView(),
 		)
@@ -108,8 +117,11 @@ func (b Bubble) modInfoView() string {
 }
 
 func (b Bubble) loadingView() string {
-	s := "loading screen?"
-	return s
+	s := "\n\n\n\n\nloading screen?\n\n\n\n\n"
+	return lipgloss.NewStyle().
+		Width(b.splashViewport.Width).
+		Height(b.splashViewport.Height).
+		Render(s)
 }
 
 func (b Bubble) statusBarView() string {
