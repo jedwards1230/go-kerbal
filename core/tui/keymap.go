@@ -7,34 +7,12 @@ import "github.com/charmbracelet/bubbles/key"
 // programmatically with methods like Model.LineDown(1). See the GoDocs for
 // details.
 type KeyMap struct {
-	Quit                key.Binding
-	Down                key.Binding
-	Up                  key.Binding
-	Space               key.Binding
-	Left                key.Binding
-	Right               key.Binding
-	Preview             key.Binding
-	GotoBottom          key.Binding
-	HomeShortcut        key.Binding
-	RootShortcut        key.Binding
-	ToggleHidden        key.Binding
-	ShowDirectoriesOnly key.Binding
-	ShowFilesOnly       key.Binding
-	CopyPathToClipboard key.Binding
-	Zip                 key.Binding
-	Unzip               key.Binding
-	NewFile             key.Binding
-	NewDirectory        key.Binding
-	Delete              key.Binding
-	Move                key.Binding
-	Enter               key.Binding
-	Edit                key.Binding
-	Copy                key.Binding
-	Find                key.Binding
-	Rename              key.Binding
-	Escape              key.Binding
-	ShowLogs            key.Binding
-	ToggleBox           key.Binding
+	Quit  key.Binding
+	Down  key.Binding
+	Up    key.Binding
+	Space key.Binding
+	Tab   key.Binding
+	One   key.Binding
 }
 
 // DefaultKeyMap returns a set of pager-like default keybindings.
@@ -56,6 +34,14 @@ func DefaultKeyMap() KeyMap {
 		Space: key.NewBinding(
 			key.WithKeys(" "),
 			key.WithHelp("spacebar", "select"),
+		),
+		Tab: key.NewBinding(
+			key.WithKeys("tab"),
+			key.WithHelp("tab", "select"),
+		),
+		One: key.NewBinding(
+			key.WithKeys("1"),
+			key.WithHelp("1", "refresh mod list"),
 		),
 	}
 }

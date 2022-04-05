@@ -2,7 +2,6 @@ package datacollector
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -58,10 +57,10 @@ func pullRepo() {
 	}
 
 	// Open repo from dir
-	fmt.Println("Checking repo")
+	log.Println("Checking repo")
 	r, err := git.PlainOpen(dir)
 	if err != nil {
-		fmt.Println("Cloning repo")
+		log.Println("Cloning repo")
 		// Clones the repository if not already downloaded
 		_, err = git.PlainClone(dir, false, &git.CloneOptions{
 			URL: "https://github.com/KSP-CKAN/CKAN-meta.git",
@@ -70,7 +69,7 @@ func pullRepo() {
 			log.Fatal(err)
 		}
 	} else {
-		fmt.Println("Updating repo")
+		log.Println("Updating repo")
 		// Get the working directory
 		w, err := r.Worktree()
 		if err != nil {
@@ -80,7 +79,7 @@ func pullRepo() {
 		// Pull from origin
 		err = w.Pull(&git.PullOptions{RemoteName: "origin"})
 		if err != nil {
-			fmt.Println("No changes detected")
+			log.Println("No changes detected")
 		}
 	}
 }
@@ -88,7 +87,7 @@ func pullRepo() {
 func parseCKAN(filePath string) Ckan {
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer file.Close()
 

@@ -20,6 +20,7 @@ type Bubble struct {
 	modList           []datacollector.Ckan
 	help              help.Bubble
 	keyMap            KeyMap
+	status            string
 	ready             bool
 	loading           bool
 	cursor            int
@@ -63,34 +64,13 @@ func InitialModel() Bubble {
 
 	h := help.New(
 		theme.DefaultTextColor,
-		"Welcome to FM!",
+		"go-kerbal help!",
 		[]help.HelpEntry{
 			{Key: "ctrl+c", Description: "Exit FM"},
-			{Key: "j/up", Description: "Move up"},
-			{Key: "k/down", Description: "Move down"},
-			{Key: "h/left", Description: "Go back a directory"},
-			{Key: "l/right", Description: "Read file or enter directory"},
-			{Key: "p", Description: "Preview directory"},
-			{Key: "gg", Description: "Go to top of filetree or box"},
-			{Key: "G", Description: "Go to bottom of filetree or box"},
-			{Key: "~", Description: "Go to home directory"},
-			{Key: "/", Description: "Go to root directory"},
-			{Key: ".", Description: "Toggle hidden files"},
-			{Key: "S", Description: "Only show directories"},
-			{Key: "s", Description: "Only show files"},
-			{Key: "y", Description: "Copy file path to clipboard"},
-			{Key: "Z", Description: "Zip currently selected tree item"},
-			{Key: "U", Description: "Unzip currently selected tree item"},
-			{Key: "n", Description: "Create new file"},
-			{Key: "N", Description: "Create new directory"},
-			{Key: "ctrl+d", Description: "Delete currently selected tree item"},
-			{Key: "M", Description: "Move currently selected tree item"},
-			{Key: "enter", Description: "Process command"},
-			{Key: "E", Description: "Edit currently selected tree item"},
-			{Key: "C", Description: "Copy currently selected tree item"},
-			{Key: "esc", Description: "Reset FM to initial state"},
-			{Key: "O", Description: "Show logs if debugging enabled"},
-			{Key: "tab", Description: "Toggle between boxes"},
+			{Key: "j | up", Description: "Move up"},
+			{Key: "k | down", Description: "Move down"},
+			{Key: "spacebar", Description: "Select an entry"},
+			{Key: "1", Description: "Refresh mod list"},
 		})
 
 	return Bubble{
