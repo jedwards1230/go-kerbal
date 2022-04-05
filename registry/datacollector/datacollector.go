@@ -20,18 +20,33 @@ func GetAvailableMods() []Ckan {
 
 	// get currently downloaded ckans
 	filesToScan = append(filesToScan, findFilePaths("ckan_database", ".ckan")...)
+	log.Printf("%v files to scan", len(filesToScan))
 
 	for i := range filesToScan {
-		mod := parseCKAN(filesToScan[i])
-		// check if mod ID has been tracked already
-		if idList[mod.Identifier] {
-			// TODO: handle storing older versions of mod
-		} else {
-			modList = append(modList, mod)
-			idList[mod.Identifier] = true
+		mod, _ := parseCKAN(filesToScan[i])
+		if mod.Version != nil {
+			// check if mod ID has been tracked already
+			if idList[mod.Identifier] {
+				for i, stored := range modList {
+					if stored.Identifier == mod.Identifier {
+						if stored.Version.LessThan(mod.Version) {
+							log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
+						} else if stored.Version.GreaterThan(mod.Version) {
+							log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
+						} else {
+							log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
+						}
+					}
+				}
+				// TODO: handle storing older versions of mod
+			} else {
+				modList = append(modList, mod)
+				idList[mod.Identifier] = true
+			}
 		}
 	}
 
+	log.Printf("%v mods in list", len(modList))
 	return modList
 }
 
@@ -84,23 +99,31 @@ func pullRepo() {
 	}
 }
 
-func parseCKAN(filePath string) Ckan {
+func parseCKAN(filePath string) (Ckan, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Println(err)
+		return Ckan{}, err
 	}
 	defer file.Close()
 
 	// parse ckan data
-	var Ckan Ckan
+	var ckan Ckan
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		log.Fatal(err)
-		return Ckan
-	} else {
-		json.Unmarshal(byteValue, &Ckan)
+		return Ckan{}, err
 	}
 
-	return Ckan
+	// unmarshal to struct
+	// store extra in raw field for cleaning later
+	json.Unmarshal(byteValue, &ckan)
+	json.Unmarshal(byteValue, &ckan.raw)
+
+	// clean data and assign necessary struct values
+	err = ckan.init()
+	if err != nil {
+		return Ckan{}, err
+	}
+
+	return ckan, nil
 
 }
