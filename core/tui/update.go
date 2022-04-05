@@ -13,6 +13,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case getAvailableModsMsg:
 		b.modList = msg
+		b.status = "Mod list updated"
 		b.checkPrimaryViewportBounds()
 		b.loading = false
 		b.primaryViewport.GotoTop()
@@ -22,7 +23,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.height = msg.Height
 		b.help.Width = msg.Width
 
-		if b.loading {
+		if false {
 			b.primaryViewport.Width = msg.Width - b.primaryViewport.Style.GetHorizontalFrameSize()
 			b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
 			b.primaryViewport.SetContent(b.loadingView())
@@ -58,6 +59,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	switch {
 	case key.Matches(msg, b.keyMap.Quit):
+		b.status = "Quitting."
 		return tea.Quit
 	case key.Matches(msg, b.keyMap.Down):
 		b.cursor++
@@ -81,6 +83,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	case key.Matches(msg, b.keyMap.One):
+		b.status = "Getting mod list"
 		b.loading = true
 		cmd = b.getAvailableModsCmd()
 		cmds = append(cmds, cmd)

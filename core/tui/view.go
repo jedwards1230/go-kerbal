@@ -20,7 +20,7 @@ func (b Bubble) View() string {
 		Border(primaryBoxBorder)
 	primaryBox = b.primaryViewport.View()
 
-	if !b.loading {
+	if true {
 		secondaryBoxBorder := lipgloss.NormalBorder()
 		b.secondaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
@@ -110,14 +110,7 @@ func (b Bubble) statusBarView() string {
 	var status = "Status: " + b.status
 
 	width := lipgloss.Width
-	selectedFileName := b.modList[b.cursor].Name
 	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.modList))
-
-	selectedFileStyle := constants.BoldTextStyle.Copy()
-	selectedFileColumn := selectedFileStyle.
-		Padding(0, 1).
-		Height(constants.StatusBarHeight).
-		Render(truncate.StringWithTail(selectedFileName, 50, "..."))
 
 	fileCountStyle := constants.BoldTextStyle.Copy()
 	fileCountColumn := fileCountStyle.
@@ -130,15 +123,14 @@ func (b Bubble) statusBarView() string {
 	statusColumn := statusStyle.
 		Padding(0, 1).
 		Height(constants.StatusBarHeight).
-		Width(b.width - width(selectedFileColumn) - width(fileCountColumn)).
+		Width(b.width - width(fileCountColumn)).
 		Render(truncate.StringWithTail(
 			status,
-			uint(b.width-width(selectedFileColumn)-width(fileCountColumn)-3),
+			uint(b.width-width(fileCountColumn)-3),
 			"..."),
 		)
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
-		selectedFileColumn,
 		statusColumn,
 		fileCountColumn,
 	)

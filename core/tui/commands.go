@@ -9,7 +9,6 @@ type getAvailableModsMsg []datacollector.Ckan
 
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
-		b.status = "Getting Mod List"
 		updatedModList := datacollector.GetAvailableMods()
 		return getAvailableModsMsg(updatedModList)
 	}

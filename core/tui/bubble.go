@@ -7,7 +7,6 @@ import (
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 	"github.com/jedwards1230/go-kerbal/core/theme"
-	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/jedwards1230/go-kerbal/registry/datacollector"
 	"github.com/knipferrc/fm/help"
 )
@@ -77,13 +76,14 @@ func InitialModel() Bubble {
 		primaryViewport:   pvp,
 		secondaryViewport: svp,
 		loadingViewport:   lvp,
-		modList:           registry.BuildRegistry(),
 		help:              h,
 		selected:          -1,
+		status:            "Initializing",
 		keyMap:            DefaultKeyMap(),
 	}
 }
 
 func (b Bubble) Init() tea.Cmd {
-	return nil
+	cmd := b.getAvailableModsCmd()
+	return cmd
 }
