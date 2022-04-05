@@ -73,22 +73,26 @@ func (b Bubble) modListView() string {
 }
 
 func (b Bubble) modInfoView() string {
-	s := ""
+	s := "\n"
 	if b.selected >= 0 {
 		var mod = b.modList[b.selected]
 
-		s += "\nMod\n\n"
+		s += "Mod\n\n"
 		s += fmt.Sprintf(
 			"Name: %s\n\n"+
 				"Identifier: %s\n\n"+
 				"Author: %s\n\n"+
 				"Version: %s\n\n"+
-				"Abstract: %s\n\n",
+				"Abstract: %s\n\n"+
+				"Download: %s\n\n",
 			mod.Name,
 			mod.Identifier,
 			mod.Author,
 			mod.Version,
-			mod.Abstract)
+			mod.Abstract,
+			mod.Download)
+	} else {
+		s += b.help.View()
 	}
 
 	return lipgloss.NewStyle().
@@ -98,11 +102,12 @@ func (b Bubble) modInfoView() string {
 }
 
 func (b Bubble) loadingView() string {
-	return ""
+	s := "loading screen?"
+	return s
 }
 
 func (b Bubble) statusBarView() string {
-	var status = fmt.Sprintf("cursor: %v, selected: %v", b.cursor, b.selected)
+	var status = "Status: " + b.status
 
 	width := lipgloss.Width
 	selectedFileName := b.modList[b.cursor].Name
