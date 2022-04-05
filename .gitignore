@@ -20,6 +20,6 @@
 # Go workspace file
 go.work
 
-# dDwnloaded metadata
+# go-kerbal stuff
 ckan_database/
 debug.log
