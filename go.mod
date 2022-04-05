@@ -42,14 +42,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/tidwall/btree v1.1.0 // indirect
-	github.com/tidwall/buntdb v1.2.9 // indirect
-	github.com/tidwall/gjson v1.12.1 // indirect
-	github.com/tidwall/grect v0.1.4 // indirect
-	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/tidwall/rtred v0.1.2 // indirect
-	github.com/tidwall/tinyqueue v0.1.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
