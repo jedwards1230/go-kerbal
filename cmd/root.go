@@ -16,6 +16,11 @@ func Execute() {
 
 	// If logging is enabled, logs will be output to debug.log.
 	if cfg.Settings.EnableLogging {
+		// clear debug file
+		if err := os.Truncate("debug.log", 0); err != nil {
+			log.Printf("Failed to clear debug.log: %v", err)
+		}
+
 		f, err := tea.LogToFile("debug.log", "[debug]")
 		if err != nil {
 			log.Fatal(err)
