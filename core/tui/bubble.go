@@ -19,6 +19,7 @@ type Bubble struct {
 	splashViewport    viewport.Model
 	modList           []datacollector.Ckan
 	help              help.Bubble
+	sortFilter        string
 	keyMap            KeyMap
 	ready             bool
 	activeBox         int
