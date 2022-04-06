@@ -10,9 +10,7 @@ This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-m
 ```
 
 ## Currently:
- * Pulls metadata and reads .ckan files
- * Compiles mods into a list for display
- * Displays a GUI with the list of mods
+ * Compiles metadata and displays info in the TUI
 
 
 ## TODO:
