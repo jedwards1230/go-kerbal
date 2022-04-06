@@ -47,7 +47,12 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return b, tea.Batch(cmds...)
 	case tea.MouseMsg:
-		b.handleMouse(msg)
+		switch msg.Type {
+		case tea.MouseWheelUp:
+			b.scrollView("up")
+		case tea.MouseWheelDown:
+			b.scrollView("down")
+		}
 	}
 
 	cmds = append(cmds, cmd)
@@ -65,13 +70,9 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.logs = append(b.logs, "Quitting")
 		return tea.Quit
 	case key.Matches(msg, b.keyMap.Down):
-		b.cursor++
-		b.checkPrimaryViewportBounds()
-		b.primaryViewport.SetContent(b.modListView())
+		b.scrollView("down")
 	case key.Matches(msg, b.keyMap.Up):
-		b.cursor--
-		b.checkPrimaryViewportBounds()
-		b.primaryViewport.SetContent(b.modListView())
+		b.scrollView("up")
 	case key.Matches(msg, b.keyMap.Space):
 		if b.selected == b.cursor {
 			b.selected = -1
@@ -130,30 +131,32 @@ func (b *Bubble) checkPrimaryViewportBounds() {
 	}
 }
 
-// handleMouse handles all mouse interaction.
-func (b *Bubble) handleMouse(msg tea.MouseMsg) {
-	switch msg.Type {
-	case tea.MouseWheelUp:
+func (b *Bubble) scrollView(dir string) {
+	if dir == "up" {
 		if b.activeBox == constants.PrimaryBoxActive {
 			b.cursor--
 			b.checkPrimaryViewportBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		}
-
-		if b.activeBox == constants.SecondaryBoxActive {
+		} else if b.activeBox == constants.SecondaryBoxActive {
 			b.secondaryViewport.LineUp(1)
 			b.primaryViewport.SetContent(b.modListView())
+		} else if b.activeBox == constants.SplashBoxActive {
+			b.splashViewport.LineUp(1)
+			b.splashViewport.SetContent(b.logView())
 		}
-	case tea.MouseWheelDown:
+	} else if dir == "down" {
 		if b.activeBox == constants.PrimaryBoxActive {
 			b.cursor++
 			b.checkPrimaryViewportBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		}
-
-		if b.activeBox == constants.SecondaryBoxActive {
+		} else if b.activeBox == constants.SecondaryBoxActive {
 			b.secondaryViewport.LineDown(1)
 			b.primaryViewport.SetContent(b.modListView())
+		} else if b.activeBox == constants.SplashBoxActive {
+			b.splashViewport.LineDown(1)
+			b.splashViewport.SetContent(b.logView())
 		}
+	} else {
+		log.Panic("Invalid scroll direction: " + dir)
 	}
 }
