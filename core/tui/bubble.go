@@ -13,19 +13,19 @@ import (
 
 type Bubble struct {
 	//appConfig         config.Config
-	primaryViewport    viewport.Model
-	secondaryViewport  viewport.Model
-	splashViewport     viewport.Model
-	modList            []datacollector.Ckan
-	help               help.Bubble
-	keyMap             KeyMap
-	ready              bool
-	splashScreenActive bool
-	cursor             int
-	selected           int
-	width              int
-	height             int
-	logs               []string
+	primaryViewport   viewport.Model
+	secondaryViewport viewport.Model
+	splashViewport    viewport.Model
+	modList           []datacollector.Ckan
+	help              help.Bubble
+	keyMap            KeyMap
+	ready             bool
+	activeBox         int
+	cursor            int
+	selected          int
+	width             int
+	height            int
+	logs              []string
 }
 
 func InitialModel() Bubble {
@@ -74,14 +74,14 @@ func InitialModel() Bubble {
 		})
 
 	return Bubble{
-		primaryViewport:    primaryVP,
-		secondaryViewport:  secondaryVP,
-		splashViewport:     splashVP,
-		help:               h,
-		selected:           -1,
-		splashScreenActive: true,
-		logs:               []string{"Initializing"},
-		keyMap:             DefaultKeyMap(),
+		primaryViewport:   primaryVP,
+		secondaryViewport: secondaryVP,
+		splashViewport:    splashVP,
+		help:              h,
+		selected:          -1,
+		activeBox:         constants.PrimaryBoxActive,
+		logs:              []string{"Initializing"},
+		keyMap:            DefaultKeyMap(),
 	}
 }
 

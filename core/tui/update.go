@@ -17,7 +17,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.modList = msg
 		b.logs = append(b.logs, "Mod list updated")
 		b.checkPrimaryViewportBounds()
-		b.splashScreenActive = false
+		b.activeBox = constants.PrimaryBoxActive
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
@@ -46,6 +46,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 
 		return b, tea.Batch(cmds...)
+	case tea.MouseMsg:
+		b.handleMouse(msg)
 	}
 
 	cmds = append(cmds, cmd)
@@ -85,17 +87,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.secondaryViewport.SetContent(b.modInfoView())
 	case key.Matches(msg, b.keyMap.ShowLogs):
 		log.Println("show logs")
-		if b.splashScreenActive {
-			b.splashScreenActive = false
+		if b.activeBox == constants.SplashBoxActive {
+			b.activeBox = constants.PrimaryBoxActive
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		} else {
-			b.splashScreenActive = true
+			b.activeBox = constants.SplashBoxActive
 			b.splashViewport.SetContent(b.logView())
 		}
 	case key.Matches(msg, b.keyMap.One):
 		b.logs = append(b.logs, "Getting mod list")
-		b.splashScreenActive = true
+		b.activeBox = constants.SplashBoxActive
 		b.splashViewport.SetContent(b.loadingView())
 		cmd = b.getAvailableModsCmd()
 		cmds = append(cmds, cmd)
@@ -125,5 +127,33 @@ func (b *Bubble) checkPrimaryViewportBounds() {
 	} else if b.cursor < 0 {
 		b.primaryViewport.GotoBottom()
 		b.cursor = len(b.modList) - 1
+	}
+}
+
+// handleMouse handles all mouse interaction.
+func (b *Bubble) handleMouse(msg tea.MouseMsg) {
+	switch msg.Type {
+	case tea.MouseWheelUp:
+		if b.activeBox == constants.PrimaryBoxActive {
+			b.cursor--
+			b.checkPrimaryViewportBounds()
+			b.primaryViewport.SetContent(b.modListView())
+		}
+
+		if b.activeBox == constants.SecondaryBoxActive {
+			b.secondaryViewport.LineUp(1)
+			b.primaryViewport.SetContent(b.modListView())
+		}
+	case tea.MouseWheelDown:
+		if b.activeBox == constants.PrimaryBoxActive {
+			b.cursor++
+			b.checkPrimaryViewportBounds()
+			b.primaryViewport.SetContent(b.modListView())
+		}
+
+		if b.activeBox == constants.SecondaryBoxActive {
+			b.secondaryViewport.LineDown(1)
+			b.primaryViewport.SetContent(b.modListView())
+		}
 	}
 }

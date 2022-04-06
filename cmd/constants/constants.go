@@ -4,10 +4,12 @@ import "github.com/charmbracelet/lipgloss"
 
 const (
 	// PrimaryBoxActive represents when the left box is active.
-	PrimaryBoxActive = iota
+	PrimaryBoxActive = 1
 
 	// SecondaryBoxActive represents when the right box is active.
-	SecondaryBoxActive
+	SecondaryBoxActive = 2
+
+	SplashBoxActive = 3
 )
 const (
 	// StatusBarHeight represents the height of the status bar.

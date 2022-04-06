@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
@@ -11,7 +13,7 @@ import (
 func (b Bubble) View() string {
 	var view string
 
-	if b.splashScreenActive {
+	if b.activeBox == constants.SplashBoxActive {
 		var splashBox string
 
 		splashBoxBorder := lipgloss.NormalBorder()
@@ -129,9 +131,16 @@ func (b Bubble) loadingView() string {
 
 func (b Bubble) logView() string {
 	s := "Logs\n"
-	for i := range b.logs {
+	/* for i := range b.logs {
 		s += b.logs[i] + "\n"
+	} */
+
+	content, err := ioutil.ReadFile("debug.log")
+	if err != nil {
+		log.Fatal(err)
 	}
+	s += string(content)
+
 	return lipgloss.NewStyle().
 		Width(b.splashViewport.Width).
 		Height(b.splashViewport.Height).
