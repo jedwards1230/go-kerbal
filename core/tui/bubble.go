@@ -12,7 +12,8 @@ import (
 )
 
 type Bubble struct {
-	//appConfig         config.Config
+	appConfig         config.Config
+	theme             theme.Theme
 	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
 	splashViewport    viewport.Model
@@ -74,6 +75,8 @@ func InitialModel() Bubble {
 		})
 
 	return Bubble{
+		appConfig:         cfg,
+		theme:             theme,
 		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
 		splashViewport:    splashVP,

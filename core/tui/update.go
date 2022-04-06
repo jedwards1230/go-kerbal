@@ -16,8 +16,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case getAvailableModsMsg:
 		b.modList = msg
 		b.logs = append(b.logs, "Mod list updated")
-		b.checkPrimaryViewportBounds()
 		b.activeBox = constants.PrimaryBoxActive
+		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
@@ -79,15 +79,19 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			b.selected = b.cursor
 		}
-		b.checkPrimaryViewportBounds()
+		b.checkActiveViewPortBounds()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
-	case key.Matches(msg, b.keyMap.Tab):
-		b.checkPrimaryViewportBounds()
-		b.primaryViewport.SetContent(b.modListView())
-		b.secondaryViewport.SetContent(b.modInfoView())
+	case key.Matches(msg, b.keyMap.SwapView):
+		switch b.activeBox {
+		case constants.PrimaryBoxActive:
+			b.activeBox = constants.SecondaryBoxActive
+		case constants.SecondaryBoxActive:
+			b.activeBox = constants.PrimaryBoxActive
+		case constants.SplashBoxActive:
+			b.activeBox = constants.PrimaryBoxActive
+		}
 	case key.Matches(msg, b.keyMap.ShowLogs):
-		log.Println("show logs")
 		if b.activeBox == constants.SplashBoxActive {
 			b.activeBox = constants.PrimaryBoxActive
 			b.primaryViewport.SetContent(b.modListView())
@@ -110,53 +114,70 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// checkPrimaryViewportBounds handles wrapping of the filetree and
+// checkActiveViewPortBounds handles wrapping of the filetree and
 // scrolling of the viewport.
-func (b *Bubble) checkPrimaryViewportBounds() {
-	top := b.primaryViewport.YOffset - 3
-	bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 4
+func (b *Bubble) checkActiveViewPortBounds() {
+	switch b.activeBox {
+	case constants.PrimaryBoxActive:
+		top := b.primaryViewport.YOffset - 3
+		bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 4
 
-	if b.cursor < top {
-		b.primaryViewport.LineUp(1)
-	} else if b.cursor > bottom {
-		b.primaryViewport.LineDown(1)
-	}
+		if b.cursor < top {
+			b.primaryViewport.LineUp(1)
+		} else if b.cursor > bottom {
+			b.primaryViewport.LineDown(1)
+		}
 
-	if b.cursor > len(b.modList)-1 {
-		b.primaryViewport.GotoTop()
-		b.cursor = 0
-	} else if b.cursor < 0 {
-		b.primaryViewport.GotoBottom()
-		b.cursor = len(b.modList) - 1
+		if b.cursor > len(b.modList)-1 {
+			b.primaryViewport.GotoTop()
+			b.cursor = 0
+		} else if b.cursor < 0 {
+			b.primaryViewport.GotoBottom()
+			b.cursor = len(b.modList) - 1
+		}
+	case constants.SecondaryBoxActive:
+		if b.secondaryViewport.AtBottom() {
+			b.secondaryViewport.GotoBottom()
+		} else if b.secondaryViewport.AtTop() {
+			b.secondaryViewport.GotoTop()
+		}
+	case constants.SplashBoxActive:
+		if b.splashViewport.AtBottom() {
+			b.splashViewport.GotoBottom()
+		} else if b.splashViewport.AtTop() {
+			b.splashViewport.GotoTop()
+		}
 	}
 }
 
 func (b *Bubble) scrollView(dir string) {
-	if dir == "up" {
-		if b.activeBox == constants.PrimaryBoxActive {
+	switch dir {
+	case "up":
+		switch b.activeBox {
+		case constants.PrimaryBoxActive:
 			b.cursor--
-			b.checkPrimaryViewportBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		} else if b.activeBox == constants.SecondaryBoxActive {
+		case constants.SecondaryBoxActive:
 			b.secondaryViewport.LineUp(1)
 			b.primaryViewport.SetContent(b.modListView())
-		} else if b.activeBox == constants.SplashBoxActive {
+		case constants.SplashBoxActive:
 			b.splashViewport.LineUp(1)
 			b.splashViewport.SetContent(b.logView())
 		}
-	} else if dir == "down" {
-		if b.activeBox == constants.PrimaryBoxActive {
+	case "down":
+		switch b.activeBox {
+		case constants.PrimaryBoxActive:
 			b.cursor++
-			b.checkPrimaryViewportBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		} else if b.activeBox == constants.SecondaryBoxActive {
+		case constants.SecondaryBoxActive:
 			b.secondaryViewport.LineDown(1)
 			b.primaryViewport.SetContent(b.modListView())
-		} else if b.activeBox == constants.SplashBoxActive {
+		case constants.SplashBoxActive:
 			b.splashViewport.LineDown(1)
 			b.splashViewport.SetContent(b.logView())
 		}
-	} else {
+	default:
 		log.Panic("Invalid scroll direction: " + dir)
 	}
+	b.checkActiveViewPortBounds()
 }

@@ -11,7 +11,7 @@ type KeyMap struct {
 	Down     key.Binding
 	Up       key.Binding
 	Space    key.Binding
-	Tab      key.Binding
+	SwapView key.Binding
 	ShowLogs key.Binding
 	One      key.Binding
 }
@@ -36,7 +36,7 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys(" "),
 			key.WithHelp("spacebar", "select"),
 		),
-		Tab: key.NewBinding(
+		SwapView: key.NewBinding(
 			key.WithKeys("tab"),
 			key.WithHelp("tab", "select"),
 		),

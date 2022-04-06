@@ -13,39 +13,36 @@ import (
 func (b Bubble) View() string {
 	var view string
 
-	if b.activeBox == constants.SplashBoxActive {
-		var splashBox string
-
-		splashBoxBorder := lipgloss.NormalBorder()
-		b.splashViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(constants.BoxPadding).
-			PaddingRight(constants.BoxPadding).
-			Border(splashBoxBorder)
-		splashBox = b.splashViewport.View()
-
-		view = lipgloss.JoinVertical(
-			lipgloss.Top,
-			lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				splashBox,
-			),
-			b.statusBarView(),
-		)
-	} else {
+	switch b.activeBox {
+	case constants.PrimaryBoxActive, constants.SecondaryBoxActive:
 		var primaryBox string
 		var secondaryBox string
+
+		primaryBoxBorderColor := b.theme.InactiveBoxBorderColor
+		secondaryBoxBorderColor := b.theme.InactiveBoxBorderColor
+
+		switch b.activeBox {
+		case constants.PrimaryBoxActive:
+			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+		case constants.SecondaryBoxActive:
+			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+
+		}
 
 		primaryBoxBorder := lipgloss.NormalBorder()
 		b.primaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
 			PaddingRight(constants.BoxPadding).
-			Border(primaryBoxBorder)
+			Border(primaryBoxBorder).
+			BorderForeground(primaryBoxBorderColor)
 		primaryBox = b.primaryViewport.View()
+
 		secondaryBoxBorder := lipgloss.NormalBorder()
 		b.secondaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
 			PaddingRight(constants.BoxPadding).
-			Border(secondaryBoxBorder)
+			Border(secondaryBoxBorder).
+			BorderForeground(secondaryBoxBorderColor)
 		secondaryBox = b.secondaryViewport.View()
 
 		view = lipgloss.JoinVertical(
@@ -54,6 +51,25 @@ func (b Bubble) View() string {
 				lipgloss.Top,
 				primaryBox,
 				secondaryBox,
+			),
+			b.statusBarView(),
+		)
+	case constants.SplashBoxActive:
+		var splashBox string
+
+		splashBoxBorder := lipgloss.NormalBorder()
+		b.splashViewport.Style = lipgloss.NewStyle().
+			PaddingLeft(constants.BoxPadding).
+			PaddingRight(constants.BoxPadding).
+			Border(splashBoxBorder).
+			BorderForeground(b.theme.ActiveBoxBorderColor)
+		splashBox = b.splashViewport.View()
+
+		view = lipgloss.JoinVertical(
+			lipgloss.Top,
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				splashBox,
 			),
 			b.statusBarView(),
 		)
