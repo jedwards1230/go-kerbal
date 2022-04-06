@@ -29,6 +29,7 @@ type Ckan struct {
 	Version              *version.Version
 	VersionKspMax        *version.Version
 	VersionKspMin        *version.Version
+	searchableAuthor     []string
 	SearchableName       string
 	SearchableIdentifier string
 }
@@ -48,6 +49,11 @@ func (c *Ckan) init() error {
 	}
 
 	err = c.cleanIdentifiers()
+	if err != nil {
+		return err
+	}
+
+	err = c.cleanAuthors()
 	if err != nil {
 		return err
 	}
@@ -76,6 +82,27 @@ func (c *Ckan) cleanIdentifiers() error {
 		return errors.New("invalid file identifier")
 	}
 	c.SearchableIdentifier = strip(c.Name)
+
+	return nil
+}
+
+// TODO: organize into one author field
+func (c *Ckan) cleanAuthors() error {
+	switch author := c.raw["author"].(type) {
+	case []interface{}:
+		for i, v := range author {
+			c.Authors = append(c.Authors, v.(string))
+			c.searchableAuthor = append(c.searchableAuthor, strip(c.Authors[i]))
+		}
+	case string:
+		c.Author = strings.TrimSpace(author)
+		if c.Author == "" {
+			return errors.New("invalid author name")
+		}
+		c.searchableAuthor = append(c.searchableAuthor, strip(c.Author))
+	default:
+		return errors.New("type mismatch")
+	}
 
 	return nil
 }
