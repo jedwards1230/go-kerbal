@@ -11,23 +11,24 @@ import (
 // CKAN Spec: https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md
 
 type Ckan struct {
-	SpecVersion   string                 `json:"spec_version" binding:"required"`
-	Identifier    string                 `json:"identifier" binding:"required"`
-	Name          string                 `json:"name" binding:"required"`
-	Abstract      string                 `json:"abstract" binding:"required"`
-	Author        string                 `json:"author" binding:"required"`
-	Download      string                 `json:"download" binding:"required"`
-	License       string                 `json:"license" binding:"required"`
-	Epoch         string                 `json:"epoch"`
-	Resources     resource               `json:"resources"`
-	Tags          map[string]interface{} `json:"tags"`
-	Depends       map[string]interface{} `json:"depends"`
-	Conflicts     map[string]interface{} `json:"conflicts"`
-	raw           map[string]interface{}
-	Version       *version.Version
-	VersionKspMax *version.Version
-	VersionKspMin *version.Version
-	Authors       []string
+	SpecVersion    string                 `json:"spec_version" binding:"required"`
+	Identifier     string                 `json:"identifier" binding:"required"`
+	Name           string                 `json:"name" binding:"required"`
+	Abstract       string                 `json:"abstract" binding:"required"`
+	Author         string                 `json:"author" binding:"required"`
+	Download       string                 `json:"download" binding:"required"`
+	License        string                 `json:"license" binding:"required"`
+	Epoch          string                 `json:"epoch"`
+	Resources      resource               `json:"resources"`
+	Tags           map[string]interface{} `json:"tags"`
+	Depends        map[string]interface{} `json:"depends"`
+	Conflicts      map[string]interface{} `json:"conflicts"`
+	raw            map[string]interface{}
+	Version        *version.Version
+	VersionKspMax  *version.Version
+	VersionKspMin  *version.Version
+	Authors        []string
+	SearchableName string
 }
 
 type resource struct {
@@ -42,6 +43,9 @@ func (c *Ckan) init() error {
 	if err != nil {
 		return err
 	}
+
+	c.Name = strings.TrimSpace(c.Name)
+	c.SearchableName = strip(c.Name)
 
 	return err
 }
@@ -126,6 +130,19 @@ func cleanKspVersion(rawVersion string) (*version.Version, error) {
 		}
 		return fixedVersion, nil
 	}
-
 	return newVersion, nil
+}
+
+func strip(s string) string {
+	var result strings.Builder
+	for i := 0; i < len(s); i++ {
+		b := s[i]
+		if ('a' <= b && b <= 'z') ||
+			('A' <= b && b <= 'Z') ||
+			('0' <= b && b <= '9') ||
+			b == ' ' {
+			result.WriteByte(b)
+		}
+	}
+	return result.String()
 }
