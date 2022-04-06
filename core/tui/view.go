@@ -120,7 +120,8 @@ func (b Bubble) modInfoView() string {
 
 		s += "Mod\n\n"
 		s += fmt.Sprintf(
-			"Name: %s\n\n"+
+			"Name: %s\n"+
+				"Name: %s (searchable)\n\n"+
 				"Identifier: %s\n\n"+
 				"Author: %s\n\n"+
 				"Version: %s\n\n"+
@@ -130,6 +131,7 @@ func (b Bubble) modInfoView() string {
 				"License: %s\n\n"+
 				"Download: %s\n\n",
 			mod.Name,
+			mod.SearchableName,
 			mod.Identifier,
 			mod.Author,
 			mod.Version,
