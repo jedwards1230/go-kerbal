@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/tidwall/buntdb"
 )
 
@@ -18,7 +19,7 @@ type CkanDB struct {
 }
 
 func GetDB() *CkanDB {
-	database, _ := buntdb.Open("data.db")
+	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
 	db := &CkanDB{database}
 	db.CreateIndex("name", "*", buntdb.IndexJSON("name"))
 	db.CreateIndex("age", "*", buntdb.IndexJSON("age"))
@@ -44,19 +45,19 @@ func (db *CkanDB) GetModList() []Ckan {
 	return modList
 }
 
-func (db *CkanDB) UpdateDB(force_update bool) {
+func (db *CkanDB) UpdateDB(force_update bool) error {
 	changes := checkChanges()
 	if !changes && !force_update {
-		return
+		return nil
 	}
 
 	log.Println("Updating database entries")
 
 	// get currently downloaded ckans
 	var filesToScan []string
-	filesToScan = append(filesToScan, findFilePaths("ckan_database", ".ckan")...)
+	filesToScan = append(filesToScan, findFilePaths(dirfs.RootDir()+"/ckan_database", ".ckan")...)
 
-	db.Update(func(tx *buntdb.Tx) error {
+	err := db.Update(func(tx *buntdb.Tx) error {
 		for i := range filesToScan {
 			mod, _ := parseCKAN(filesToScan[i])
 			tx.Set(strconv.Itoa(i), mod, nil)
@@ -64,10 +65,11 @@ func (db *CkanDB) UpdateDB(force_update bool) {
 		return nil
 	})
 	log.Println("Database updated")
+	return err
 }
 
 func checkChanges() bool {
-	dir := filepath.Join(".", "ckan_database")
+	dir := dirfs.RootDir() + "/ckan_database"
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
