@@ -1,6 +1,7 @@
 package datacollector
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -70,7 +71,16 @@ func (c *Ckan) cleanVersions() error {
 }
 
 func (c *Ckan) cleanModVersion() error {
-	rawVersion := c.raw["version"].(string)
+	var rawVersion string
+
+	v := c.raw["version"]
+	if v != nil {
+		rawVersion = v.(string)
+	} else {
+		return errors.New("no version available")
+
+	}
+
 	re := regexp.MustCompile(`\d+(\.\d+)+`)
 
 	if strings.Contains(rawVersion, ":") {

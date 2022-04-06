@@ -47,6 +47,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return b, tea.Batch(cmds...)
 	case tea.MouseMsg:
+		// TODO: fix scrolling beyond page. breaks things.
 		switch msg.Type {
 		case tea.MouseWheelUp:
 			b.scrollView("up")

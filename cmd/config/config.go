@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/knipferrc/fm/dirfs"
 	"github.com/spf13/viper"
+
+	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
 // SettingsConfig struct represents the config for the settings.
