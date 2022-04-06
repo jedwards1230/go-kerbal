@@ -12,24 +12,25 @@ import (
 // CKAN Spec: https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md
 
 type Ckan struct {
-	SpecVersion    string                 `json:"spec_version" binding:"required"`
-	Identifier     string                 `json:"identifier" binding:"required"`
-	Name           string                 `json:"name" binding:"required"`
-	Abstract       string                 `json:"abstract" binding:"required"`
-	Author         string                 `json:"author" binding:"required"`
-	Download       string                 `json:"download" binding:"required"`
-	License        string                 `json:"license" binding:"required"`
-	Epoch          string                 `json:"epoch"`
-	Resources      resource               `json:"resources"`
-	Tags           map[string]interface{} `json:"tags"`
-	Depends        map[string]interface{} `json:"depends"`
-	Conflicts      map[string]interface{} `json:"conflicts"`
-	raw            map[string]interface{}
-	Version        *version.Version
-	VersionKspMax  *version.Version
-	VersionKspMin  *version.Version
-	Authors        []string
-	SearchableName string
+	Identifier           string
+	Name                 string
+	Author               string
+	Authors              []string
+	Abstract             string
+	Download             string
+	License              string
+	Epoch                string
+	Resources            resource
+	SearchTags           map[string]interface{}
+	ModDepends           map[string]interface{}
+	ModConflicts         map[string]interface{}
+	raw                  map[string]interface{}
+	SpecVersion          *version.Version
+	Version              *version.Version
+	VersionKspMax        *version.Version
+	VersionKspMin        *version.Version
+	SearchableName       string
+	SearchableIdentifier string
 }
 
 type resource struct {
@@ -39,16 +40,44 @@ type resource struct {
 	XScreenshot string `json:"x_screenshot"`
 }
 
+// Initialize struct values in-place
 func (c *Ckan) init() error {
-	err := c.cleanVersions()
+	err := c.cleanNames()
 	if err != nil {
 		return err
 	}
 
-	c.Name = strings.TrimSpace(c.Name)
-	c.SearchableName = strip(c.Name)
+	err = c.cleanIdentifiers()
+	if err != nil {
+		return err
+	}
+
+	err = c.cleanVersions()
+	if err != nil {
+		return err
+	}
 
 	return err
+}
+
+func (c *Ckan) cleanNames() error {
+	c.Name = strings.TrimSpace(c.raw["name"].(string))
+	if c.Name == "" {
+		return errors.New("invalid file name")
+	}
+	c.SearchableName = strip(c.Name)
+
+	return nil
+}
+
+func (c *Ckan) cleanIdentifiers() error {
+	c.Identifier = strings.TrimSpace(c.raw["identifier"].(string))
+	if c.Identifier == "" {
+		return errors.New("invalid file identifier")
+	}
+	c.SearchableIdentifier = strip(c.Name)
+
+	return nil
 }
 
 func (c *Ckan) cleanVersions() error {
@@ -106,7 +135,7 @@ func (c *Ckan) cleanModVersion() error {
 			/* log.Printf("BAD VERSION: %v", err)
 			log.Printf("raw: %v", c.raw["version"].(string))
 			log.Printf("final: %s\n", rawVersion) */
-			return err
+			return nil
 		}
 		c.Version = fixedVersion
 	}

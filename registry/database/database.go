@@ -14,10 +14,12 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+// Wrapper for buntDB
 type CkanDB struct {
 	*buntdb.DB
 }
 
+// Open database file
 func GetDB() *CkanDB {
 	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
 	db := &CkanDB{database}
@@ -27,16 +29,34 @@ func GetDB() *CkanDB {
 	return db
 }
 
+// Get list of Ckan objects from database
+//
+// TODO: Filtering
 func (db *CkanDB) GetModList() []Ckan {
 	log.Println("Gathering mod list from database")
 
 	var ckan Ckan
 	var modList []Ckan
+	idList := make(map[string]bool)
 	db.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
-			json.Unmarshal([]byte(value), &ckan)
-			ckan.init()
-			modList = append(modList, ckan)
+			err := json.Unmarshal([]byte(value), &ckan.raw)
+			if err != nil {
+				log.Printf("Error loading Ckan.raw struct: %v", err)
+			}
+
+			// initialize struct values
+			err = ckan.init()
+			if err != nil {
+				log.Printf("Error initializing ckan: %v", err)
+			}
+
+			if idList[ckan.Identifier] {
+				// TODO: handle multiple versions
+			} else {
+				modList = append(modList, ckan)
+				idList[ckan.Identifier] = true
+			}
 			return true
 		})
 		return nil
@@ -45,6 +65,9 @@ func (db *CkanDB) GetModList() []Ckan {
 	return modList
 }
 
+// Update the database by checking the repo and applying any new changes
+//
+// TODO: a lot
 func (db *CkanDB) UpdateDB(force_update bool) error {
 	changes := checkChanges()
 	if !changes && !force_update {
@@ -59,8 +82,8 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 
 	err := db.Update(func(tx *buntdb.Tx) error {
 		for i := range filesToScan {
-			mod, _ := parseCKAN(filesToScan[i])
-			tx.Set(strconv.Itoa(i), mod, nil)
+			modJSON, _ := parseCKAN(filesToScan[i])
+			tx.Set(strconv.Itoa(i), modJSON, nil)
 		}
 		return nil
 	})
@@ -68,6 +91,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	return err
 }
 
+// Check for any changes in metadata repo
 func checkChanges() bool {
 	dir := dirfs.RootDir() + "/ckan_database"
 	err := os.MkdirAll(dir, os.ModePerm)
@@ -104,6 +128,7 @@ func checkChanges() bool {
 	return true
 }
 
+// Parse .ckan file into JSON string
 func parseCKAN(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -121,6 +146,7 @@ func parseCKAN(filePath string) (string, error) {
 
 }
 
+// Collect list of file paths
 func findFilePaths(root, ext string) []string {
 	var pathList []string
 	filepath.WalkDir(root, func(s string, dir fs.DirEntry, err error) error {
