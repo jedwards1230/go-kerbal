@@ -9,6 +9,7 @@ type Registry struct {
 	DB      *database.CkanDB
 }
 
+// Initializes database and registry
 func GetRegistry() Registry {
 	db := database.GetDB()
 

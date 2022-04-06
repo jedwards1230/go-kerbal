@@ -8,6 +8,7 @@ import (
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 )
 
+// Do computations for TUI app
 func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
@@ -61,7 +62,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return b, tea.Batch(cmds...)
 }
 
-// handleKeys handles all keypresses.
+// Handles all key press events
 func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
@@ -115,8 +116,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// checkActiveViewPortBounds handles wrapping of the filetree and
-// scrolling of the viewport.
+// Handles wrapping and button
+// scrolling in the viewport.
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
 	case constants.PrimaryBoxActive:
@@ -151,6 +152,7 @@ func (b *Bubble) checkActiveViewPortBounds() {
 	}
 }
 
+// Handles mouse scrolling in the viewport
 func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
