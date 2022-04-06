@@ -81,7 +81,8 @@ func (b Bubble) View() string {
 
 func (b Bubble) modListView() string {
 	// sort mod list by name
-	// TODO: add more search filters
+	// TODO: do this sorting in the backend
+	// TODO: make a bubble tea command
 	if len(b.modList) > 0 {
 		switch b.sortFilter {
 		case "ascending":

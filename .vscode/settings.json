@@ -1,0 +1,13 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/*.ckan"
+            ],
+            "url": "./CKAN.schema"
+        }
+    ],
+    "files.associations": {
+        "*.ckan": "json"
+    }
+}
