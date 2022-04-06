@@ -14,7 +14,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case getAvailableModsMsg:
-		b.modList = msg
+		b.registry.ModList = msg
 		b.logs = append(b.logs, "Mod list updated")
 		b.activeBox = constants.PrimaryBoxActive
 		b.checkActiveViewPortBounds()
@@ -129,12 +129,12 @@ func (b *Bubble) checkActiveViewPortBounds() {
 			b.primaryViewport.LineDown(1)
 		}
 
-		if b.cursor > len(b.modList)-1 {
+		if b.cursor > len(b.registry.ModList)-1 {
 			b.primaryViewport.GotoTop()
 			b.cursor = 0
 		} else if b.cursor < 0 {
 			b.primaryViewport.GotoBottom()
-			b.cursor = len(b.modList) - 1
+			b.cursor = len(b.registry.ModList) - 1
 		}
 	case constants.SecondaryBoxActive:
 		if b.secondaryViewport.AtBottom() {

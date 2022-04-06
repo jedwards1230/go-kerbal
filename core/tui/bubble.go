@@ -8,7 +8,7 @@ import (
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 	"github.com/jedwards1230/go-kerbal/core/theme"
 	"github.com/jedwards1230/go-kerbal/help"
-	"github.com/jedwards1230/go-kerbal/registry/datacollector"
+	"github.com/jedwards1230/go-kerbal/registry"
 )
 
 type Bubble struct {
@@ -17,7 +17,7 @@ type Bubble struct {
 	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
 	splashViewport    viewport.Model
-	modList           []datacollector.Ckan
+	registry          registry.Registry
 	help              help.Bubble
 	sortFilter        string
 	keyMap            KeyMap
@@ -33,6 +33,7 @@ type Bubble struct {
 func InitialModel() Bubble {
 	cfg := config.GetConfig()
 	theme := theme.GetTheme(cfg.Theme.AppTheme)
+	reg := registry.GetRegistry()
 
 	primaryBoxBorder := lipgloss.NormalBorder()
 	primaryBoxBorderColor := theme.ActiveBoxBorderColor
@@ -83,6 +84,7 @@ func InitialModel() Bubble {
 		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
 		splashViewport:    splashVP,
+		registry:          reg,
 		help:              h,
 		selected:          -1,
 		activeBox:         constants.PrimaryBoxActive,
@@ -92,9 +94,14 @@ func InitialModel() Bubble {
 }
 
 func (b Bubble) Init() tea.Cmd {
+	var cmds []tea.Cmd
 	cmd := b.getAvailableModsCmd()
+	cmds = append(cmds, cmd)
+
+	/* b.updateDbCmd()
+	cmds = append(cmds, cmd) */
 
 	b.splashViewport.SetContent(b.loadingView())
 
-	return cmd
+	return tea.Batch(cmds...)
 }

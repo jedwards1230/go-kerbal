@@ -1,4 +1,4 @@
-package datacollector
+package database
 
 import (
 	"errors"

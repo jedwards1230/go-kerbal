@@ -1,0 +1,163 @@
+package database
+
+import (
+	"encoding/json"
+	"io/fs"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"strconv"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/tidwall/buntdb"
+)
+
+type CkanDB struct {
+	*buntdb.DB
+}
+
+func GetDB() *CkanDB {
+	database, _ := buntdb.Open("data.db")
+	db := &CkanDB{database}
+	db.CreateIndex("name", "*", buntdb.IndexJSON("name"))
+	db.CreateIndex("age", "*", buntdb.IndexJSON("age"))
+
+	return db
+}
+
+func (db *CkanDB) GetModList() []Ckan {
+	log.Println("Gathering mod list from database")
+
+	var ckan Ckan
+	var modList []Ckan
+	db.View(func(tx *buntdb.Tx) error {
+		tx.Ascend("", func(_, value string) bool {
+			json.Unmarshal([]byte(value), &ckan)
+			ckan.init()
+			modList = append(modList, ckan)
+			return true
+		})
+		return nil
+	})
+	log.Printf("Loaded %v mods from database", len(modList))
+	return modList
+}
+
+func (db *CkanDB) UpdateDB(force_update bool) {
+	changes := checkChanges()
+	if !changes && !force_update {
+		return
+	}
+
+	log.Println("Updating database entries")
+
+	// get currently downloaded ckans
+	var filesToScan []string
+	filesToScan = append(filesToScan, findFilePaths("ckan_database", ".ckan")...)
+
+	db.Update(func(tx *buntdb.Tx) error {
+		for i := range filesToScan {
+			mod, _ := parseCKAN(filesToScan[i])
+			tx.Set(strconv.Itoa(i), mod, nil)
+		}
+		return nil
+	})
+	log.Println("Database updated")
+}
+
+func checkChanges() bool {
+	dir := filepath.Join(".", "ckan_database")
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Open repo from dir
+	r, err := git.PlainOpen(dir)
+	if err != nil {
+		log.Println("Cloning repo")
+		// Clones the repository if not already downloaded
+		_, err = git.PlainClone(dir, false, &git.CloneOptions{
+			URL: "https://github.com/KSP-CKAN/CKAN-meta.git",
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Println("Updating repo")
+		// Get the working directory
+		w, err := r.Worktree()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Pull from origin
+		err = w.Pull(&git.PullOptions{RemoteName: "origin"})
+		if err != nil {
+			log.Println("No changes detected")
+			return false
+		}
+	}
+	return true
+}
+
+func parseCKAN(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// parse ckan data
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(byteValue), nil
+
+}
+
+func findFilePaths(root, ext string) []string {
+	var pathList []string
+	filepath.WalkDir(root, func(s string, dir fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if filepath.Ext(dir.Name()) == ext {
+			pathList = append(pathList, s)
+		}
+		return nil
+	})
+	return pathList
+}
+
+/* func CleanModList() {
+	modList := GetModList()
+	idList := make(map[string]bool)
+	for i := range modList {
+		mod := modList[i]
+		mod.init()
+		if mod.Version != nil {
+			// check if mod ID has been tracked already
+			if idList[mod.Identifier] {
+				for i, stored := range modList {
+					if stored.Identifier == mod.Identifier {
+						if stored.Version.LessThan(mod.Version) {
+							log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
+						} else if stored.Version.GreaterThan(mod.Version) {
+							log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
+						} else {
+							log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
+						}
+					}
+				}
+				// TODO: handle storing older versions of mod
+			} else {
+				modList = append(modList, mod)
+				idList[mod.Identifier] = true
+			}
+		}
+	}
+} */

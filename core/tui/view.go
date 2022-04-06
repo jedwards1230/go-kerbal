@@ -83,20 +83,26 @@ func (b Bubble) modListView() string {
 	// sort mod list by name
 	// TODO: do this sorting in the backend
 	// TODO: make a bubble tea command
-	if len(b.modList) > 0 {
+	if len(b.registry.ModList) > 0 {
 		switch b.sortFilter {
 		case "ascending":
-			sort.Slice(b.modList, func(i, j int) bool { return b.modList[i].SearchableName < b.modList[j].SearchableName })
+			sort.Slice(b.registry.ModList, func(i, j int) bool {
+				return b.registry.ModList[i].SearchableName < b.registry.ModList[j].SearchableName
+			})
 		case "descending":
-			sort.Slice(b.modList, func(i, j int) bool { return b.modList[i].SearchableName > b.modList[j].SearchableName })
+			sort.Slice(b.registry.ModList, func(i, j int) bool {
+				return b.registry.ModList[i].SearchableName > b.registry.ModList[j].SearchableName
+			})
 		default:
-			sort.Slice(b.modList, func(i, j int) bool { return b.modList[i].SearchableName < b.modList[j].SearchableName })
+			sort.Slice(b.registry.ModList, func(i, j int) bool {
+				return b.registry.ModList[i].SearchableName < b.registry.ModList[j].SearchableName
+			})
 		}
 	}
 
 	// construct list
 	s := "\n  Mod List\n\n"
-	for i, mod := range b.modList {
+	for i, mod := range b.registry.ModList {
 		cursor := " "
 		if b.cursor == i {
 			cursor = ">"
@@ -117,7 +123,7 @@ func (b Bubble) modListView() string {
 func (b Bubble) modInfoView() string {
 	s := "\n"
 	if b.selected >= 0 {
-		var mod = b.modList[b.selected]
+		var mod = b.registry.ModList[b.selected]
 
 		s += "Mod\n\n"
 		s += fmt.Sprintf(
@@ -184,7 +190,7 @@ func (b Bubble) statusBarView() string {
 	var status = "Status: " + b.logs[len(b.logs)-1]
 
 	width := lipgloss.Width
-	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.modList))
+	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.registry.ModList))
 
 	fileCountStyle := constants.BoldTextStyle.Copy()
 	fileCountColumn := fileCountStyle.
