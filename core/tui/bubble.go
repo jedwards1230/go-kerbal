@@ -70,6 +70,8 @@ func InitialModel() Bubble {
 			{Key: "j | up", Description: "Move up"},
 			{Key: "k | down", Description: "Move down"},
 			{Key: "spacebar", Description: "Select an entry"},
+			{Key: "tab", Description: "Swap active views"},
+			{},
 			{Key: "O", Description: "Show logs if debugging enabled"},
 			{},
 			{Key: "1", Description: "Refresh mod list"},
