@@ -4,6 +4,11 @@ Basically a TUI based Golang clone of the Kerbal [CKAN Mod Manager](https://gith
 
 This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta)
 
+## To run
+```
+./go-kerbal
+```
+
 ## Currently:
  * Pulls metadata and reads .ckan files
  * Compiles mods into a list for display
