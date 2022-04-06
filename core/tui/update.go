@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"log"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
@@ -13,9 +15,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case getAvailableModsMsg:
 		b.modList = msg
-		//b.status = "Mod list updated"
+		b.logs = append(b.logs, "Mod list updated")
 		b.checkPrimaryViewportBounds()
-		b.splashScreen = false
+		b.splashScreenActive = false
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
@@ -58,7 +60,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	switch {
 	case key.Matches(msg, b.keyMap.Quit):
-		b.status = "Quitting."
+		b.logs = append(b.logs, "Quitting")
 		return tea.Quit
 	case key.Matches(msg, b.keyMap.Down):
 		b.cursor++
@@ -81,9 +83,20 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.checkPrimaryViewportBounds()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	case key.Matches(msg, b.keyMap.ShowLogs):
+		log.Println("show logs")
+		if b.splashScreenActive {
+			b.splashScreenActive = false
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
+		} else {
+			b.splashScreenActive = true
+			b.splashViewport.SetContent(b.logView())
+		}
 	case key.Matches(msg, b.keyMap.One):
-		b.status = "Getting mod list"
-		b.splashScreen = true
+		b.logs = append(b.logs, "Getting mod list")
+		b.splashScreenActive = true
+		b.splashViewport.SetContent(b.loadingView())
 		cmd = b.getAvailableModsCmd()
 		cmds = append(cmds, cmd)
 	}

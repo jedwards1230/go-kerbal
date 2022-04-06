@@ -11,7 +11,7 @@ import (
 func (b Bubble) View() string {
 	var view string
 
-	if b.splashScreen {
+	if b.splashScreenActive {
 		var splashBox string
 
 		splashBoxBorder := lipgloss.NormalBorder()
@@ -117,7 +117,21 @@ func (b Bubble) modInfoView() string {
 }
 
 func (b Bubble) loadingView() string {
-	s := "\n\n\n\n\nloading screen?\n\n\n\n\n"
+	s := "Loading Screen\n"
+	for i := range b.logs {
+		s += b.logs[i] + "\n"
+	}
+	return lipgloss.NewStyle().
+		Width(b.splashViewport.Width).
+		Height(b.splashViewport.Height).
+		Render(s)
+}
+
+func (b Bubble) logView() string {
+	s := "Logs\n"
+	for i := range b.logs {
+		s += b.logs[i] + "\n"
+	}
 	return lipgloss.NewStyle().
 		Width(b.splashViewport.Width).
 		Height(b.splashViewport.Height).
@@ -125,7 +139,7 @@ func (b Bubble) loadingView() string {
 }
 
 func (b Bubble) statusBarView() string {
-	var status = "Status: " + b.status
+	var status = "Status: " + b.logs[len(b.logs)-1]
 
 	width := lipgloss.Width
 	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.modList))

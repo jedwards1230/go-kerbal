@@ -7,12 +7,13 @@ import "github.com/charmbracelet/bubbles/key"
 // programmatically with methods like Model.LineDown(1). See the GoDocs for
 // details.
 type KeyMap struct {
-	Quit  key.Binding
-	Down  key.Binding
-	Up    key.Binding
-	Space key.Binding
-	Tab   key.Binding
-	One   key.Binding
+	Quit     key.Binding
+	Down     key.Binding
+	Up       key.Binding
+	Space    key.Binding
+	Tab      key.Binding
+	ShowLogs key.Binding
+	One      key.Binding
 }
 
 // DefaultKeyMap returns a set of pager-like default keybindings.
@@ -38,6 +39,9 @@ func DefaultKeyMap() KeyMap {
 		Tab: key.NewBinding(
 			key.WithKeys("tab"),
 			key.WithHelp("tab", "select"),
+		),
+		ShowLogs: key.NewBinding(
+			key.WithKeys("O"),
 		),
 		One: key.NewBinding(
 			key.WithKeys("1"),
