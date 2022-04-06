@@ -43,8 +43,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.ready = true
 		}
 	case tea.KeyMsg:
-		cmd = b.handleKeys(msg)
-		cmds = append(cmds, cmd)
+		cmds = append(cmds, b.handleKeys(msg))
 
 		return b, tea.Batch(cmds...)
 	case tea.MouseMsg:
@@ -56,7 +55,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.scrollView("down")
 		}
 	}
-
 	cmds = append(cmds, cmd)
 
 	return b, tea.Batch(cmds...)

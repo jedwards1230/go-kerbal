@@ -12,22 +12,28 @@ import (
 )
 
 type Bubble struct {
-	appConfig         config.Config
-	theme             theme.Theme
-	primaryViewport   viewport.Model
+	// Contains config for TUI
+	appConfig config.Config
+	// Contains style details for TUI
+	theme theme.Theme
+	// Primary view (left panel)
+	primaryViewport viewport.Model
+	// Seconday view (right panel)
 	secondaryViewport viewport.Model
-	splashViewport    viewport.Model
-	registry          registry.Registry
-	help              help.Bubble
-	sortFilter        string
-	keyMap            KeyMap
-	ready             bool
-	activeBox         int
-	cursor            int
-	selected          int
-	width             int
-	height            int
-	logs              []string
+	// full page view (splash panel)
+	splashViewport viewport.Model
+	// Contains mod list and db
+	registry   registry.Registry
+	help       help.Bubble
+	sortFilter string
+	keyMap     KeyMap
+	ready      bool
+	activeBox  int
+	cursor     int
+	selected   int
+	width      int
+	height     int
+	logs       []string
 }
 
 func InitialModel() Bubble {

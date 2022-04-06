@@ -161,31 +161,10 @@ func findFilePaths(root, ext string) []string {
 	return pathList
 }
 
-/* func CleanModList() {
-	modList := GetModList()
-	idList := make(map[string]bool)
-	for i := range modList {
-		mod := modList[i]
-		mod.init()
-		if mod.Version != nil {
-			// check if mod ID has been tracked already
-			if idList[mod.Identifier] {
-				for i, stored := range modList {
-					if stored.Identifier == mod.Identifier {
-						if stored.Version.LessThan(mod.Version) {
-							log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
-						} else if stored.Version.GreaterThan(mod.Version) {
-							log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
-						} else {
-							log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
-						}
-					}
-				}
-				// TODO: handle storing older versions of mod
-			} else {
-				modList = append(modList, mod)
-				idList[mod.Identifier] = true
-			}
-		}
-	}
+/* if stored.Version.LessThan(mod.Version) {
+	log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
+} else if stored.Version.GreaterThan(mod.Version) {
+	log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
+} else {
+	log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
 } */
