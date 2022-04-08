@@ -24,13 +24,7 @@ type CkanDB struct {
 func GetDB() *CkanDB {
 	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
 	db := &CkanDB{database}
-	//db.CreateSearchIndex("name")
 	return db
-}
-
-// TODO: Handle computed searchable names vs stored names
-func (db *CkanDB) CreateSearchIndex(key string) {
-	db.CreateIndex(key, "", buntdb.IndexJSON(key))
 }
 
 // Get list of Ckan objects from database

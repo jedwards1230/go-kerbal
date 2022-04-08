@@ -63,7 +63,6 @@ func LoadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
 
-	// TODO: store this in database instead. probably just all config in database? might clean things up
 	kerbalDir := dirfs.FindKspPath()
 	kerbalVer := dirfs.FindKspVersion(kerbalDir)
 

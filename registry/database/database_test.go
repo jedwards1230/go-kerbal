@@ -8,6 +8,8 @@ import (
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 )
 
+// TODO: build test db
+
 func TestUpdateDB(t *testing.T) {
 	config.LoadConfig()
 	db := GetDB()
@@ -19,6 +21,7 @@ func TestUpdateDB(t *testing.T) {
 
 func TestGetModList(t *testing.T) {
 	config.LoadConfig()
+
 	db := GetDB()
 	modlist := db.GetModList()
 	if modlist == nil && len(modlist) > 0 {
@@ -30,6 +33,7 @@ func BenchmarkGetModList(b *testing.B) {
 	f, _ := os.OpenFile("debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	log.SetOutput(f)
 	config.LoadConfig()
+
 	db := GetDB()
 	for n := 0; n < b.N; n++ {
 		modlist := db.GetModList()

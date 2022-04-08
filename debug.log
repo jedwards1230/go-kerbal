@@ -1,6 +1,16 @@
-2022/04/08 07:24:48 Starting program
-2022/04/08 07:24:48 Found Kerbal dir: /Users/jedwards/Library/Application Support/Steam/steamapps/common/Kerbal Space Program/
-2022/04/08 07:24:48 Found Kerbal Version: 1.12.3
-2022/04/08 07:24:48 Program initialized
-2022/04/08 07:24:48 Gathering mod list from database
-2022/04/08 07:24:49 Loaded 2782 mods from database
+2022/04/08 17:20:11 Starting program
+2022/04/08 17:20:11 Found Kerbal dir: /Users/jedwards/Library/Application Support/Steam/steamapps/common/Kerbal Space Program/
+2022/04/08 17:20:11 Found Kerbal Version: 1.12.3
+2022/04/08 17:20:11 Program initialized
+2022/04/08 17:20:11 Gathering mod list from database
+2022/04/08 17:20:12 Loaded 23750 mods from database
+2022/04/08 17:20:12 Sorting 23750 mods. Order: ascend by name
+2022/04/08 17:20:13 Total filtered by compatibility: Compatible: 2801 | Incompatible: 20949
+2022/04/08 17:20:13 Total filtered by identifier: Unique: 731 | Extra: 2070
+2022/04/08 17:20:13 Sort result: 731/23750
+2022/04/08 17:21:31 Config file changed: /Users/jedwards/Documents/GitHub/go-kerbal/config.json
+2022/04/08 17:21:31 Gathering mod list from database
+2022/04/08 17:21:31 Loaded 23750 mods from database
+2022/04/08 17:21:31 Sorting 23750 mods. Order: ascend by name
+2022/04/08 17:21:31 Total filtered by identifier: Unique: 2782 | Extra: 20968
+2022/04/08 17:21:31 Sort result: 2782/23750
