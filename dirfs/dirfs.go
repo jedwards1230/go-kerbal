@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/go-git/go-billy/v5"
 	"github.com/hashicorp/go-version"
 )
 
@@ -36,15 +37,14 @@ func CreateDirectory(name string) error {
 	return nil
 }
 
-// Collect list of file paths
-func FindFilePaths(root, ext string) []string {
+func FindFilePaths(repo billy.Filesystem, ext string) []string {
 	var pathList []string
-	filepath.WalkDir(root, func(s string, dir fs.DirEntry, err error) error {
+	WalkDir(repo, "", func(s string, dir fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if filepath.Ext(dir.Name()) == ext {
-			pathList = append(pathList, s)
+			pathList = append(pathList, "/"+s)
 		}
 		return nil
 	})
@@ -117,8 +117,8 @@ func FindKspVersion(filePath string) *version.Version {
 }
 
 // Parse .ckan file into JSON string
-func ParseCKAN(filePath string) (string, error) {
-	file, err := os.Open(filePath)
+func ParseCKAN(repo billy.Filesystem, filePath string) (string, error) {
+	file, err := repo.Open(filePath)
 	if err != nil {
 		return "", err
 	}

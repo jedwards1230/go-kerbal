@@ -3,10 +3,8 @@ package config
 import (
 	"log"
 	"os"
-	"path/filepath"
-	"runtime"
 
-	"github.com/hashicorp/go-version"
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 
 	"github.com/jedwards1230/go-kerbal/dirfs"
@@ -15,16 +13,12 @@ import (
 // SettingsConfig struct represents the config for the settings.
 type (
 	SettingsConfig struct {
-		KerbalDir           string           `mapstructure:"kerbal_dir"`
-		KerbalVer           *version.Version `mapstructure:"kerbal_ver"`
-		StartDir            string           `mapstructure:"start_dir"`
-		ShowIcons           bool             `mapstructure:"show_icons"`
-		EnableLogging       bool             `mapstructure:"enable_logging"`
-		EnableMouseWheel    bool             `mapstructure:"enable_mousewheel"`
-		PrettyMarkdown      bool             `mapstructure:"pretty_markdown"`
-		Borderless          bool             `mapstructure:"borderless"`
-		SimpleMode          bool             `mapstructure:"simple_mode"`
-		CalculatedFileSizes bool             `mapstructure:"calculated_file_sizes"`
+		KerbalDir        string `mapstructure:"kerbal_dir"`
+		KerbalVer        string `mapstructure:"kerbal_ver"`
+		MetaRepo         string `mapstructure:"meta_repo"`
+		LastRepoHash     string `mapstructure:"last_repo_hash"`
+		EnableLogging    bool   `mapstructure:"enable_logging"`
+		EnableMouseWheel bool   `mapstructure:"enable_mousewheel"`
 	}
 
 	SyntaxThemeConfig struct {
@@ -47,7 +41,7 @@ type (
 // located at ~/.config/fm.yml.
 func LoadConfig() {
 
-	if runtime.GOOS != "windows" {
+	/* if runtime.GOOS != "windows" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			log.Fatal(err)
@@ -58,29 +52,26 @@ func LoadConfig() {
 			log.Fatal(err)
 		}
 
-		// TODO: Adjust where config is stored
-		//viper.AddConfigPath("$HOME/.config/go-kerbal")
-		viper.AddConfigPath("./")
+		viper.AddConfigPath("$HOME/.config/go-kerbal")
 	} else {
-		//viper.AddConfigPath("$HOME")
-		viper.AddConfigPath("./")
-	}
+		viper.AddConfigPath("$HOME")
+	} */
+
+	viper.AddConfigPath("./")
 
 	viper.SetConfigName("go-kerbal")
 	viper.SetConfigType("yml")
 
+	kerbalDir := dirfs.FindKspPath()
+	kerbalVer := dirfs.FindKspVersion(kerbalDir)
+
 	// Setup config defaults.
-	v, _ := version.NewVersion("0")
-	viper.SetDefault("settings.kerbal_dir", dirfs.FindKspPath())
-	viper.SetDefault("settings.kerbal_ver", v)
-	viper.SetDefault("settings.start_dir", ".")
-	viper.SetDefault("settings.show_icons", true)
+	viper.SetDefault("settings.kerbal_dir", kerbalDir)
+	viper.SetDefault("settings.kerbal_ver", kerbalVer.String())
+	viper.SetDefault("settings.meta_repo", "https://github.com/KSP-CKAN/CKAN-meta.git")
+	viper.SetDefault("settings.last_repo_hash", "")
 	viper.SetDefault("settings.enable_logging", true)
 	viper.SetDefault("settings.enable_mousewheel", true)
-	viper.SetDefault("settings.pretty_markdown", true)
-	viper.SetDefault("settings.borderless", false)
-	viper.SetDefault("settings.simple_mode", false)
-	viper.SetDefault("settings.calculated_file_sizes", false)
 	viper.SetDefault("theme.app_theme", "default")
 	viper.SetDefault("theme.syntax_theme.light", "pygments")
 	viper.SetDefault("theme.syntax_theme.dark", "dracula")
@@ -100,9 +91,10 @@ func LoadConfig() {
 		}
 	}
 
-	// Setup flag defaults.
-	viper.SetDefault("start-dir", "")
-	viper.SetDefault("selection-path", "")
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		log.Printf("Config file changed: %v", e.Name)
+	})
+	viper.WatchConfig()
 }
 
 // GetConfig returns the users config.

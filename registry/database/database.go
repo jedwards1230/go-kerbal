@@ -2,15 +2,16 @@ package database
 
 import (
 	"encoding/json"
-	"io/fs"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"strconv"
 
+	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
+	gitConfig "github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/spf13/viper"
 	"github.com/tidwall/buntdb"
 )
 
@@ -69,20 +70,39 @@ func (db *CkanDB) GetModList() []Ckan {
 //
 // TODO: a lot
 func (db *CkanDB) UpdateDB(force_update bool) error {
-	changes := checkChanges()
+	cfg := config.GetConfig()
+
+	changes := checkRepoChanges()
 	if !changes && !force_update {
 		return nil
 	}
 
 	log.Println("Updating database entries")
+	// Pull metadata repo
+	fs := memfs.New()
+	storer := memory.NewStorage()
+	r, err := git.Clone(storer, fs, &git.CloneOptions{
+		URL: cfg.Settings.MetaRepo,
+	})
+	if err != nil {
+		log.Printf("Error cloning repo: %v", err)
+	}
+
+	ref, err := r.Head()
+	if err != nil {
+		log.Printf("Error collecting HEAD: %v", err)
+	}
+
+	viper.Set("settings.last_repo_hash", ref.Hash().String())
+	viper.WriteConfigAs(viper.ConfigFileUsed())
 
 	// get currently downloaded ckans
 	var filesToScan []string
-	filesToScan = append(filesToScan, findFilePaths(dirfs.RootDir()+"/ckan_database", ".ckan")...)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
-	err := db.Update(func(tx *buntdb.Tx) error {
+	err = db.Update(func(tx *buntdb.Tx) error {
 		for i := range filesToScan {
-			modJSON, _ := parseCKAN(filesToScan[i])
+			modJSON, _ := dirfs.ParseCKAN(fs, filesToScan[i])
 			tx.Set(strconv.Itoa(i), modJSON, nil)
 		}
 		return nil
@@ -91,74 +111,38 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	return err
 }
 
-// Check for any changes in metadata repo
-func checkChanges() bool {
-	dir := dirfs.RootDir() + "/ckan_database"
-	err := os.MkdirAll(dir, os.ModePerm)
+// Checks for changes to the repo by comparing commit hashes
+//
+// TODO: look into using git.Repository instead of git.Remote. Which is better?
+func checkRepoChanges() bool {
+	log.Println("Checking repo for changes")
+
+	// Load metadata repo
+	cfg := config.GetConfig()
+	storer := memory.NewStorage()
+	rem := git.NewRemote(storer, &gitConfig.RemoteConfig{
+		Name: "master",
+		URLs: []string{cfg.Settings.MetaRepo},
+	})
+
+	// Gather reference list
+	refs, err := rem.List(&git.ListOptions{})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error loading remote list: %v", err)
 	}
 
-	// Open repo from dir
-	r, err := git.PlainOpen(dir)
-	if err != nil {
-		log.Println("Cloning repo")
-		// Clones the repository if not already downloaded
-		_, err = git.PlainClone(dir, false, &git.CloneOptions{
-			URL: "https://github.com/KSP-CKAN/CKAN-meta.git",
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		log.Println("Updating repo")
-		// Get the working directory
-		w, err := r.Worktree()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Pull from origin
-		err = w.Pull(&git.PullOptions{RemoteName: "origin"})
-		if err != nil {
-			log.Println("No changes detected")
-			return false
+	// Finds last hash in master
+	for _, ref := range refs {
+		if ref.Name().IsBranch() && ref.Name() == "refs/heads/master" {
+			log.Printf("Loading: %s %v", cfg.Settings.MetaRepo, ref.Name())
+			log.Printf("Latest commit: %v", ref.Hash().String())
+			if cfg.Settings.LastRepoHash == ref.Hash().String() {
+				log.Printf("Stored commit: %v", cfg.Settings.LastRepoHash)
+				return false
+			}
 		}
 	}
 	return true
-}
-
-// Parse .ckan file into JSON string
-func parseCKAN(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	// parse ckan data
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
-
-	return string(byteValue), nil
-
-}
-
-// Collect list of file paths
-func findFilePaths(root, ext string) []string {
-	var pathList []string
-	filepath.WalkDir(root, func(s string, dir fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if filepath.Ext(dir.Name()) == ext {
-			pathList = append(pathList, s)
-		}
-		return nil
-	})
-	return pathList
 }
 
 /* if stored.Version.LessThan(mod.Version) {
