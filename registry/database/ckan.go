@@ -34,6 +34,7 @@ type Ckan struct {
 	VersionKspMin        *version.Version
 	searchableAuthor     []string
 	SearchableName       string
+	SearchableAbstract   string
 	SearchableIdentifier string
 }
 
@@ -62,6 +63,18 @@ func (c *Ckan) init() error {
 	}
 
 	err = c.cleanVersions()
+	if err != nil {
+		return err
+	}
+
+	_ = c.cleanAbstract()
+
+	err = c.cleanLicense()
+	if err != nil {
+		return err
+	}
+
+	err = c.cleanDownload()
 	if err != nil {
 		return err
 	}
@@ -144,6 +157,45 @@ func (c *Ckan) cleanVersions() error {
 	}
 }
 
+func (c *Ckan) cleanAbstract() error {
+	c.Abstract = strings.TrimSpace(c.raw["abstract"].(string))
+	if c.Abstract == "" {
+		c.SearchableAbstract = ""
+		return errors.New("invalid abstract")
+	}
+	c.SearchableAbstract = dirfs.Strip(c.Abstract)
+
+	return nil
+}
+
+func (c *Ckan) cleanLicense() error {
+	switch license := c.raw["license"].(type) {
+	case []interface{}:
+		for _, v := range license {
+			c.License = v.(string)
+			break
+		}
+	case string:
+		c.License = strings.TrimSpace(c.raw["license"].(string))
+		if c.License == "" {
+			return errors.New("invalid license")
+		}
+	default:
+		return errors.New("type mismatch")
+	}
+
+	return nil
+}
+
+func (c *Ckan) cleanDownload() error {
+	c.Download = strings.TrimSpace(c.raw["download"].(string))
+	if c.Download == "" {
+		return errors.New("invalid download path")
+	}
+
+	return nil
+}
+
 // Clean version string
 //
 // Returns Version, Epoch, and any errors
@@ -195,21 +247,14 @@ func (c *Ckan) CheckCompatible() bool {
 
 	if c.VersionKspMin != nil {
 		if !c.VersionKspMin.LessThanOrEqual(kerbalVer) {
-			/* 			log.Printf("True!")
-			   			log.Printf("%v <= %v <= %v\n\n", c.VersionKspMin, configVer, c.VersionKspMin)
-			*/return false
+			return false
 		}
 
 	}
 	if c.VersionKspMax != nil {
 		if !c.VersionKspMax.GreaterThanOrEqual(kerbalVer) {
-			/* 			log.Printf("True!")
-			   			log.Printf("%v <= %v <= %v\n\n", c.VersionKspMin, configVer, c.VersionKspMin)
-			*/return false
+			return false
 		}
 	}
-
-	/* 	log.Printf("True!")
-	   	log.Printf("%v <= %v <= %v\n\n", c.VersionKspMin, configVer, c.VersionKspMin)
-	*/return true
+	return true
 }
