@@ -68,16 +68,19 @@ func (db *CkanDB) GetModList() []Ckan {
 
 // Update the database by checking the repo and applying any new changes
 //
-// TODO: a lot
+// TODO: compare speeds between downloading to memory vs storage. currently uses <= 7GB of memory on git clones.
 func (db *CkanDB) UpdateDB(force_update bool) error {
 	cfg := config.GetConfig()
 
-	changes := checkRepoChanges()
-	if !changes && !force_update {
-		return nil
+	if !force_update {
+		changes := checkRepoChanges()
+		if !changes {
+			log.Printf("No repo changes detected")
+			return nil
+		}
 	}
 
-	log.Println("Updating database entries")
+	log.Println("Cloning database repo")
 	// Pull metadata repo
 	fs := memfs.New()
 	storer := memory.NewStorage()
@@ -97,6 +100,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	viper.WriteConfigAs(viper.ConfigFileUsed())
 
 	// get currently downloaded ckans
+	log.Printf("Updating DB entries")
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
@@ -112,6 +116,8 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 }
 
 // Checks for changes to the repo by comparing commit hashes
+//
+// Returns true if changes were detected
 //
 // TODO: look into using git.Repository instead of git.Remote. Which is better?
 func checkRepoChanges() bool {
@@ -136,8 +142,8 @@ func checkRepoChanges() bool {
 		if ref.Name().IsBranch() && ref.Name() == "refs/heads/master" {
 			log.Printf("Loading: %s %v", cfg.Settings.MetaRepo, ref.Name())
 			log.Printf("Latest commit: %v", ref.Hash().String())
+			// if hashes match, return false to show no changes
 			if cfg.Settings.LastRepoHash == ref.Hash().String() {
-				log.Printf("Stored commit: %v", cfg.Settings.LastRepoHash)
 				return false
 			}
 		}

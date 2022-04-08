@@ -21,11 +21,10 @@ func Execute() {
 			log.Printf("Failed to clear debug.log: %v", err)
 		}
 
-		f, err := tea.LogToFile("debug.log", "[debug]")
+		f, err := tea.LogToFile("debug.log", "")
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		defer func() {
 			if err = f.Close(); err != nil {
 				log.Fatal(err)
