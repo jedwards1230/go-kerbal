@@ -21,6 +21,5 @@ go build && ./go-kerbal
  * Find currently installed mods
  * Implement installer
  * Search through list of mods
-   * Add filtering for display
  * Make the TUI pretty
  * And a lot more...
