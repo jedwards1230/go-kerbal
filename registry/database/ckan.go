@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
 // CKAN Spec: https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md
@@ -71,7 +72,7 @@ func (c *Ckan) cleanNames() error {
 	if c.Name == "" {
 		return errors.New("invalid file name")
 	}
-	c.SearchableName = strip(c.Name)
+	c.SearchableName = dirfs.Strip(c.Name)
 
 	return nil
 }
@@ -81,7 +82,7 @@ func (c *Ckan) cleanIdentifiers() error {
 	if c.Identifier == "" {
 		return errors.New("invalid file identifier")
 	}
-	c.SearchableIdentifier = strip(c.Name)
+	c.SearchableIdentifier = dirfs.Strip(c.Name)
 
 	return nil
 }
@@ -92,14 +93,14 @@ func (c *Ckan) cleanAuthors() error {
 	case []interface{}:
 		for i, v := range author {
 			c.Authors = append(c.Authors, v.(string))
-			c.searchableAuthor = append(c.searchableAuthor, strip(c.Authors[i]))
+			c.searchableAuthor = append(c.searchableAuthor, dirfs.Strip(c.Authors[i]))
 		}
 	case string:
 		c.Author = strings.TrimSpace(author)
 		if c.Author == "" {
 			return errors.New("invalid author name")
 		}
-		c.searchableAuthor = append(c.searchableAuthor, strip(c.Author))
+		c.searchableAuthor = append(c.searchableAuthor, dirfs.Strip(c.Author))
 	default:
 		return errors.New("type mismatch")
 	}
@@ -108,71 +109,51 @@ func (c *Ckan) cleanAuthors() error {
 }
 
 func (c *Ckan) cleanVersions() error {
-	err := c.cleanModVersion()
-	if err != nil {
-		return err
-	}
-
-	kspMax := c.raw["ksp_version_max"]
-	if kspMax != nil {
-		c.VersionKspMax, err = cleanKspVersion(kspMax.(string))
-	}
-
-	kspMin := c.raw["ksp_version_min"]
-	if kspMin != nil {
-		c.VersionKspMax, err = cleanKspVersion(kspMin.(string))
-	}
-
-	return err
-}
-
-func (c *Ckan) cleanModVersion() error {
-	var rawVersion string
-
 	v := c.raw["version"]
 	if v != nil {
-		rawVersion = v.(string)
+		modVersion, epoch, err := c.cleanModVersion(v.(string))
+		if err != nil {
+			// TODO: Only minor errors come through but could be fixed with better filtering
+			return nil
+		}
+		c.Version = modVersion
+		c.Epoch = epoch
+
+		v = c.raw["ksp_version_max"]
+		if v != nil {
+			vMax, _, err := c.cleanModVersion(v.(string))
+			if err != nil {
+				return err
+			}
+			c.VersionKspMax = vMax
+		}
+
+		v = c.raw["ksp_version_min"]
+		if v != nil {
+			vMin, _, err := c.cleanModVersion(v.(string))
+			if err != nil {
+				return err
+			}
+			c.VersionKspMin = vMin
+		}
+		return nil
 	} else {
 		return errors.New("no version available")
-
 	}
+}
 
-	re := regexp.MustCompile(`\d+(\.\d+)+`)
+// Clean version string
+//
+// Returns Version, Epoch, and any errors
+func (c *Ckan) cleanModVersion(rawVersion string) (*version.Version, string, error) {
+	var v *version.Version
+	var epoch string
 
 	if strings.Contains(rawVersion, ":") {
 		s := strings.Split(rawVersion, ":")
-		c.Epoch = s[0]
+		epoch = s[0]
 		rawVersion = s[1]
 	}
-
-	newVersion, err := version.NewVersion(rawVersion)
-	if err != nil {
-		rawVersion = fmt.Sprint(re.FindAllString(rawVersion, -1))
-
-		if strings.Contains(rawVersion, "[") {
-			rawVersion = strings.ReplaceAll(rawVersion, "[", "")
-		}
-		if strings.Contains(rawVersion, "]") {
-			rawVersion = strings.ReplaceAll(rawVersion, "]", "")
-		}
-
-		fixedVersion, err := version.NewVersion(rawVersion)
-		if err != nil {
-			// TODO: Better version cleaning
-			/* log.Printf("BAD VERSION: %v", err)
-			log.Printf("raw: %v", c.raw["version"].(string))
-			log.Printf("final: %s\n", rawVersion) */
-			return nil
-		}
-		c.Version = fixedVersion
-	}
-
-	c.Version = newVersion
-	return nil
-}
-
-func cleanKspVersion(rawVersion string) (*version.Version, error) {
-	var v *version.Version
 
 	newVersion, err := version.NewVersion(rawVersion)
 	if err != nil {
@@ -192,23 +173,9 @@ func cleanKspVersion(rawVersion string) (*version.Version, error) {
 			/* log.Printf("BAD VERSION: %v", err)
 			log.Printf("raw: %v", c.raw["version"].(string))
 			log.Printf("final: %s\n", rawVersion) */
-			return v, err
+			return v, epoch, err
 		}
-		return fixedVersion, nil
+		return fixedVersion, epoch, nil
 	}
-	return newVersion, nil
-}
-
-func strip(s string) string {
-	var result strings.Builder
-	for i := 0; i < len(s); i++ {
-		b := s[i]
-		if ('a' <= b && b <= 'z') ||
-			('A' <= b && b <= 'Z') ||
-			('0' <= b && b <= '9') ||
-			b == ' ' {
-			result.WriteByte(b)
-		}
-	}
-	return result.String()
+	return newVersion, epoch, nil
 }

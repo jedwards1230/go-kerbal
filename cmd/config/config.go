@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 
 	"github.com/jedwards1230/go-kerbal/dirfs"
@@ -14,15 +15,16 @@ import (
 // SettingsConfig struct represents the config for the settings.
 type (
 	SettingsConfig struct {
-		KerbalDir           string `mapstructure:"kerbal_dir"`
-		StartDir            string `mapstructure:"start_dir"`
-		ShowIcons           bool   `mapstructure:"show_icons"`
-		EnableLogging       bool   `mapstructure:"enable_logging"`
-		EnableMouseWheel    bool   `mapstructure:"enable_mousewheel"`
-		PrettyMarkdown      bool   `mapstructure:"pretty_markdown"`
-		Borderless          bool   `mapstructure:"borderless"`
-		SimpleMode          bool   `mapstructure:"simple_mode"`
-		CalculatedFileSizes bool   `mapstructure:"calculated_file_sizes"`
+		KerbalDir           string           `mapstructure:"kerbal_dir"`
+		KerbalVer           *version.Version `mapstructure:"kerbal_ver"`
+		StartDir            string           `mapstructure:"start_dir"`
+		ShowIcons           bool             `mapstructure:"show_icons"`
+		EnableLogging       bool             `mapstructure:"enable_logging"`
+		EnableMouseWheel    bool             `mapstructure:"enable_mousewheel"`
+		PrettyMarkdown      bool             `mapstructure:"pretty_markdown"`
+		Borderless          bool             `mapstructure:"borderless"`
+		SimpleMode          bool             `mapstructure:"simple_mode"`
+		CalculatedFileSizes bool             `mapstructure:"calculated_file_sizes"`
 	}
 
 	SyntaxThemeConfig struct {
@@ -68,7 +70,9 @@ func LoadConfig() {
 	viper.SetConfigType("yml")
 
 	// Setup config defaults.
+	v, _ := version.NewVersion("0")
 	viper.SetDefault("settings.kerbal_dir", dirfs.FindKspPath())
+	viper.SetDefault("settings.kerbal_ver", v)
 	viper.SetDefault("settings.start_dir", ".")
 	viper.SetDefault("settings.show_icons", true)
 	viper.SetDefault("settings.enable_logging", true)

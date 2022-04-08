@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/core/tui"
+	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
 func Execute() {
@@ -37,8 +38,11 @@ func Execute() {
 	if cfg.Settings.KerbalDir == "" {
 		log.Printf("ERROR: No Kerbal Directory found!")
 	} else {
-		log.Printf("Found Kerbal dir: " + cfg.Settings.KerbalDir)
+		log.Printf("Found Kerbal dir: " + cfg.Settings.KerbalDir + "/")
 	}
+
+	cfg.Settings.KerbalVer = dirfs.FindKspVersion(cfg.Settings.KerbalDir)
+	log.Printf("Found Kerbal Version: %v", cfg.Settings.KerbalVer)
 
 	m := tui.InitialModel()
 	var opts []tea.ProgramOption

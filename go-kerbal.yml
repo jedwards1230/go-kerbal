@@ -5,6 +5,7 @@ settings:
   enable_mousewheel: true
   kerbal_dir: /Users/jedwards/Library/Application Support/Steam/steamapps/common/Kerbal
     Space Program
+  kerbal_ver: {}
   pretty_markdown: true
   show_icons: true
   simple_mode: false
