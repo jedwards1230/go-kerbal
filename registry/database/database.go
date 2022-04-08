@@ -39,7 +39,6 @@ func (db *CkanDB) GetModList() []Ckan {
 
 	var ckan Ckan
 	var modList []Ckan
-	idList := make(map[string]bool)
 	db.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
 			err := json.Unmarshal([]byte(value), &ckan.raw)
@@ -53,12 +52,7 @@ func (db *CkanDB) GetModList() []Ckan {
 				log.Printf("Error initializing ckan: %v", err)
 			}
 
-			if idList[ckan.Identifier] {
-				// TODO: handle multiple versions
-			} else {
-				modList = append(modList, ckan)
-				idList[ckan.Identifier] = true
-			}
+			modList = append(modList, ckan)
 			return true
 		})
 

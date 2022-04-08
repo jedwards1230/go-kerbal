@@ -36,6 +36,9 @@ func (r *Registry) SortModList(opts SortOptions) {
 	// Check compatible
 	sortedModList = getCompatibleModList(r.ModList)
 
+	// Get list by unique identifiers
+	sortedModList = getUniqueModList(sortedModList)
+
 	// TODO: Filter by tag
 
 	// Sort by order
@@ -69,6 +72,26 @@ func getCompatibleModList(modList []database.Ckan) []database.Ckan {
 	return compatibleModList
 }
 
+// Filters list by unique identifiers to ensure duplicate mods are not displayed
+func getUniqueModList(modList []database.Ckan) []database.Ckan {
+	var sortedModList []database.Ckan
+	idList := make(map[string]bool)
+	countGood := 0
+	countBad := 0
+	for _, mod := range modList {
+		if idList[mod.Identifier] {
+			// TODO: Compare versions
+			countBad += 1
+		} else {
+			sortedModList = append(sortedModList, mod)
+			idList[mod.Identifier] = true
+			countGood += 1
+		}
+	}
+	log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
+	return sortedModList
+}
+
 // Sort mods by order
 func getSortedModList(modList []database.Ckan, tag, order string) []database.Ckan {
 	sortedModList := modList
@@ -85,7 +108,6 @@ func getSortedModList(modList []database.Ckan, tag, order string) []database.Cka
 			})
 		}
 	}
-
 	return sortedModList
 }
 
