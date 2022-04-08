@@ -111,9 +111,6 @@ func (b Bubble) Init() tea.Cmd {
 	cmd := b.getAvailableModsCmd()
 	cmds = append(cmds, cmd)
 
-	/* b.updateDbCmd()
-	cmds = append(cmds, cmd) */
-
 	b.splashViewport.SetContent(b.loadingView())
 
 	return tea.Batch(cmds...)

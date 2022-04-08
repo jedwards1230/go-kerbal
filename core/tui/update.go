@@ -102,6 +102,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			b.activeBox = constants.SplashBoxActive
 			b.splashViewport.SetContent(b.logView())
+			b.splashViewport.GotoBottom()
 		}
 	case key.Matches(msg, b.keyMap.RefreshList):
 		b.logs = append(b.logs, "Getting mod list")

@@ -11,13 +11,10 @@ type ModListUpdatedMsg []database.Ckan
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
 		updatedModList := b.registry.DB.GetModList()
+		if len(updatedModList) == 0 {
+			b.registry.DB.UpdateDB(true)
+			updatedModList = b.registry.DB.GetModList()
+		}
 		return ModListUpdatedMsg(updatedModList)
 	}
 }
-
-/* // Request to ping the metadata repo and update if needed.
-// Cloning the repo can be forced with a bool parameter
-func (b Bubble) updateDbCmd(force bool) {
-	b.registry.DB.UpdateDB(force)
-}
-*/
