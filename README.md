@@ -6,20 +6,21 @@ This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-m
 
 ## To run
 ```
-./go-kerbal
+go build && ./go-kerbal
 ```
 
 ## Currently:
+ * Automatically keeps metadata up to date
  * Compiles metadata and displays info in the TUI
  * Finds Kerbal game directory
+ * Sorts and filters mod list
 
 
 ## TODO:
- * Optimize how .ckan files are saved into Modules and the Registry
- * Handle old versions of mods
+ * Better .ckan data cleaning
  * Find currently installed mods
- * Implement mod installer
+ * Implement installer
  * Search through list of mods
    * Add filtering for display
- * Make the GUI pretty
+ * Make the TUI pretty
  * And a lot more...
