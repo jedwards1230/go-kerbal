@@ -11,13 +11,13 @@ This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-m
 
 ## Currently:
  * Compiles metadata and displays info in the TUI
+ * Finds Kerbal game directory
 
 
 ## TODO:
  * Optimize how .ckan files are saved into Modules and the Registry
  * Handle old versions of mods
- * Find kerbal game directory
-   * Find currently installed mods
+ * Find currently installed mods
  * Implement mod installer
  * Search through list of mods
    * Add filtering for display
