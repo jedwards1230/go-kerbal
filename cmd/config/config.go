@@ -46,7 +46,7 @@ type (
 func LoadConfig() {
 
 	if runtime.GOOS != "windows" {
-		homeDir, err := dirfs.GetHomeDirectory()
+		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			log.Fatal(err)
 		}

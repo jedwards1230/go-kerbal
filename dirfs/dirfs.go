@@ -3,6 +3,7 @@ package dirfs
 import (
 	"errors"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,16 +18,6 @@ func RootDir() string {
 	return filepath.Dir(d)
 }
 
-// GetHomeDirectory returns the users home directory.
-func GetHomeDirectory() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	return home, nil
-}
-
 // CreateDirectory creates a new directory given a name.
 func CreateDirectory(name string) error {
 	if _, err := os.Stat(name); errors.Is(err, os.ErrNotExist) {
@@ -37,6 +28,21 @@ func CreateDirectory(name string) error {
 	}
 
 	return nil
+}
+
+// Collect list of file paths
+func FindFilePaths(root, ext string) []string {
+	var pathList []string
+	filepath.WalkDir(root, func(s string, dir fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if filepath.Ext(dir.Name()) == ext {
+			pathList = append(pathList, s)
+		}
+		return nil
+	})
+	return pathList
 }
 
 // Find root directory of KSP
@@ -54,6 +60,22 @@ func FindKspPath() string {
 		}
 		return nil
 	})
-
 	return path
+}
+
+// Parse .ckan file into JSON string
+func ParseCKAN(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// parse ckan data
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(byteValue), nil
 }
