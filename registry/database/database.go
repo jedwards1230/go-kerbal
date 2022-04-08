@@ -23,11 +23,11 @@ type CkanDB struct {
 // Open database file
 func GetDB() *CkanDB {
 	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
-	db := &CkanDB{database}
-	db.CreateIndex("name", "*", buntdb.IndexJSON("name"))
-	db.CreateIndex("age", "*", buntdb.IndexJSON("age"))
+	return &CkanDB{database}
+}
 
-	return db
+func (db *CkanDB) CreateSearchIndex(key string) {
+	db.CreateIndex(key, "mod-*", buntdb.IndexJSON(key))
 }
 
 // Get list of Ckan objects from database
@@ -73,7 +73,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	cfg := config.GetConfig()
 
 	if !force_update {
-		changes := checkRepoChanges()
+		changes := CheckRepoChanges()
 		if !changes {
 			log.Printf("No repo changes detected")
 			return nil
@@ -107,7 +107,8 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	err = db.Update(func(tx *buntdb.Tx) error {
 		for i := range filesToScan {
 			modJSON, _ := dirfs.ParseCKAN(fs, filesToScan[i])
-			tx.Set(strconv.Itoa(i), modJSON, nil)
+			key := "mod-" + strconv.Itoa(i)
+			tx.Set(key, modJSON, nil)
 		}
 		return nil
 	})
@@ -120,11 +121,12 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 // Returns true if changes were detected
 //
 // TODO: look into using git.Repository instead of git.Remote. Which is better?
-func checkRepoChanges() bool {
+func CheckRepoChanges() bool {
 	log.Println("Checking repo for changes")
 
 	// Load metadata repo
 	cfg := config.GetConfig()
+	log.Printf("config: %v", cfg.Settings.MetaRepo)
 	storer := memory.NewStorage()
 	rem := git.NewRemote(storer, &gitConfig.RemoteConfig{
 		Name: "master",
@@ -151,10 +153,12 @@ func checkRepoChanges() bool {
 	return true
 }
 
-/* if stored.Version.LessThan(mod.Version) {
-	log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
-} else if stored.Version.GreaterThan(mod.Version) {
-	log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
-} else {
-	log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
-} */
+func compareVersions(stored, mod Ckan, i int) {
+	if stored.Version.LessThan(mod.Version) {
+		log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
+	} else if stored.Version.GreaterThan(mod.Version) {
+		log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
+	} else {
+		log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
+	}
+}

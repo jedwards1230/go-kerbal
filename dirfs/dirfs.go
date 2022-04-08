@@ -52,6 +52,8 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 }
 
 // Find root directory of KSP
+//
+// TODO: add paths for linux and windows
 func FindKspPath() string {
 	path := ""
 	home, _ := os.UserHomeDir()

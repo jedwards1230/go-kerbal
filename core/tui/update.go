@@ -104,7 +104,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.logs = append(b.logs, "Getting mod list")
 		b.activeBox = constants.SplashBoxActive
 		b.splashViewport.SetContent(b.loadingView())
-		b.updateDbCmd()
+		b.updateDbCmd(false)
 		cmds = append(cmds, b.getAvailableModsCmd())
 	}
 	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)

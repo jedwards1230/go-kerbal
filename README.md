@@ -21,6 +21,5 @@ This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-m
  * Implement mod installer
  * Search through list of mods
    * Add filtering for display
- * Efficiently save metadata repo and only update as needed
  * Make the GUI pretty
  * And a lot more...
