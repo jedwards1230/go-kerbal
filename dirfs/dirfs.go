@@ -2,10 +2,12 @@ package dirfs
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // useeful for keeping unit tests on track with created directories
@@ -35,4 +37,23 @@ func CreateDirectory(name string) error {
 	}
 
 	return nil
+}
+
+// Find root directory of KSP
+func FindKspPath() string {
+	path := ""
+	home, _ := os.UserHomeDir()
+	home += "/Library/Application Support/Steam/steamapps"
+	filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
+			path = s
+		}
+		return nil
+	})
+
+	return path
 }

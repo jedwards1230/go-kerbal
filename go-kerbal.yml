@@ -3,6 +3,8 @@ settings:
   calculated_file_sizes: false
   enable_logging: true
   enable_mousewheel: true
+  kerbal_dir: /Users/jedwards/Library/Application Support/Steam/steamapps/common/Kerbal
+    Space Program
   pretty_markdown: true
   show_icons: true
   simple_mode: false

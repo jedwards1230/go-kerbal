@@ -34,6 +34,12 @@ func Execute() {
 	}
 	log.Println("Starting program")
 
+	if cfg.Settings.KerbalDir == "" {
+		log.Printf("ERROR: No Kerbal Directory found!")
+	} else {
+		log.Printf("Found Kerbal dir: " + cfg.Settings.KerbalDir)
+	}
+
 	m := tui.InitialModel()
 	var opts []tea.ProgramOption
 

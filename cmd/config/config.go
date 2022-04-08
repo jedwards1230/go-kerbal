@@ -14,6 +14,7 @@ import (
 // SettingsConfig struct represents the config for the settings.
 type (
 	SettingsConfig struct {
+		KerbalDir           string `mapstructure:"kerbal_dir"`
 		StartDir            string `mapstructure:"start_dir"`
 		ShowIcons           bool   `mapstructure:"show_icons"`
 		EnableLogging       bool   `mapstructure:"enable_logging"`
@@ -55,6 +56,7 @@ func LoadConfig() {
 			log.Fatal(err)
 		}
 
+		// TODO: Adjust where config is stored
 		//viper.AddConfigPath("$HOME/.config/go-kerbal")
 		viper.AddConfigPath("./")
 	} else {
@@ -66,6 +68,7 @@ func LoadConfig() {
 	viper.SetConfigType("yml")
 
 	// Setup config defaults.
+	viper.SetDefault("settings.kerbal_dir", dirfs.FindKspPath())
 	viper.SetDefault("settings.start_dir", ".")
 	viper.SetDefault("settings.show_icons", true)
 	viper.SetDefault("settings.enable_logging", true)
