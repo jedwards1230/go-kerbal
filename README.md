@@ -14,6 +14,7 @@ go build && ./go-kerbal
  * Compiles metadata and displays info in the TUI
  * Finds Kerbal game directory
  * Sorts and filters mod list
+ * Displays logs in-app
 
 
 ## TODO:
