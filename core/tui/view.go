@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"sort"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
@@ -80,26 +79,6 @@ func (b Bubble) View() string {
 }
 
 func (b Bubble) modListView() string {
-	// sort mod list by name
-	// TODO: do this sorting in the backend
-	// TODO: make a bubble tea command
-	if len(b.registry.ModList) > 0 {
-		switch b.sortFilter {
-		case "ascending":
-			sort.Slice(b.registry.ModList, func(i, j int) bool {
-				return b.registry.ModList[i].SearchableName < b.registry.ModList[j].SearchableName
-			})
-		case "descending":
-			sort.Slice(b.registry.ModList, func(i, j int) bool {
-				return b.registry.ModList[i].SearchableName > b.registry.ModList[j].SearchableName
-			})
-		default:
-			sort.Slice(b.registry.ModList, func(i, j int) bool {
-				return b.registry.ModList[i].SearchableName < b.registry.ModList[j].SearchableName
-			})
-		}
-	}
-
 	// construct list
 	s := "\n  Mod List\n\n"
 	for i, mod := range b.registry.ModList {

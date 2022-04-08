@@ -13,12 +13,13 @@ import (
 // SettingsConfig struct represents the config for the settings.
 type (
 	SettingsConfig struct {
-		KerbalDir        string `mapstructure:"kerbal_dir"`
-		KerbalVer        string `mapstructure:"kerbal_ver"`
-		MetaRepo         string `mapstructure:"meta_repo"`
-		LastRepoHash     string `mapstructure:"last_repo_hash"`
-		EnableLogging    bool   `mapstructure:"enable_logging"`
-		EnableMouseWheel bool   `mapstructure:"enable_mousewheel"`
+		KerbalDir            string `mapstructure:"kerbal_dir"`
+		KerbalVer            string `mapstructure:"kerbal_ver"`
+		MetaRepo             string `mapstructure:"meta_repo"`
+		LastRepoHash         string `mapstructure:"last_repo_hash"`
+		EnableLogging        bool   `mapstructure:"enable_logging"`
+		EnableMouseWheel     bool   `mapstructure:"enable_mousewheel"`
+		HideIncompatibleMods bool   `mapstructure:"hide_incompatible"`
 	}
 
 	SyntaxThemeConfig struct {
@@ -73,6 +74,7 @@ func LoadConfig() {
 	viper.SetDefault("settings.last_repo_hash", "")
 	viper.SetDefault("settings.enable_logging", true)
 	viper.SetDefault("settings.enable_mousewheel", true)
+	viper.SetDefault("settings.hide_incompatible", true)
 	viper.SetDefault("theme.app_theme", "default")
 	viper.SetDefault("theme.syntax_theme.light", "pygments")
 	viper.SetDefault("theme.syntax_theme.dark", "dracula")

@@ -5,7 +5,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
+	"github.com/spf13/viper"
 )
 
 // Do computations for TUI app
@@ -14,8 +16,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case getAvailableModsMsg:
+	case ModListUpdatedMsg:
 		b.registry.ModList = msg
+		b.registry.SortModList(b.sortOptions)
 		b.logs = append(b.logs, "Mod list updated")
 		b.activeBox = constants.PrimaryBoxActive
 		b.checkActiveViewPortBounds()
@@ -44,8 +47,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
-
-		return b, tea.Batch(cmds...)
 	case tea.MouseMsg:
 		// TODO: fix scrolling beyond page. breaks things.
 		switch msg.Type {
@@ -55,6 +56,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.scrollView("down")
 		}
 	}
+
 	cmds = append(cmds, cmd)
 
 	return b, tea.Batch(cmds...)
@@ -64,6 +66,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
+	cfg := config.GetConfig()
 
 	switch {
 	case key.Matches(msg, b.keyMap.Quit):
@@ -100,12 +103,28 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.activeBox = constants.SplashBoxActive
 			b.splashViewport.SetContent(b.logView())
 		}
-	case key.Matches(msg, b.keyMap.One):
+	case key.Matches(msg, b.keyMap.RefreshList):
 		b.logs = append(b.logs, "Getting mod list")
-		b.activeBox = constants.SplashBoxActive
-		b.splashViewport.SetContent(b.loadingView())
-		b.updateDbCmd(false)
 		cmds = append(cmds, b.getAvailableModsCmd())
+	case key.Matches(msg, b.keyMap.HideIncompatible):
+		b.logs = append(b.logs, "Toggling compatible mod view")
+		viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
+		viper.WriteConfigAs(viper.ConfigFileUsed())
+		cmds = append(cmds, b.getAvailableModsCmd())
+	case key.Matches(msg, b.keyMap.SwapSortOrder):
+		if b.sortOptions.SortOrder == "ascend" {
+			b.sortOptions.SortOrder = "descend"
+		} else if b.sortOptions.SortOrder == "descend" {
+			b.sortOptions.SortOrder = "ascend"
+		}
+		b.logs = append(b.logs, "Swapping sort order to "+b.sortOptions.SortOrder)
+		log.Printf("Swapping sort order to %s", b.sortOptions.SortOrder)
+		b.registry.SortModList(b.sortOptions)
+		b.activeBox = constants.PrimaryBoxActive
+		b.checkActiveViewPortBounds()
+		b.primaryViewport.GotoTop()
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 	}
 	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
 

@@ -23,23 +23,27 @@ type Bubble struct {
 	// full page view (splash panel)
 	splashViewport viewport.Model
 	// Contains mod list and db
-	registry   registry.Registry
-	help       help.Bubble
-	sortFilter string
-	keyMap     KeyMap
-	ready      bool
-	activeBox  int
-	cursor     int
-	selected   int
-	width      int
-	height     int
-	logs       []string
+	registry    registry.Registry
+	sortOptions registry.SortOptions
+	help        help.Bubble
+	keyMap      KeyMap
+	ready       bool
+	activeBox   int
+	cursor      int
+	selected    int
+	width       int
+	height      int
+	logs        []string
 }
 
 func InitialModel() Bubble {
 	cfg := config.GetConfig()
 	theme := theme.GetTheme(cfg.Theme.AppTheme)
 	reg := registry.GetRegistry()
+	sortOpts := registry.SortOptions{
+		SortTag:   "name",
+		SortOrder: "ascend",
+	}
 
 	primaryBoxBorder := lipgloss.NormalBorder()
 	primaryBoxBorderColor := theme.ActiveBoxBorderColor
@@ -82,6 +86,8 @@ func InitialModel() Bubble {
 			{Key: "O", Description: "Show logs if debugging enabled"},
 			{},
 			{Key: "1", Description: "Refresh mod list"},
+			{Key: "2", Description: "Toggle hiding incompatible mods"},
+			{Key: "3", Description: "Toggle sort order (ascend/descend)"},
 		})
 
 	return Bubble{
@@ -91,6 +97,7 @@ func InitialModel() Bubble {
 		secondaryViewport: secondaryVP,
 		splashViewport:    splashVP,
 		registry:          reg,
+		sortOptions:       sortOpts,
 		help:              h,
 		selected:          -1,
 		activeBox:         constants.PrimaryBoxActive,

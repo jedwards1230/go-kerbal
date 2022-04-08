@@ -13,7 +13,10 @@ type KeyMap struct {
 	Space    key.Binding
 	SwapView key.Binding
 	ShowLogs key.Binding
-	One      key.Binding
+
+	RefreshList      key.Binding
+	HideIncompatible key.Binding
+	SwapSortOrder    key.Binding
 }
 
 // DefaultKeyMap returns a set of pager-like default keybindings.
@@ -43,9 +46,17 @@ func DefaultKeyMap() KeyMap {
 		ShowLogs: key.NewBinding(
 			key.WithKeys("O"),
 		),
-		One: key.NewBinding(
+		RefreshList: key.NewBinding(
 			key.WithKeys("1"),
 			key.WithHelp("1", "refresh mod list"),
+		),
+		HideIncompatible: key.NewBinding(
+			key.WithKeys("2"),
+			key.WithHelp("2", "toggle incompatible mods view"),
+		),
+		SwapSortOrder: key.NewBinding(
+			key.WithKeys("3"),
+			key.WithHelp("3", "swap sort order (asc/desc)"),
 		),
 	}
 }

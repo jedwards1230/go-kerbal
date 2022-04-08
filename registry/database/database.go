@@ -23,16 +23,17 @@ type CkanDB struct {
 // Open database file
 func GetDB() *CkanDB {
 	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
-	return &CkanDB{database}
+	db := &CkanDB{database}
+	//db.CreateSearchIndex("name")
+	return db
 }
 
+// TODO: Handle computed searchable names vs stored names
 func (db *CkanDB) CreateSearchIndex(key string) {
-	db.CreateIndex(key, "mod-*", buntdb.IndexJSON(key))
+	db.CreateIndex(key, "", buntdb.IndexJSON(key))
 }
 
 // Get list of Ckan objects from database
-//
-// TODO: Filtering
 func (db *CkanDB) GetModList() []Ckan {
 	log.Println("Gathering mod list from database")
 
@@ -60,6 +61,7 @@ func (db *CkanDB) GetModList() []Ckan {
 			}
 			return true
 		})
+
 		return nil
 	})
 	log.Printf("Loaded %v mods from database", len(modList))
@@ -72,7 +74,11 @@ func (db *CkanDB) GetModList() []Ckan {
 func (db *CkanDB) UpdateDB(force_update bool) error {
 	cfg := config.GetConfig()
 
-	if !force_update {
+	idxs, err := db.Indexes()
+	if err != nil {
+		return err
+	}
+	if !force_update && len(idxs) > 1 {
 		changes := CheckRepoChanges()
 		if !changes {
 			log.Printf("No repo changes detected")
@@ -107,7 +113,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	err = db.Update(func(tx *buntdb.Tx) error {
 		for i := range filesToScan {
 			modJSON, _ := dirfs.ParseCKAN(fs, filesToScan[i])
-			key := "mod-" + strconv.Itoa(i)
+			key := strconv.Itoa(i)
 			tx.Set(key, modJSON, nil)
 		}
 		return nil
@@ -153,7 +159,7 @@ func CheckRepoChanges() bool {
 	return true
 }
 
-func compareVersions(stored, mod Ckan, i int) {
+/* func compareVersions(stored, mod Ckan, i int) {
 	if stored.Version.LessThan(mod.Version) {
 		log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
 	} else if stored.Version.GreaterThan(mod.Version) {
@@ -161,4 +167,4 @@ func compareVersions(stored, mod Ckan, i int) {
 	} else {
 		log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
 	}
-}
+} */

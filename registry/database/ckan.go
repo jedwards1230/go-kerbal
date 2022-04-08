@@ -3,10 +3,12 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-version"
+	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
@@ -178,4 +180,36 @@ func (c *Ckan) cleanModVersion(rawVersion string) (*version.Version, string, err
 		return fixedVersion, epoch, nil
 	}
 	return newVersion, epoch, nil
+}
+
+// Compares installed KSP version to min/max compatible for the mod.
+//
+// Returns true if compatible
+func (c *Ckan) CheckCompatible() bool {
+	cfg := config.GetConfig()
+	configVer := cfg.Settings.KerbalVer
+	kerbalVer, err := version.NewVersion(configVer)
+	if err != nil {
+		log.Printf("Error with kerbal version: %v", err)
+	}
+
+	if c.VersionKspMin != nil {
+		if !c.VersionKspMin.LessThanOrEqual(kerbalVer) {
+			/* 			log.Printf("True!")
+			   			log.Printf("%v <= %v <= %v\n\n", c.VersionKspMin, configVer, c.VersionKspMin)
+			*/return false
+		}
+
+	}
+	if c.VersionKspMax != nil {
+		if !c.VersionKspMax.GreaterThanOrEqual(kerbalVer) {
+			/* 			log.Printf("True!")
+			   			log.Printf("%v <= %v <= %v\n\n", c.VersionKspMin, configVer, c.VersionKspMin)
+			*/return false
+		}
+	}
+
+	/* 	log.Printf("True!")
+	   	log.Printf("%v <= %v <= %v\n\n", c.VersionKspMin, configVer, c.VersionKspMin)
+	*/return true
 }
