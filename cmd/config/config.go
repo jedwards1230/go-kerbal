@@ -63,7 +63,11 @@ func LoadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
 
-	kerbalDir := dirfs.FindKspPath()
+	kerbalDir, err := dirfs.FindKspPath()
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	log.Printf("dir: %s", kerbalDir)
 	kerbalVer := dirfs.FindKspVersion(kerbalDir)
 
 	// Setup config defaults.

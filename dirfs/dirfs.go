@@ -37,6 +37,7 @@ func CreateDirectory(name string) error {
 	return nil
 }
 
+// Walks dir in billy.Filesystem
 func FindFilePaths(repo billy.Filesystem, ext string) []string {
 	var pathList []string
 	WalkDir(repo, "", func(s string, dir fs.DirEntry, err error) error {
@@ -54,21 +55,32 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 // Find root directory of KSP
 //
 // TODO: add paths for linux and windows
-func FindKspPath() string {
+func FindKspPath() (string, error) {
 	path := ""
-	home, _ := os.UserHomeDir()
-	home += "/Library/Application Support/Steam/steamapps"
-	filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+	if runtime.GOOS == "darwin" {
+		log.Printf("MacOS detected")
+		home, _ := os.UserHomeDir()
+		home += "/Library/Application Support/Steam/steamapps"
+		filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
 
-		if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
-			path = s
-		}
-		return nil
-	})
-	return path
+			if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
+				path = s
+			}
+			return nil
+		})
+	} else if runtime.GOOS == "windows" {
+		log.Printf("Windows OS detected")
+	} else if runtime.GOOS == "linux" {
+		log.Printf("Linux OS detected")
+	}
+
+	if path == "" {
+		return path, errors.New("unable to find KSP version")
+	}
+	return path, nil
 }
 
 // Find version of installed KSP.
