@@ -63,16 +63,9 @@ func LoadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
 
-	kerbalDir, err := dirfs.FindKspPath()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-	log.Printf("dir: %s", kerbalDir)
-	kerbalVer := dirfs.FindKspVersion(kerbalDir)
-
 	// Setup config defaults.
-	viper.SetDefault("settings.kerbal_dir", kerbalDir)
-	viper.SetDefault("settings.kerbal_ver", kerbalVer.String())
+	viper.SetDefault("settings.kerbal_dir", "")
+	viper.SetDefault("settings.kerbal_ver", "")
 	viper.SetDefault("settings.meta_repo", "https://github.com/KSP-CKAN/CKAN-meta.git")
 	viper.SetDefault("settings.last_repo_hash", "")
 	viper.SetDefault("settings.enable_logging", true)
@@ -98,7 +91,7 @@ func LoadConfig() {
 	}
 
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		log.Printf("Config file changed: %v", e.Name)
+		log.Printf("Config file updated")
 	})
 	viper.WatchConfig()
 }

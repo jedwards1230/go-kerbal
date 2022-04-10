@@ -8,6 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/core/tui"
+	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/spf13/viper"
 )
 
 func Execute() {
@@ -33,11 +35,20 @@ func Execute() {
 	}
 	log.Println("Starting program")
 
-	if cfg.Settings.KerbalDir == "" {
-		log.Printf("ERROR: No Kerbal Directory found!")
+	if cfg.Settings.KerbalDir == "" || cfg.Settings.KerbalVer == "" {
+		kerbalDir, err := dirfs.FindKspPath()
+		if err != nil {
+			log.Fatalf("Error finding KSP folder: %v", err)
+		}
+		kerbalVer := dirfs.FindKspVersion(kerbalDir)
+		viper.Set("settings.kerbal_dir", kerbalDir)
+		viper.Set("settings.kerbal_ver", kerbalVer.String())
+		viper.WriteConfigAs(viper.ConfigFileUsed())
+		log.Printf("Kerbal dir: " + kerbalDir + "/")
+		log.Printf("Kerbal Version: %v", kerbalVer)
 	} else {
-		log.Printf("Found Kerbal dir: " + cfg.Settings.KerbalDir + "/")
-		log.Printf("Found Kerbal Version: %v", cfg.Settings.KerbalVer)
+		log.Printf("Kerbal dir: " + cfg.Settings.KerbalDir + "/")
+		log.Printf("Kerbal Version: %v", cfg.Settings.KerbalVer)
 	}
 
 	m := tui.InitialModel()
