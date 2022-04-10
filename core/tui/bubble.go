@@ -77,7 +77,7 @@ func InitialModel() Bubble {
 		theme.DefaultTextColor,
 		"go-kerbal help!",
 		[]help.HelpEntry{
-			{Key: "ctrl+c", Description: "Exit FM"},
+			{Key: "q | ctrl+c", Description: "Exit FM"},
 			{Key: "j | up", Description: "Move up"},
 			{Key: "k | down", Description: "Move down"},
 			{Key: "spacebar", Description: "Select an entry"},

@@ -19,8 +19,10 @@ func Execute() {
 	// If logging is enabled, logs will be output to debug.log.
 	if cfg.Settings.EnableLogging {
 		// clear debug file
-		if err := os.Truncate("debug.log", 0); err != nil {
-			log.Printf("Failed to clear debug.log: %v", err)
+		if _, err := os.Stat("debug.log"); err == nil {
+			if err := os.Truncate("debug.log", 0); err != nil {
+				log.Printf("Failed to clear debug.log: %v", err)
+			}
 		}
 
 		f, err := tea.LogToFile("debug.log", "")
@@ -40,16 +42,25 @@ func Execute() {
 		if err != nil {
 			log.Fatalf("Error finding KSP folder: %v", err)
 		}
-		kerbalVer := dirfs.FindKspVersion(kerbalDir)
-		viper.Set("settings.kerbal_dir", kerbalDir)
-		viper.Set("settings.kerbal_ver", kerbalVer.String())
-		viper.WriteConfigAs(viper.ConfigFileUsed())
-		log.Printf("Kerbal dir: " + kerbalDir + "/")
-		log.Printf("Kerbal Version: %v", kerbalVer)
+		if kerbalDir == "/FIXME" {
+			viper.Set("settings.kerbal_dir", "")
+			viper.Set("settings.kerbal_ver", "1.12.3")
+			viper.WriteConfigAs(viper.ConfigFileUsed())
+			log.Printf("***** TODO: FIND KSP DIR FOR LINUX *****")
+		} else {
+			kerbalVer := dirfs.FindKspVersion(kerbalDir)
+			viper.Set("settings.kerbal_dir", kerbalDir)
+			viper.Set("settings.kerbal_ver", kerbalVer.String())
+			viper.WriteConfigAs(viper.ConfigFileUsed())
+			log.Printf("Kerbal dir: " + kerbalDir + "/")
+			log.Printf("Kerbal Version: %v", kerbalVer)
+		}
 	} else {
 		log.Printf("Kerbal dir: " + cfg.Settings.KerbalDir + "/")
 		log.Printf("Kerbal Version: %v", cfg.Settings.KerbalVer)
 	}
+
+	// TODO: Handle custom folderpath input for game directory if not found
 
 	m := tui.InitialModel()
 	var opts []tea.ProgramOption

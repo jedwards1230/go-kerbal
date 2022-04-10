@@ -92,6 +92,7 @@ func FindKspPath() (string, error) {
 		}
 	} else if runtime.GOOS == "linux" {
 		log.Printf("Linux OS detected")
+		path = "/FIXME"
 	}
 
 	if path == "" {
