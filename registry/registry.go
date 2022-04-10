@@ -31,10 +31,15 @@ func GetRegistry() Registry {
 
 func (r *Registry) SortModList(opts SortOptions) {
 	log.Printf("Sorting %d mods. Order: %s by %s", len(r.ModList), opts.SortOrder, opts.SortTag)
+	cfg := config.GetConfig()
 	var sortedModList []database.Ckan
 
 	// Check compatible
-	sortedModList = getCompatibleModList(r.ModList)
+	if cfg.Settings.HideIncompatibleMods {
+		sortedModList = getCompatibleModList(r.ModList)
+	} else {
+		sortedModList = r.ModList
+	}
 
 	// Get list by unique identifiers
 	sortedModList = getUniqueModList(sortedModList)
@@ -50,25 +55,18 @@ func (r *Registry) SortModList(opts SortOptions) {
 
 // Filter out incompatible mods if config is set
 func getCompatibleModList(modList []database.Ckan) []database.Ckan {
-	cfg := config.GetConfig()
 	countGood := 0
 	countBad := 0
 	var compatibleModList []database.Ckan
 	for _, mod := range modList {
-		if cfg.Settings.HideIncompatibleMods {
-			if mod.CheckCompatible() {
-				countGood += 1
-				compatibleModList = append(compatibleModList, mod)
-			} else {
-				countBad += 1
-			}
-		} else {
+		if mod.CheckCompatible() {
+			countGood += 1
 			compatibleModList = append(compatibleModList, mod)
+		} else {
+			countBad += 1
 		}
 	}
-	if cfg.Settings.HideIncompatibleMods {
-		log.Printf("Total filtered by compatibility: Compatible: %d | Incompatible: %d", countGood, countBad)
-	}
+	log.Printf("Total filtered by compatibility: Compatible: %d | Incompatible: %d", countGood, countBad)
 	return compatibleModList
 }
 
