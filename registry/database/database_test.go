@@ -10,6 +10,39 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+func TestMain(m *testing.M) {
+	f, err := os.OpenFile(dirfs.RootDir()+"/test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Print(err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+	log.Println()
+	log.Println("*****************")
+	log.Println("Testing Database")
+	log.Println("*****************")
+
+	config.LoadConfig()
+	log.Printf("Initializing test-db")
+	db, err := GetTestDB()
+	if err != nil {
+		log.Print(err)
+	}
+
+	err = db.UpdateDB(true)
+	if err != nil {
+		log.Print(err)
+	}
+
+	code := m.Run()
+	err = os.Remove(dirfs.RootDir() + "/test-data.db")
+	if err != nil {
+		log.Print(err)
+	}
+
+	os.Exit(code)
+}
+
 // Open database file
 func GetTestDB() (*CkanDB, error) {
 	var db *CkanDB
@@ -18,19 +51,9 @@ func GetTestDB() (*CkanDB, error) {
 		return db, err
 	}
 	db = &CkanDB{database}
-	f, err := os.OpenFile(dirfs.RootDir()+"/test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	log.SetOutput(f)
 	return db, err
 }
-
-func TestGetTestDB(t *testing.T) {
-	_, err := GetTestDB()
-	if err != nil {
-		t.Errorf("Error getting database %v", err)
-	}
-}
 func TestUpdateDB(t *testing.T) {
-	config.LoadConfig()
 	db, err := GetTestDB()
 	if err != nil {
 		t.Errorf("Error getting database %v", err)
@@ -42,8 +65,6 @@ func TestUpdateDB(t *testing.T) {
 }
 
 func TestGetModList(t *testing.T) {
-	config.LoadConfig()
-
 	db, err := GetTestDB()
 	if err != nil {
 		t.Errorf("Error getting database %v", err)
@@ -68,16 +89,11 @@ func BenchmarkGetModList(b *testing.B) {
 }
 
 func TestCheckRepoChanges(t *testing.T) {
-	config.LoadConfig()
-	GetTestDB()
-
 	_ = CheckRepoChanges()
 }
 
 func BenchmarkCheckRepoChanges(b *testing.B) {
-	GetTestDB()
 	for n := 0; n < b.N; n++ {
-		config.LoadConfig()
 		_ = CheckRepoChanges()
 	}
 }
