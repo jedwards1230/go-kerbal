@@ -22,5 +22,5 @@ go.work
 
 config.json
 go-kerbal
-debug.log
-data.db
+*debug.log
+*data.db

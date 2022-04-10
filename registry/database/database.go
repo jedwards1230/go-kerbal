@@ -113,14 +113,11 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 // Checks for changes to the repo by comparing commit hashes
 //
 // Returns true if changes were detected
-//
-// TODO: look into using git.Repository instead of git.Remote. Which is better?
 func CheckRepoChanges() bool {
 	log.Println("Checking repo for changes")
 
 	// Load metadata repo
 	cfg := config.GetConfig()
-	log.Printf("config: %v", cfg.Settings.MetaRepo)
 	storer := memory.NewStorage()
 	rem := git.NewRemote(storer, &gitConfig.RemoteConfig{
 		Name: "master",
