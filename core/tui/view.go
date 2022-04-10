@@ -167,7 +167,7 @@ func (b Bubble) statusBarView() string {
 	var status = "Status: " + b.logs[len(b.logs)-1]
 
 	width := lipgloss.Width
-	var fileCount = fmt.Sprintf("%d/%d", b.cursor+1, len(b.registry.ModList))
+	var fileCount = fmt.Sprintf("Mod: %d/%d", b.cursor+1, len(b.registry.ModList))
 
 	fileCountStyle := constants.BoldTextStyle.Copy()
 	fileCountColumn := fileCountStyle.
@@ -176,19 +176,29 @@ func (b Bubble) statusBarView() string {
 		Height(constants.StatusBarHeight).
 		Render(fileCount)
 
+	sortOptions := fmt.Sprintf("Sort Options: %s by %s", b.sortOptions.SortOrder, b.sortOptions.SortTag)
+
+	sortOptionsStyle := constants.BoldTextStyle.Copy()
+	sortOptionsColumn := sortOptionsStyle.
+		Align(lipgloss.Right).
+		Padding(0, 3).
+		Height(constants.StatusBarHeight).
+		Render(sortOptions)
+
 	statusStyle := constants.BoldTextStyle.Copy()
 	statusColumn := statusStyle.
 		Padding(0, 1).
 		Height(constants.StatusBarHeight).
-		Width(b.width - width(fileCountColumn)).
+		Width(b.width - width(fileCountColumn) - width(sortOptionsColumn)).
 		Render(truncate.StringWithTail(
 			status,
-			uint(b.width-width(fileCountColumn)-3),
+			uint(b.width-width(fileCountColumn)-width(sortOptionsColumn)-3),
 			"..."),
 		)
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		statusColumn,
+		sortOptionsColumn,
 		fileCountColumn,
 	)
 }
