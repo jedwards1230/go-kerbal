@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -56,43 +57,38 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 //
 // TODO: add paths for linux and windows
 func FindKspPath() (string, error) {
-	path := ""
+	var home string
 	if runtime.GOOS == "darwin" {
 		log.Printf("MacOS detected")
-		home, _ := os.UserHomeDir()
+		home, _ = os.UserHomeDir()
 		home += "/Library/Application Support/Steam/steamapps"
-		err := filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
 
-			if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
-				path = s
-			}
-			return nil
-		})
-		if err != nil {
-			return path, err
-		}
 	} else if runtime.GOOS == "windows" {
 		log.Printf("Windows OS detected")
-		home := "C:\\Program Files (x86)\\steam\\SteamApps\\common"
-		err := filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
+		home = "C:\\Program Files (x86)\\steam\\SteamApps\\common"
 
-			if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
-				path = s
-			}
-			return nil
-		})
-		if err != nil {
-			return path, err
-		}
 	} else if runtime.GOOS == "linux" {
 		log.Printf("Linux OS detected")
-		path = "/FIXME"
+		return "/FIXME", nil
+	}
+
+	path := ""
+	log.Printf("Searching directory: %s", home)
+	err := filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
+			path = s
+			return io.EOF
+		}
+		return nil
+	})
+	if err == io.EOF {
+		err = nil
+	} else if err != nil {
+		return path, err
 	}
 
 	if path == "" {
