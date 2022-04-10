@@ -10,6 +10,8 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+var db *CkanDB
+
 func TestMain(m *testing.M) {
 	f, err := os.OpenFile(dirfs.RootDir()+"/test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
@@ -24,7 +26,7 @@ func TestMain(m *testing.M) {
 
 	config.LoadConfig()
 	log.Printf("Initializing test-db")
-	db, err := GetTestDB()
+	db, err = GetTestDB()
 	if err != nil {
 		log.Print(err)
 	}
@@ -54,37 +56,9 @@ func GetTestDB() (*CkanDB, error) {
 	return db, err
 }
 func TestUpdateDB(t *testing.T) {
-	db, err := GetTestDB()
-	if err != nil {
-		t.Errorf("Error getting database %v", err)
-	}
-	err = db.UpdateDB(true)
+	err := db.UpdateDB(true)
 	if err != nil {
 		t.Errorf("Error updating database %v", err)
-	}
-}
-
-func TestGetModList(t *testing.T) {
-	db, err := GetTestDB()
-	if err != nil {
-		t.Errorf("Error getting database %v", err)
-	}
-	modlist := db.GetModList()
-	if modlist == nil && len(modlist) > 0 {
-		t.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modlist), modlist)
-	}
-}
-
-func BenchmarkGetModList(b *testing.B) {
-	db, err := GetTestDB()
-	if err != nil {
-		b.Errorf("Error getting database %v", err)
-	}
-	for n := 0; n < b.N; n++ {
-		modlist := db.GetModList()
-		if modlist == nil && len(modlist) > 0 {
-			b.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modlist), modlist)
-		}
 	}
 }
 

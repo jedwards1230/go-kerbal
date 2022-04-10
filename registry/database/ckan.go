@@ -27,7 +27,8 @@ type Ckan struct {
 	SearchTags           map[string]interface{}
 	ModDepends           map[string]interface{}
 	ModConflicts         map[string]interface{}
-	raw                  map[string]interface{}
+	Raw                  map[string]interface{}
+	IsCompatible         bool
 	SpecVersion          *version.Version
 	Version              *version.Version
 	VersionKspMax        *version.Version
@@ -46,7 +47,7 @@ type resource struct {
 }
 
 // Initialize struct values in-place
-func (c *Ckan) init() error {
+func (c *Ckan) Init() error {
 	err := c.cleanNames()
 	if err != nil {
 		return err
@@ -67,6 +68,8 @@ func (c *Ckan) init() error {
 		return err
 	}
 
+	c.IsCompatible = c.CheckCompatible()
+
 	_ = c.cleanAbstract()
 
 	err = c.cleanLicense()
@@ -83,7 +86,7 @@ func (c *Ckan) init() error {
 }
 
 func (c *Ckan) cleanNames() error {
-	c.Name = strings.TrimSpace(c.raw["name"].(string))
+	c.Name = strings.TrimSpace(c.Raw["name"].(string))
 	if c.Name == "" {
 		return errors.New("invalid file name")
 	}
@@ -93,7 +96,7 @@ func (c *Ckan) cleanNames() error {
 }
 
 func (c *Ckan) cleanIdentifiers() error {
-	c.Identifier = strings.TrimSpace(c.raw["identifier"].(string))
+	c.Identifier = strings.TrimSpace(c.Raw["identifier"].(string))
 	if c.Identifier == "" {
 		return errors.New("invalid file identifier")
 	}
@@ -104,7 +107,7 @@ func (c *Ckan) cleanIdentifiers() error {
 
 // TODO: organize into one author field
 func (c *Ckan) cleanAuthors() error {
-	switch author := c.raw["author"].(type) {
+	switch author := c.Raw["author"].(type) {
 	case []interface{}:
 		for i, v := range author {
 			c.Authors = append(c.Authors, v.(string))
@@ -124,7 +127,7 @@ func (c *Ckan) cleanAuthors() error {
 }
 
 func (c *Ckan) cleanVersions() error {
-	v := c.raw["version"]
+	v := c.Raw["version"]
 	if v != nil {
 		modVersion, epoch, err := c.cleanModVersion(v.(string))
 		if err != nil {
@@ -134,7 +137,7 @@ func (c *Ckan) cleanVersions() error {
 		c.Version = modVersion
 		c.Epoch = epoch
 
-		v = c.raw["ksp_version_max"]
+		v = c.Raw["ksp_version_max"]
 		if v != nil {
 			vMax, _, err := c.cleanModVersion(v.(string))
 			if err != nil {
@@ -143,7 +146,7 @@ func (c *Ckan) cleanVersions() error {
 			c.VersionKspMax = vMax
 		}
 
-		v = c.raw["ksp_version_min"]
+		v = c.Raw["ksp_version_min"]
 		if v != nil {
 			vMin, _, err := c.cleanModVersion(v.(string))
 			if err != nil {
@@ -158,7 +161,7 @@ func (c *Ckan) cleanVersions() error {
 }
 
 func (c *Ckan) cleanAbstract() error {
-	c.Abstract = strings.TrimSpace(c.raw["abstract"].(string))
+	c.Abstract = strings.TrimSpace(c.Raw["abstract"].(string))
 	if c.Abstract == "" {
 		c.SearchableAbstract = ""
 		return errors.New("invalid abstract")
@@ -169,14 +172,14 @@ func (c *Ckan) cleanAbstract() error {
 }
 
 func (c *Ckan) cleanLicense() error {
-	switch license := c.raw["license"].(type) {
+	switch license := c.Raw["license"].(type) {
 	case []interface{}:
 		for _, v := range license {
 			c.License = v.(string)
 			break
 		}
 	case string:
-		c.License = strings.TrimSpace(c.raw["license"].(string))
+		c.License = strings.TrimSpace(c.Raw["license"].(string))
 		if c.License == "" {
 			return errors.New("invalid license")
 		}
@@ -188,7 +191,7 @@ func (c *Ckan) cleanLicense() error {
 }
 
 func (c *Ckan) cleanDownload() error {
-	c.Download = strings.TrimSpace(c.raw["download"].(string))
+	c.Download = strings.TrimSpace(c.Raw["download"].(string))
 	if c.Download == "" {
 		return errors.New("invalid download path")
 	}

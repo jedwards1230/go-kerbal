@@ -1,7 +1,6 @@
 package database
 
 import (
-	"encoding/json"
 	"log"
 	"strconv"
 
@@ -25,35 +24,6 @@ func GetDB() *CkanDB {
 	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
 	db := &CkanDB{database}
 	return db
-}
-
-// Get list of Ckan objects from database
-func (db *CkanDB) GetModList() []Ckan {
-	log.Println("Gathering mod list from database")
-
-	var ckan Ckan
-	var modList []Ckan
-	db.View(func(tx *buntdb.Tx) error {
-		tx.Ascend("", func(_, value string) bool {
-			err := json.Unmarshal([]byte(value), &ckan.raw)
-			if err != nil {
-				log.Printf("Error loading Ckan.raw struct: %v", err)
-			}
-
-			// initialize struct values
-			err = ckan.init()
-			if err != nil {
-				log.Printf("Error initializing ckan: %v", err)
-			}
-
-			modList = append(modList, ckan)
-			return true
-		})
-
-		return nil
-	})
-	log.Printf("Loaded %v mods from database", len(modList))
-	return modList
 }
 
 // Update the database by checking the repo and applying any new changes

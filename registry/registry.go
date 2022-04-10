@@ -1,11 +1,13 @@
 package registry
 
 import (
+	"encoding/json"
 	"log"
 	"sort"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/registry/database"
+	"github.com/tidwall/buntdb"
 )
 
 type Registry struct {
@@ -53,15 +55,43 @@ func (r *Registry) SortModList(opts SortOptions) {
 	r.ModList = sortedModList
 }
 
+// Get list of Ckan objects from database
+func (r *Registry) GetModList() []database.Ckan {
+	log.Println("Gathering mod list from database")
+
+	var ckan database.Ckan
+	var newList []database.Ckan
+	r.DB.View(func(tx *buntdb.Tx) error {
+		tx.Ascend("", func(_, value string) bool {
+			err := json.Unmarshal([]byte(value), &ckan.Raw)
+			if err != nil {
+				log.Printf("Error loading Ckan.raw struct: %v", err)
+			}
+
+			// initialize struct values
+			err = ckan.Init()
+			if err != nil {
+				log.Printf("Error initializing ckan: %v", err)
+			}
+
+			newList = append(newList, ckan)
+			return true
+		})
+		return nil
+	})
+	log.Printf("Loaded %v mods from database", len(newList))
+	return newList
+}
+
 // Filter out incompatible mods if config is set
 func getCompatibleModList(modList []database.Ckan) []database.Ckan {
 	countGood := 0
 	countBad := 0
 	var compatibleModList []database.Ckan
-	for _, mod := range modList {
-		if mod.CheckCompatible() {
+	for i := range modList {
+		if modList[i].IsCompatible {
 			countGood += 1
-			compatibleModList = append(compatibleModList, mod)
+			compatibleModList = append(compatibleModList, modList[i])
 		} else {
 			countBad += 1
 		}
