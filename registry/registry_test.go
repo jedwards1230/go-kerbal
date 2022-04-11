@@ -55,7 +55,7 @@ func GetTestDB() (*database.CkanDB, error) {
 	if err != nil {
 		return db, err
 	}
-	db = &database.CkanDB{data}
+	db = &database.CkanDB{DB: data}
 	return db, err
 }
 

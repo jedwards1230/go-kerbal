@@ -86,33 +86,21 @@ func (c *Ckan) Init(raw map[string]interface{}) error {
 }
 
 func (c *Ckan) cleanNames(raw map[string]interface{}) error {
-	switch name := raw["name"].(type) {
-	case string:
-		c.Name = strings.TrimSpace(raw["name"].(string))
-		if c.Name == "" {
-			return errors.New("invalid file name")
-		}
-		c.SearchableName = dirfs.Strip(c.Name)
-	default:
-		log.Printf("Alternative cleanNames type: %v", name)
-		log.Printf("Alternative cleanNames type: %v", raw["name"])
-		log.Panicf("%v", raw)
+	c.Name = strings.TrimSpace(raw["name"].(string))
+	if c.Name == "" {
+		return errors.New("invalid file name")
 	}
+	c.SearchableName = dirfs.Strip(c.Name)
 
 	return nil
 }
 
 func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
-	switch id := raw["identifier"].(type) {
-	case string:
-		c.Identifier = strings.TrimSpace(string(id))
-		if c.Identifier == "" {
-			return errors.New("invalid file identifier")
-		}
-		c.SearchableIdentifier = dirfs.Strip(c.Name)
-	default:
-		log.Printf("Identifier mismatch: %T, %v", id, id)
+	c.Identifier = strings.TrimSpace(raw["identifier"].(string))
+	if c.Identifier == "" {
+		return errors.New("invalid file identifier")
 	}
+	c.SearchableIdentifier = dirfs.Strip(c.Name)
 
 	return nil
 }
@@ -207,13 +195,12 @@ func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 	switch download := raw["download"].(type) {
 	case string:
 		c.Download = strings.TrimSpace(string(download))
-		if c.Download == "" {
-			return errors.New("invalid download path")
-		}
 	default:
-		return errors.New("download is nil")
+		c.Download = ""
 	}
-
+	if c.Download == "" {
+		return errors.New("invalid download path")
+	}
 	return nil
 }
 
