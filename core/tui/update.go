@@ -148,12 +148,12 @@ func (b *Bubble) checkActiveViewPortBounds() {
 			b.primaryViewport.LineDown(1)
 		}
 
-		if b.cursor > len(b.registry.ModList)-1 {
-			b.primaryViewport.GotoTop()
+		if b.cursor > len(b.registry.SortedModList)-1 {
 			b.cursor = 0
+			b.primaryViewport.GotoTop()
 		} else if b.cursor < 0 {
+			b.cursor = len(b.registry.SortedModList) - 1
 			b.primaryViewport.GotoBottom()
-			b.cursor = len(b.registry.ModList) - 1
 		}
 	case constants.SecondaryBoxActive:
 		if b.secondaryViewport.AtBottom() {
@@ -177,9 +177,11 @@ func (b *Bubble) scrollView(dir string) {
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
 			b.cursor--
+			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 		case constants.SecondaryBoxActive:
 			b.secondaryViewport.LineUp(1)
+			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 		case constants.SplashBoxActive:
 			b.splashViewport.LineUp(1)
@@ -189,12 +191,15 @@ func (b *Bubble) scrollView(dir string) {
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
 			b.cursor++
+			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 		case constants.SecondaryBoxActive:
 			b.secondaryViewport.LineDown(1)
+			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 		case constants.SplashBoxActive:
 			b.splashViewport.LineDown(1)
+			b.checkActiveViewPortBounds()
 			b.splashViewport.SetContent(b.logView())
 		}
 	default:
