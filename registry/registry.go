@@ -11,8 +11,10 @@ import (
 )
 
 type Registry struct {
-	// List of mods in the database
+	// Base list of mods in the database
 	ModList []database.Ckan
+	// Sorted list of mods in the database
+	SortedModList []database.Ckan
 	// Database for handling CKAN files
 	DB *database.CkanDB
 }
@@ -52,7 +54,7 @@ func (r *Registry) SortModList(opts SortOptions) {
 	sortedModList = getSortedModList(sortedModList, opts.SortTag, opts.SortOrder)
 
 	log.Printf("Sort result: %d/%d", len(sortedModList), len(r.ModList))
-	r.ModList = sortedModList
+	r.SortedModList = sortedModList
 }
 
 // Get list of Ckan objects from database
@@ -63,15 +65,9 @@ func (r *Registry) GetModList() []database.Ckan {
 	var newList []database.Ckan
 	r.DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
-			err := json.Unmarshal([]byte(value), &ckan.Raw)
+			err := json.Unmarshal([]byte(value), &ckan)
 			if err != nil {
-				log.Printf("Error loading Ckan.raw struct: %v", err)
-			}
-
-			// initialize struct values
-			err = ckan.Init()
-			if err != nil {
-				log.Printf("Error initializing ckan: %v", err)
+				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
 			newList = append(newList, ckan)
@@ -79,6 +75,7 @@ func (r *Registry) GetModList() []database.Ckan {
 		})
 		return nil
 	})
+
 	log.Printf("Loaded %v mods from database", len(newList))
 	return newList
 }

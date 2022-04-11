@@ -27,12 +27,11 @@ type Ckan struct {
 	SearchTags           map[string]interface{}
 	ModDepends           map[string]interface{}
 	ModConflicts         map[string]interface{}
-	Raw                  map[string]interface{}
 	IsCompatible         bool
-	SpecVersion          *version.Version
-	Version              *version.Version
-	VersionKspMax        *version.Version
-	VersionKspMin        *version.Version
+	SpecVersion          string
+	Version              string
+	VersionKspMax        string
+	VersionKspMin        string
 	searchableAuthor     []string
 	SearchableName       string
 	SearchableAbstract   string
@@ -47,37 +46,38 @@ type resource struct {
 }
 
 // Initialize struct values in-place
-func (c *Ckan) Init() error {
-	err := c.cleanNames()
+func (c *Ckan) Init(raw map[string]interface{}) error {
+	err := c.cleanNames(raw)
 	if err != nil {
 		return err
 	}
 
-	err = c.cleanIdentifiers()
+	err = c.cleanIdentifiers(raw)
 	if err != nil {
 		return err
 	}
 
-	err = c.cleanAuthors()
+	err = c.cleanAuthors(raw)
 	if err != nil {
 		return err
 	}
 
-	err = c.cleanVersions()
+	err = c.cleanVersions(raw)
 	if err != nil {
+		log.Printf("cleanVersions error: %v", err)
 		return err
 	}
 
 	c.IsCompatible = c.CheckCompatible()
 
-	_ = c.cleanAbstract()
+	_ = c.cleanAbstract(raw)
 
-	err = c.cleanLicense()
+	err = c.cleanLicense(raw)
 	if err != nil {
 		return err
 	}
 
-	err = c.cleanDownload()
+	err = c.cleanDownload(raw)
 	if err != nil {
 		return err
 	}
@@ -85,29 +85,41 @@ func (c *Ckan) Init() error {
 	return err
 }
 
-func (c *Ckan) cleanNames() error {
-	c.Name = strings.TrimSpace(c.Raw["name"].(string))
-	if c.Name == "" {
-		return errors.New("invalid file name")
+func (c *Ckan) cleanNames(raw map[string]interface{}) error {
+	switch name := raw["name"].(type) {
+	case string:
+		c.Name = strings.TrimSpace(raw["name"].(string))
+		if c.Name == "" {
+			return errors.New("invalid file name")
+		}
+		c.SearchableName = dirfs.Strip(c.Name)
+	default:
+		log.Printf("Alternative cleanNames type: %v", name)
+		log.Printf("Alternative cleanNames type: %v", raw["name"])
+		log.Panicf("%v", raw)
 	}
-	c.SearchableName = dirfs.Strip(c.Name)
 
 	return nil
 }
 
-func (c *Ckan) cleanIdentifiers() error {
-	c.Identifier = strings.TrimSpace(c.Raw["identifier"].(string))
-	if c.Identifier == "" {
-		return errors.New("invalid file identifier")
+func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
+	switch id := raw["identifier"].(type) {
+	case string:
+		c.Identifier = strings.TrimSpace(string(id))
+		if c.Identifier == "" {
+			return errors.New("invalid file identifier")
+		}
+		c.SearchableIdentifier = dirfs.Strip(c.Name)
+	default:
+		log.Printf("Identifier mismatch: %T, %v", id, id)
 	}
-	c.SearchableIdentifier = dirfs.Strip(c.Name)
 
 	return nil
 }
 
 // TODO: organize into one author field
-func (c *Ckan) cleanAuthors() error {
-	switch author := c.Raw["author"].(type) {
+func (c *Ckan) cleanAuthors(raw map[string]interface{}) error {
+	switch author := raw["author"].(type) {
 	case []interface{}:
 		for i, v := range author {
 			c.Authors = append(c.Authors, v.(string))
@@ -126,8 +138,8 @@ func (c *Ckan) cleanAuthors() error {
 	return nil
 }
 
-func (c *Ckan) cleanVersions() error {
-	v := c.Raw["version"]
+func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
+	v := raw["version"]
 	if v != nil {
 		modVersion, epoch, err := c.cleanModVersion(v.(string))
 		if err != nil {
@@ -137,7 +149,7 @@ func (c *Ckan) cleanVersions() error {
 		c.Version = modVersion
 		c.Epoch = epoch
 
-		v = c.Raw["ksp_version_max"]
+		v = raw["ksp_version_max"]
 		if v != nil {
 			vMax, _, err := c.cleanModVersion(v.(string))
 			if err != nil {
@@ -146,7 +158,7 @@ func (c *Ckan) cleanVersions() error {
 			c.VersionKspMax = vMax
 		}
 
-		v = c.Raw["ksp_version_min"]
+		v = raw["ksp_version_min"]
 		if v != nil {
 			vMin, _, err := c.cleanModVersion(v.(string))
 			if err != nil {
@@ -160,26 +172,27 @@ func (c *Ckan) cleanVersions() error {
 	}
 }
 
-func (c *Ckan) cleanAbstract() error {
-	c.Abstract = strings.TrimSpace(c.Raw["abstract"].(string))
+func (c *Ckan) cleanAbstract(raw map[string]interface{}) error {
+	c.Abstract = strings.TrimSpace(raw["abstract"].(string))
 	if c.Abstract == "" {
 		c.SearchableAbstract = ""
 		return errors.New("invalid abstract")
 	}
+	// TODO: strip common words (a, the, and, etc.)
 	c.SearchableAbstract = dirfs.Strip(c.Abstract)
 
 	return nil
 }
 
-func (c *Ckan) cleanLicense() error {
-	switch license := c.Raw["license"].(type) {
+func (c *Ckan) cleanLicense(raw map[string]interface{}) error {
+	switch license := raw["license"].(type) {
 	case []interface{}:
 		for _, v := range license {
 			c.License = v.(string)
 			break
 		}
 	case string:
-		c.License = strings.TrimSpace(c.Raw["license"].(string))
+		c.License = strings.TrimSpace(raw["license"].(string))
 		if c.License == "" {
 			return errors.New("invalid license")
 		}
@@ -190,10 +203,15 @@ func (c *Ckan) cleanLicense() error {
 	return nil
 }
 
-func (c *Ckan) cleanDownload() error {
-	c.Download = strings.TrimSpace(c.Raw["download"].(string))
-	if c.Download == "" {
-		return errors.New("invalid download path")
+func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
+	switch download := raw["download"].(type) {
+	case string:
+		c.Download = strings.TrimSpace(string(download))
+		if c.Download == "" {
+			return errors.New("invalid download path")
+		}
+	default:
+		return errors.New("download is nil")
 	}
 
 	return nil
@@ -202,9 +220,9 @@ func (c *Ckan) cleanDownload() error {
 // Clean version string
 //
 // Returns Version, Epoch, and any errors
-func (c *Ckan) cleanModVersion(rawVersion string) (*version.Version, string, error) {
-	var v *version.Version
+func (c *Ckan) cleanModVersion(rawVersion string) (string, string, error) {
 	var epoch string
+	var cleanVersion string
 
 	if strings.Contains(rawVersion, ":") {
 		s := strings.Split(rawVersion, ":")
@@ -224,17 +242,17 @@ func (c *Ckan) cleanModVersion(rawVersion string) (*version.Version, string, err
 			rawVersion = strings.ReplaceAll(rawVersion, "]", "")
 		}
 
-		fixedVersion, err := version.NewVersion(rawVersion)
+		newVersion, err = version.NewVersion(rawVersion)
 		if err != nil {
 			// TODO: Better version cleaning
-			/* log.Printf("BAD VERSION: %v", err)
-			log.Printf("raw: %v", c.raw["version"].(string))
-			log.Printf("final: %s\n", rawVersion) */
-			return v, epoch, err
+			return "", "", err
 		}
-		return fixedVersion, epoch, nil
+		cleanVersion = newVersion.String()
+		return cleanVersion, epoch, nil
 	}
-	return newVersion, epoch, nil
+
+	cleanVersion = newVersion.String()
+	return cleanVersion, epoch, nil
 }
 
 // Compares installed KSP version to min/max compatible for the mod.
@@ -248,14 +266,21 @@ func (c *Ckan) CheckCompatible() bool {
 		log.Printf("Error with kerbal version: %v", err)
 	}
 
-	if c.VersionKspMin != nil {
-		if !c.VersionKspMin.LessThanOrEqual(kerbalVer) {
+	if c.VersionKspMin != "" {
+		min, err := version.NewVersion(c.VersionKspMin)
+		if err != nil {
+			log.Printf("Error with kerbal min version: %v", err)
+		}
+		if min.GreaterThan(kerbalVer) {
 			return false
 		}
-
 	}
-	if c.VersionKspMax != nil {
-		if !c.VersionKspMax.GreaterThanOrEqual(kerbalVer) {
+	if c.VersionKspMax != "" {
+		max, err := version.NewVersion(c.VersionKspMax)
+		if err != nil {
+			log.Printf("Error with kerbal min version: %v", err)
+		}
+		if max.LessThan(kerbalVer) {
 			return false
 		}
 	}

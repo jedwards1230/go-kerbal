@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -142,23 +141,6 @@ func FindKspVersion(filePath string) *version.Version {
 	}
 
 	return result
-}
-
-// Parse .ckan file into JSON string
-func ParseCKAN(repo billy.Filesystem, filePath string) (string, error) {
-	file, err := repo.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	// parse ckan data
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
-
-	return string(byteValue), nil
 }
 
 // Strip string of non-alphanumeric characters

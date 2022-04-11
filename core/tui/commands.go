@@ -10,6 +10,7 @@ type ModListUpdatedMsg []database.Ckan
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
+		b.registry.DB.UpdateDB(false)
 		updatedModList := b.registry.GetModList()
 		if len(updatedModList) == 0 {
 			b.registry.DB.UpdateDB(true)

@@ -1,9 +1,13 @@
 package database
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"strconv"
 
+	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	gitConfig "github.com/go-git/go-git/v5/config"
@@ -30,13 +34,8 @@ func GetDB() *CkanDB {
 //
 // TODO: compare speeds between downloading to memory vs storage. currently uses <= 7GB of memory on git clones.
 func (db *CkanDB) UpdateDB(force_update bool) error {
-	cfg := config.GetConfig()
-
-	idxs, err := db.Indexes()
-	if err != nil {
-		return err
-	}
-	if !force_update && len(idxs) > 1 {
+	log.Printf("Updating DB. Force Update: %v", force_update)
+	if !force_update {
 		changes := CheckRepoChanges()
 		if !changes {
 			log.Printf("No repo changes detected")
@@ -44,40 +43,69 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 		}
 	}
 
-	log.Println("Cloning database repo")
-	// Pull metadata repo
-	fs := memfs.New()
-	storer := memory.NewStorage()
-	r, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL: cfg.Settings.MetaRepo,
-	})
+	fs, err := cloneRepo()
 	if err != nil {
 		log.Printf("Error cloning repo: %v", err)
+		return err
 	}
-
-	ref, err := r.Head()
-	if err != nil {
-		log.Printf("Error collecting HEAD: %v", err)
-	}
-
-	viper.Set("settings.last_repo_hash", ref.Hash().String())
-	viper.WriteConfigAs(viper.ConfigFileUsed())
 
 	// get currently downloaded ckans
-	log.Printf("Updating DB entries")
+	log.Printf("Searching for .ckan files")
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
+	log.Printf("Cleaning .ckan files and adding to database")
+	var ckan Ckan
 	err = db.Update(func(tx *buntdb.Tx) error {
 		for i := range filesToScan {
-			modJSON, _ := dirfs.ParseCKAN(fs, filesToScan[i])
+			// Parse .ckan from repo into JSON
+			ckan, _ = parseCKAN(fs, filesToScan[i])
+
+			// Ckan to JSON
+			b, err := json.Marshal(ckan)
+			if err != nil {
+				fmt.Printf("Error: %s", err)
+				return err
+			}
+
+			// Store in DB
 			key := strconv.Itoa(i)
-			tx.Set(key, modJSON, nil)
+			tx.Set(key, string(b), nil)
 		}
 		return nil
 	})
-	log.Println("Database updated")
+	log.Printf("Database updated with %d entries", len(filesToScan))
 	return err
+}
+
+// Parse .ckan file into JSON string
+func parseCKAN(repo billy.Filesystem, filePath string) (Ckan, error) {
+	var ckan Ckan
+
+	// Read .ckan from filesystem
+	file, err := repo.Open(filePath)
+	if err != nil {
+		return ckan, err
+	}
+	defer file.Close()
+
+	// parse ckan data
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		return ckan, err
+	}
+
+	// Store .ckan in struct and interface
+	var raw map[string]interface{}
+	err = json.Unmarshal(byteValue, &raw)
+	if err != nil {
+		return ckan, err
+	}
+
+	// clean extra data into struct
+	ckan.Init(raw)
+
+	return ckan, nil
 }
 
 // Checks for changes to the repo by comparing commit hashes
@@ -112,6 +140,31 @@ func CheckRepoChanges() bool {
 		}
 	}
 	return true
+}
+
+func cloneRepo() (billy.Filesystem, error) {
+	cfg := config.GetConfig()
+	log.Println("Cloning database repo")
+	// Pull metadata repo
+	fs := memfs.New()
+	storer := memory.NewStorage()
+	r, err := git.Clone(storer, fs, &git.CloneOptions{
+		URL:   cfg.Settings.MetaRepo,
+		Depth: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ref, err := r.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	viper.Set("settings.last_repo_hash", ref.Hash().String())
+	viper.WriteConfigAs(viper.ConfigFileUsed())
+
+	return fs, nil
 }
 
 /* func compareVersions(stored, mod Ckan, i int) {

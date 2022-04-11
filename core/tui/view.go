@@ -81,7 +81,7 @@ func (b Bubble) View() string {
 func (b Bubble) modListView() string {
 	// construct list
 	s := "\n  Mod List\n\n"
-	for i, mod := range b.registry.ModList {
+	for i, mod := range b.registry.SortedModList {
 		cursor := " "
 		if b.cursor == i {
 			cursor = ">"
@@ -167,7 +167,7 @@ func (b Bubble) statusBarView() string {
 	var status = "Status: " + b.logs[len(b.logs)-1]
 
 	width := lipgloss.Width
-	var fileCount = fmt.Sprintf("Mod: %d/%d", b.cursor+1, len(b.registry.ModList))
+	var fileCount = fmt.Sprintf("Mod: %d/%d", b.cursor+1, len(b.registry.SortedModList))
 
 	fileCountStyle := constants.BoldTextStyle.Copy()
 	fileCountColumn := fileCountStyle.
