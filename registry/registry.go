@@ -104,8 +104,8 @@ func getUniqueModList(modList []database.Ckan) []database.Ckan {
 	countGood := 0
 	countBad := 0
 	for _, mod := range modList {
+		// TODO: Compare mod versions
 		if idList[mod.Identifier] {
-			// TODO: Compare versions
 			countBad += 1
 		} else {
 			sortedModList = append(sortedModList, mod)

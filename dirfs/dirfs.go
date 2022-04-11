@@ -54,7 +54,7 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 
 // Find root directory of KSP
 //
-// TODO: add paths for linux and windows
+// TODO: add paths for linux
 func FindKspPath() (string, error) {
 	var home string
 	if runtime.GOOS == "darwin" {
