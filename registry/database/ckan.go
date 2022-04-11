@@ -18,7 +18,6 @@ type Ckan struct {
 	Identifier           string
 	Name                 string
 	Author               string
-	Authors              []string
 	Abstract             string
 	Download             string
 	License              string
@@ -32,7 +31,6 @@ type Ckan struct {
 	Version              string
 	VersionKspMax        string
 	VersionKspMin        string
-	searchableAuthor     []string
 	SearchableName       string
 	SearchableAbstract   string
 	SearchableIdentifier string
@@ -105,20 +103,23 @@ func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
 	return nil
 }
 
-// TODO: organize into one author field
+// Clean author name data.
+//
+//
 func (c *Ckan) cleanAuthors(raw map[string]interface{}) error {
 	switch author := raw["author"].(type) {
 	case []interface{}:
-		for i, v := range author {
-			c.Authors = append(c.Authors, v.(string))
-			c.searchableAuthor = append(c.searchableAuthor, dirfs.Strip(c.Authors[i]))
+		var list []string
+		for _, v := range author {
+			val := strings.TrimSpace(v.(string))
+			list = append(list, val)
 		}
+		c.Author = strings.Join(list, ", ")
 	case string:
 		c.Author = strings.TrimSpace(author)
 		if c.Author == "" {
 			return errors.New("invalid author name")
 		}
-		c.searchableAuthor = append(c.searchableAuthor, dirfs.Strip(c.Author))
 	default:
 		return errors.New("type mismatch")
 	}
