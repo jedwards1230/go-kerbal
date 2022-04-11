@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 	"github.com/muesli/reflow/truncate"
 )
@@ -81,7 +82,7 @@ func (b Bubble) View() string {
 func (b Bubble) modListView() string {
 	// construct list
 	s := "\n  Mod List\n\n"
-	for i, mod := range b.registry.SortedModList {
+	for i := range b.registry.SortedModList {
 		cursor := " "
 		if b.cursor == i {
 			cursor = ">"
@@ -90,7 +91,7 @@ func (b Bubble) modListView() string {
 		if i == b.selected {
 			checked = "x"
 		}
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, mod.Name)
+		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, b.registry.SortedModList[i].Name)
 	}
 
 	return lipgloss.NewStyle().
@@ -102,19 +103,19 @@ func (b Bubble) modListView() string {
 func (b Bubble) modInfoView() string {
 	s := "\n"
 	if b.selected >= 0 {
-		var mod = b.registry.ModList[b.selected]
+		var mod = b.registry.SortedModList[b.selected]
 
 		s += "Mod\n\n"
 		s += fmt.Sprintf(
-			"Name: %s\n"+
-				"Identifier: %s\n\n"+
-				"Author: %s\n\n"+
-				"Version: %s\n\n"+
-				"KSP Max Version: %s\n\n"+
-				"KSP Min Version: %s\n\n"+
-				"Abstract: %s\n\n"+
-				"License: %s\n\n"+
-				"Download: %s\n\n",
+			"Name:             %s\n"+
+				"Identifier:       %s\n"+
+				"Author:           %s\n\n"+
+				"Version:          %s\n"+
+				"KSP Max Version:  %s\n"+
+				"KSP Min Version:  %s\n\n"+
+				"Abstract:         %s\n\n"+
+				"License:          %s\n\n"+
+				"Download:         %s\n\n",
 			mod.Name,
 			mod.Identifier,
 			mod.Author,
@@ -164,6 +165,7 @@ func (b Bubble) logView() string {
 }
 
 func (b Bubble) statusBarView() string {
+	cfg := config.GetConfig()
 	var status = "Status: " + b.logs[len(b.logs)-1]
 
 	width := lipgloss.Width
@@ -176,7 +178,7 @@ func (b Bubble) statusBarView() string {
 		Height(constants.StatusBarHeight).
 		Render(fileCount)
 
-	sortOptions := fmt.Sprintf("Sort Options: %s by %s", b.sortOptions.SortOrder, b.sortOptions.SortTag)
+	sortOptions := fmt.Sprintf("Sort: %s by %s", b.sortOptions.SortOrder, b.sortOptions.SortTag)
 
 	sortOptionsStyle := constants.BoldTextStyle.Copy()
 	sortOptionsColumn := sortOptionsStyle.
@@ -185,20 +187,35 @@ func (b Bubble) statusBarView() string {
 		Height(constants.StatusBarHeight).
 		Render(sortOptions)
 
+	var showCompatible string
+	if cfg.Settings.HideIncompatibleMods {
+		showCompatible = "Hide incompatible mods"
+	} else {
+		showCompatible = "Show incompatible mods"
+	}
+
+	showCompatibleStyle := constants.BoldTextStyle.Copy()
+	showCompatibleColumn := showCompatibleStyle.
+		Align(lipgloss.Right).
+		Padding(0, 3).
+		Height(constants.StatusBarHeight).
+		Render(showCompatible)
+
 	statusStyle := constants.BoldTextStyle.Copy()
 	statusColumn := statusStyle.
 		Padding(0, 1).
 		Height(constants.StatusBarHeight).
-		Width(b.width - width(fileCountColumn) - width(sortOptionsColumn)).
+		Width(b.width - width(fileCountColumn) - width(sortOptionsColumn) - width(showCompatibleColumn)).
 		Render(truncate.StringWithTail(
 			status,
-			uint(b.width-width(fileCountColumn)-width(sortOptionsColumn)-3),
+			uint(b.width-width(fileCountColumn)-width(sortOptionsColumn)-width(showCompatibleColumn)-3),
 			"..."),
 		)
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		statusColumn,
 		sortOptionsColumn,
+		showCompatibleColumn,
 		fileCountColumn,
 	)
 }
