@@ -22,24 +22,18 @@ type (
 		HideIncompatibleMods bool   `mapstructure:"hide_incompatible"`
 	}
 
-	SyntaxThemeConfig struct {
-		Light string `mapstructure:"light"`
-		Dark  string `mapstructure:"dark"`
-	}
-
 	ThemeConfig struct {
-		AppTheme    string            `mapstructure:"app_theme"`
-		SyntaxTheme SyntaxThemeConfig `mapstructure:"syntax_theme"`
+		AppTheme string `mapstructure:"app_theme"`
 	}
 
 	Config struct {
 		Settings SettingsConfig `mapstructure:"settings"`
-		Theme    ThemeConfig    `mapstructure:"theme"`
+		AppTheme string         `mapstructure:"app_theme"`
 	}
 )
 
 // LoadConfig loads a users config and creates the config if it does not exist
-// located at ~/.config/fm.yml.
+// located at ~/.config/config.json.
 func LoadConfig() {
 
 	/* if runtime.GOOS != "windows" {

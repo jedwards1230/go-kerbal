@@ -38,7 +38,7 @@ type Bubble struct {
 
 func InitialModel() Bubble {
 	cfg := config.GetConfig()
-	theme := theme.GetTheme(cfg.Theme.AppTheme)
+	theme := theme.GetTheme(cfg.AppTheme)
 	reg := registry.GetRegistry()
 	sortOpts := registry.SortOptions{
 		SortTag:   "name",
