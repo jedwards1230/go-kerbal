@@ -55,20 +55,21 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 // Find root directory of KSP
 //
 // TODO: add paths for linux
-func FindKspPath() (string, error) {
-	var home string
-	if runtime.GOOS == "darwin" {
-		log.Printf("MacOS detected")
-		home, _ = os.UserHomeDir()
-		home += "/Library/Application Support/Steam/steamapps"
+func FindKspPath(home string) (string, error) {
+	if home == "" {
+		if runtime.GOOS == "darwin" {
+			log.Printf("MacOS detected")
+			home, _ = os.UserHomeDir()
+			home += "/Library/Application Support/Steam/steamapps"
 
-	} else if runtime.GOOS == "windows" {
-		log.Printf("Windows OS detected")
-		home = "C:\\Program Files (x86)\\steam\\SteamApps\\common"
+		} else if runtime.GOOS == "windows" {
+			log.Printf("Windows OS detected")
+			home = "C:\\Program Files (x86)\\steam\\SteamApps\\common"
 
-	} else if runtime.GOOS == "linux" {
-		log.Printf("Linux OS detected")
-		return "/FIXME", nil
+		} else if runtime.GOOS == "linux" {
+			log.Printf("Linux OS detected")
+			return "/FIXME", nil
+		}
 	}
 
 	path := ""

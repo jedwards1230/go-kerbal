@@ -38,7 +38,7 @@ func Execute() {
 	log.Println("Starting program")
 
 	if cfg.Settings.KerbalDir == "" || cfg.Settings.KerbalVer == "" {
-		kerbalDir, err := dirfs.FindKspPath()
+		kerbalDir, err := dirfs.FindKspPath("")
 		if err != nil {
 			log.Printf("Error finding KSP folder: %v", err)
 		}

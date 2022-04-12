@@ -1,11 +1,12 @@
 package tui
 
 import (
-	"errors"
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/jedwards1230/go-kerbal/registry/database"
+	"github.com/spf13/viper"
 )
 
 type ModListUpdatedMsg []database.Ckan
@@ -26,10 +27,16 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 
 func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 	return func() tea.Msg {
-		// update config file
-		// validate directory
 		log.Printf("Input received: %s", s)
-		err := errors.New("validate directory plz")
+		kerbalDir, err := dirfs.FindKspPath(s)
+		if err == nil {
+			kerbalVer := dirfs.FindKspVersion(kerbalDir)
+			viper.Set("settings.kerbal_dir", kerbalDir)
+			viper.Set("settings.kerbal_ver", kerbalVer.String())
+			viper.WriteConfigAs(viper.ConfigFileUsed())
+			log.Printf("Kerbal dir: " + kerbalDir + "/")
+			log.Printf("Kerbal Version: %v", kerbalVer)
+		}
 		return UpdateKspDirMsg(err)
 	}
 }

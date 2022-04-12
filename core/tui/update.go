@@ -32,8 +32,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			log.Printf("Error updating ksp dir: %v", msg)
 		}
-		b.textInput.Blur()
 		b.textInput.Reset()
+		b.textInput.Blur()
+		b.inputRequested = false
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -69,7 +70,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if b.inputRequested {
 		b.splashViewport.SetContent(b.inputKspView())
 	}
-
 	b.textInput, cmd = b.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -104,6 +104,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
+			b.inputRequested = false
 		}
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
@@ -154,9 +155,9 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			b.activeBox = constants.SplashBoxActive
 			b.inputRequested = true
-			b.splashViewport.SetContent(b.inputKspView())
-			b.textInput.SetValue("")
 			b.textInput.Focus()
+			b.textInput.SetValue("")
+			b.splashViewport.SetContent(b.inputKspView())
 			cmds = append(cmds, textinput.Blink)
 		}
 	}

@@ -168,7 +168,6 @@ func (b Bubble) inputKspView() string {
 	s := "Please enter the path to your Kerbal Space Program directory:\n\n\n"
 
 	s += b.textInput.View()
-	log.Printf("input view: \n%v", b.textInput.View())
 
 	return lipgloss.NewStyle().
 		Width(b.splashViewport.Width).
