@@ -59,21 +59,23 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 
 	log.Printf("Cleaning .ckan files and adding to database")
 	var ckan Ckan
+	//var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	err = db.Update(func(tx *buntdb.Tx) error {
+		var err error
+		var byteValue []byte
 		for i := range filesToScan {
 			// Parse .ckan from repo into JSON
 			ckan, _ = parseCKAN(fs, filesToScan[i])
 
 			// Ckan to []byte]
-			b, err := json.Marshal(ckan)
+			byteValue, err = json.Marshal(ckan)
 			if err != nil {
 				fmt.Printf("Error: %s", err)
 				return err
 			}
 
 			// Store in DB
-			key := strconv.Itoa(i)
-			tx.Set(key, string(b), nil)
+			tx.Set(strconv.Itoa(i), string(byteValue), nil)
 		}
 		return nil
 	})

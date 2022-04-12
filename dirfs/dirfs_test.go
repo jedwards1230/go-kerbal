@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFindKspPath(t *testing.T) {
-	s, _ := FindKspPath()
+	s, _ := FindKspPath("")
 	if s == "" {
 		t.Errorf("Error finding KSP path: %v", s)
 	}
@@ -33,7 +33,7 @@ func TestFindKspPath(t *testing.T) {
 
 func BenchmarkFindKspPath(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		s, _ := FindKspPath()
+		s, _ := FindKspPath("")
 		if s == "" {
 			b.Errorf("Error finding KSP path: %v", s)
 		}
