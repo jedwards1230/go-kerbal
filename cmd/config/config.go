@@ -66,8 +66,6 @@ func LoadConfig() {
 	viper.SetDefault("settings.enable_mousewheel", true)
 	viper.SetDefault("settings.hide_incompatible", true)
 	viper.SetDefault("theme.app_theme", "default")
-	viper.SetDefault("theme.syntax_theme.light", "pygments")
-	viper.SetDefault("theme.syntax_theme.dark", "dracula")
 
 	if err := viper.SafeWriteConfig(); err != nil {
 		if os.IsNotExist(err) {
