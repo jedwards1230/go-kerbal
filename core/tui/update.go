@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -27,14 +28,18 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	case UpdateKspDirMsg:
-		if msg == nil {
+		if msg {
 			log.Print("Kerbal directory updated")
+			b.textInput.Reset()
+			b.textInput.SetValue(fmt.Sprintf("Success!: %v", msg))
+			b.textInput.Blur()
+			b.inputRequested = false
 		} else {
 			log.Printf("Error updating ksp dir: %v", msg)
+			b.textInput.Reset()
+			b.textInput.Placeholder = "Try again..."
 		}
-		b.textInput.Reset()
-		b.textInput.Blur()
-		b.inputRequested = false
+		b.splashViewport.SetContent(b.inputKspView())
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -104,8 +109,14 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
-			b.inputRequested = false
 		}
+	case key.Matches(msg, b.keyMap.Esc):
+		b.inputRequested = false
+		b.textInput.Reset()
+		b.textInput.Blur()
+		b.activeBox = constants.PrimaryBoxActive
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
@@ -116,11 +127,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.activeBox = constants.PrimaryBoxActive
 		}
 	case key.Matches(msg, b.keyMap.ShowLogs):
-		if b.activeBox == constants.SplashBoxActive {
+		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
 			b.activeBox = constants.PrimaryBoxActive
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		} else {
+			b.inputRequested = false
 			b.activeBox = constants.SplashBoxActive
 			b.splashViewport.SetContent(b.logView())
 			b.splashViewport.GotoBottom()
@@ -156,7 +168,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.activeBox = constants.SplashBoxActive
 			b.inputRequested = true
 			b.textInput.Focus()
-			b.textInput.SetValue("")
+			b.textInput.Placeholder = "KSP Directory..."
 			b.splashViewport.SetContent(b.inputKspView())
 			cmds = append(cmds, textinput.Blink)
 		}

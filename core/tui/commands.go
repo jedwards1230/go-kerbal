@@ -10,7 +10,7 @@ import (
 )
 
 type ModListUpdatedMsg []database.Ckan
-type UpdateKspDirMsg error
+type UpdateKspDirMsg bool
 
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
@@ -36,7 +36,8 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 			viper.WriteConfigAs(viper.ConfigFileUsed())
 			log.Printf("Kerbal dir: " + kerbalDir + "/")
 			log.Printf("Kerbal Version: %v", kerbalVer)
+			return UpdateKspDirMsg(true)
 		}
-		return UpdateKspDirMsg(err)
+		return UpdateKspDirMsg(false)
 	}
 }

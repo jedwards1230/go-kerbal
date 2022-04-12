@@ -12,6 +12,7 @@ type KeyMap struct {
 	Up       key.Binding
 	Space    key.Binding
 	Enter    key.Binding
+	Esc      key.Binding
 	SwapView key.Binding
 	ShowLogs key.Binding
 
@@ -44,6 +45,10 @@ func DefaultKeyMap() KeyMap {
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "Enter selection"),
+		),
+		Esc: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("escape", "Exit menu"),
 		),
 		SwapView: key.NewBinding(
 			key.WithKeys("tab"),
