@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
@@ -25,6 +26,14 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	case UpdateKspDirMsg:
+		if msg == nil {
+			log.Print("Kerbal directory updated")
+		} else {
+			log.Printf("Error updating ksp dir: %v", msg)
+		}
+		b.textInput.Blur()
+		b.textInput.Reset()
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -32,7 +41,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		b.splashViewport.Width = msg.Width - b.primaryViewport.Style.GetHorizontalFrameSize()
 		b.splashViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
-		b.splashViewport.SetContent(b.loadingView())
+		//b.splashViewport.SetContent(b.loadingView())
 
 		b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
 		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
@@ -57,6 +66,14 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	if b.inputRequested {
+		b.splashViewport.SetContent(b.inputKspView())
+	}
+
+	b.textInput, cmd = b.textInput.Update(msg)
+	cmds = append(cmds, cmd)
+
+	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return b, tea.Batch(cmds...)
@@ -65,7 +82,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Handles all key press events
 func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmds []tea.Cmd
-	var cmd tea.Cmd
 	cfg := config.GetConfig()
 
 	switch {
@@ -85,6 +101,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	case key.Matches(msg, b.keyMap.Enter):
+		if b.inputRequested {
+			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
+		}
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
@@ -126,10 +146,20 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	case key.Matches(msg, b.keyMap.EnterKspDir):
+		if b.activeBox == constants.SplashBoxActive {
+			b.activeBox = constants.PrimaryBoxActive
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
+		} else {
+			b.activeBox = constants.SplashBoxActive
+			b.inputRequested = true
+			b.splashViewport.SetContent(b.inputKspView())
+			b.textInput.SetValue("")
+			b.textInput.Focus()
+			cmds = append(cmds, textinput.Blink)
+		}
 	}
-	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
-
-	cmds = append(cmds, cmd)
 
 	return tea.Batch(cmds...)
 }

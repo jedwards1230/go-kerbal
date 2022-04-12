@@ -40,7 +40,7 @@ func Execute() {
 	if cfg.Settings.KerbalDir == "" || cfg.Settings.KerbalVer == "" {
 		kerbalDir, err := dirfs.FindKspPath()
 		if err != nil {
-			log.Fatalf("Error finding KSP folder: %v", err)
+			log.Printf("Error finding KSP folder: %v", err)
 		}
 		if kerbalDir == "/FIXME" {
 			viper.Set("settings.kerbal_dir", "")

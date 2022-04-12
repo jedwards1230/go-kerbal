@@ -11,12 +11,14 @@ type KeyMap struct {
 	Down     key.Binding
 	Up       key.Binding
 	Space    key.Binding
+	Enter    key.Binding
 	SwapView key.Binding
 	ShowLogs key.Binding
 
 	RefreshList      key.Binding
 	HideIncompatible key.Binding
 	SwapSortOrder    key.Binding
+	EnterKspDir      key.Binding
 }
 
 // DefaultKeyMap returns a set of pager-like default keybindings.
@@ -24,20 +26,24 @@ type KeyMap struct {
 func DefaultKeyMap() KeyMap {
 	return KeyMap{
 		Quit: key.NewBinding(
-			key.WithKeys("ctrl+c", "q"),
-			key.WithHelp("q", "quit"),
+			key.WithKeys("ctrl+c"),
+			key.WithHelp("ctrl+c", "quit"),
 		),
 		Down: key.NewBinding(
-			key.WithKeys("down", "j"),
-			key.WithHelp("↓/j", "move down"),
+			key.WithKeys("down"),
+			key.WithHelp("↓", "move down"),
 		),
 		Up: key.NewBinding(
-			key.WithKeys("up", "k"),
-			key.WithHelp("↑/k", "move up"),
+			key.WithKeys("up"),
+			key.WithHelp("↑", "move up"),
 		),
 		Space: key.NewBinding(
 			key.WithKeys(" "),
 			key.WithHelp("spacebar", "select"),
+		),
+		Enter: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Enter selection"),
 		),
 		SwapView: key.NewBinding(
 			key.WithKeys("tab"),
@@ -57,6 +63,10 @@ func DefaultKeyMap() KeyMap {
 		SwapSortOrder: key.NewBinding(
 			key.WithKeys("3"),
 			key.WithHelp("3", "swap sort order (asc/desc)"),
+		),
+		EnterKspDir: key.NewBinding(
+			key.WithKeys("4"),
+			key.WithHelp("4", "swap sort order (asc/desc)"),
 		),
 	}
 }

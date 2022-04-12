@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -12,28 +13,24 @@ import (
 )
 
 type Bubble struct {
-	// Contains config for TUI
-	appConfig config.Config
-	// Contains style details for TUI
-	theme theme.Theme
-	// Primary view (left panel)
-	primaryViewport viewport.Model
-	// Seconday view (right panel)
+	appConfig         config.Config
+	theme             theme.Theme
+	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
-	// full page view (splash panel)
-	splashViewport viewport.Model
-	// Contains mod list and db
-	registry    registry.Registry
-	sortOptions registry.SortOptions
-	help        help.Bubble
-	keyMap      KeyMap
-	ready       bool
-	activeBox   int
-	cursor      int
-	selected    int
-	width       int
-	height      int
-	logs        []string
+	splashViewport    viewport.Model
+	textInput         textinput.Model
+	inputRequested    bool
+	registry          registry.Registry
+	sortOptions       registry.SortOptions
+	help              help.Bubble
+	keyMap            KeyMap
+	ready             bool
+	activeBox         int
+	cursor            int
+	selected          int
+	width             int
+	height            int
+	logs              []string
 }
 
 func InitialModel() Bubble {
@@ -45,12 +42,23 @@ func InitialModel() Bubble {
 		SortOrder: "ascend",
 	}
 
+	iRequested := false
+	if cfg.Settings.KerbalDir == "" {
+		iRequested = true
+	}
+
 	primaryBoxBorder := lipgloss.NormalBorder()
 	primaryBoxBorderColor := theme.ActiveBoxBorderColor
 	secondaryBoxBorder := lipgloss.NormalBorder()
 	secondaryBoxBorderColor := theme.InactiveBoxBorderColor
 	splashBoxBorder := lipgloss.NormalBorder()
 	splashBoxBorderColor := theme.InactiveBoxBorderColor
+
+	t := textinput.New()
+	t.Prompt = "❯ "
+	t.CharLimit = 250
+	t.EchoMode = textinput.EchoMode(textinput.EchoNormal)
+	t.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
 	primaryVP := viewport.New(0, 0)
 	primaryVP.Style = lipgloss.NewStyle().
@@ -77,9 +85,9 @@ func InitialModel() Bubble {
 		theme.DefaultTextColor,
 		"go-kerbal help!",
 		[]help.HelpEntry{
-			{Key: "q | ctrl+c", Description: "Exit FM"},
-			{Key: "j | up", Description: "Move up"},
-			{Key: "k | down", Description: "Move down"},
+			{Key: "ctrl+c", Description: "Exit FM"},
+			{Key: "up", Description: "Move up"},
+			{Key: "down", Description: "Move down"},
 			{Key: "spacebar", Description: "Select an entry"},
 			{Key: "tab", Description: "Swap active views"},
 			{},
@@ -88,6 +96,7 @@ func InitialModel() Bubble {
 			{Key: "1", Description: "Refresh mod list"},
 			{Key: "2", Description: "Toggle hiding incompatible mods"},
 			{Key: "3", Description: "Toggle sort order (ascend/descend)"},
+			{Key: "4", Description: "Update KSP directory"},
 		})
 
 	return Bubble{
@@ -96,6 +105,8 @@ func InitialModel() Bubble {
 		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
 		splashViewport:    splashVP,
+		textInput:         t,
+		inputRequested:    iRequested,
 		registry:          reg,
 		sortOptions:       sortOpts,
 		help:              h,
@@ -108,8 +119,8 @@ func InitialModel() Bubble {
 
 func (b Bubble) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	cmd := b.getAvailableModsCmd()
-	cmds = append(cmds, cmd)
+	cmds = append(cmds, b.getAvailableModsCmd())
+	cmds = append(cmds, textinput.Blink)
 
 	b.splashViewport.SetContent(b.loadingView())
 
