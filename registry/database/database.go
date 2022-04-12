@@ -1,6 +1,7 @@
 package database
 
 import (
+	// Using standard json encoder here because benchmarks showed segmentio to be slightly slower
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -35,6 +36,7 @@ func GetDB() *CkanDB {
 // TODO: compare speeds between downloading to memory vs storage. currently uses <= 7GB of memory on git clones.
 func (db *CkanDB) UpdateDB(force_update bool) error {
 	log.Printf("Updating DB. Force Update: %v", force_update)
+	// Check if update is required
 	if !force_update {
 		changes := CheckRepoChanges()
 		if !changes {
@@ -43,13 +45,14 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 		}
 	}
 
+	// Clone repo
 	fs, err := cloneRepo()
 	if err != nil {
 		log.Printf("Error cloning repo: %v", err)
 		return err
 	}
 
-	// get currently downloaded ckans
+	// Get currently downloaded .ckan files
 	log.Printf("Searching for .ckan files")
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
@@ -61,7 +64,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 			// Parse .ckan from repo into JSON
 			ckan, _ = parseCKAN(fs, filesToScan[i])
 
-			// Ckan to JSON
+			// Ckan to []byte]
 			b, err := json.Marshal(ckan)
 			if err != nil {
 				fmt.Printf("Error: %s", err)

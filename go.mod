@@ -11,6 +11,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/hashicorp/go-version v1.4.0
 	github.com/muesli/reflow v0.3.0
+	github.com/segmentio/encoding v0.3.4
 	github.com/spf13/viper v1.10.1
 	github.com/tidwall/buntdb v1.2.9
 )
@@ -38,6 +39,7 @@ require (
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/afero v1.8.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect

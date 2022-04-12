@@ -31,16 +31,14 @@ func TestMain(m *testing.M) {
 		log.Print(err)
 	}
 
-	err = db.UpdateDB(true)
+	/* err = db.UpdateDB(true)
 	if err != nil {
 		log.Print(err)
-	}
+	} */
 
 	code := m.Run()
-	err = os.Remove(dirfs.RootDir() + "/test-data.db")
-	if err != nil {
-		log.Print(err)
-	}
+
+	DeleteTestDB()
 
 	os.Exit(code)
 }
@@ -55,10 +53,26 @@ func GetTestDB() (*CkanDB, error) {
 	db = &CkanDB{database}
 	return db, err
 }
+
+func DeleteTestDB() {
+	err := os.Remove(dirfs.RootDir() + "/test-data.db")
+	if err != nil {
+		log.Print(err)
+	}
+}
 func TestUpdateDB(t *testing.T) {
-	err := db.UpdateDB(true)
+	err := db.UpdateDB(false)
 	if err != nil {
 		t.Errorf("Error updating database %v", err)
+	}
+}
+
+func BenchmarkUpdateDB(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		err := db.UpdateDB(true)
+		if err != nil {
+			b.Errorf("Error updating database %v", err)
+		}
 	}
 }
 

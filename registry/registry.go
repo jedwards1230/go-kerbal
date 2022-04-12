@@ -1,9 +1,10 @@
 package registry
 
 import (
-	"encoding/json"
 	"log"
 	"sort"
+
+	"github.com/segmentio/encoding/json"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/registry/database"
