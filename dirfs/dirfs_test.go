@@ -24,9 +24,12 @@ func TestMain(m *testing.M) {
 }
 
 func TestFindKspPath(t *testing.T) {
-	s, _ := FindKspPath("")
-	if s == "" {
+	s, err := FindKspPath("")
+	if err != nil {
 		t.Errorf("Error finding KSP path: %v", s)
+	}
+	if s == "" {
+		log.Printf("No KSP path found")
 	}
 
 }

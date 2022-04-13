@@ -56,8 +56,8 @@ func InitialModel() Bubble {
 
 	t := textinput.New()
 	t.Prompt = "❯ "
-	t.CharLimit = 250
-	t.EchoMode = textinput.EchoMode(textinput.EchoNormal)
+	t.CharLimit = 0
+	//t.EchoMode = textinput.EchoMode(textinput.EchoNormal)
 	t.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
 	primaryVP := viewport.New(0, 0)

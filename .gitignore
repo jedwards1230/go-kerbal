@@ -24,3 +24,4 @@ config.json
 go-kerbal
 *debug.log
 *data.db
+__debug_bin
