@@ -47,7 +47,11 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		b.splashViewport.Width = msg.Width - b.primaryViewport.Style.GetHorizontalFrameSize()
 		b.splashViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
-		//b.splashViewport.SetContent(b.loadingView())
+		if b.inputRequested {
+			b.splashViewport.SetContent(b.inputKspView())
+		} else {
+			b.splashViewport.SetContent(b.logView())
+		}
 
 		b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
 		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
@@ -160,17 +164,18 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	case key.Matches(msg, b.keyMap.EnterKspDir):
-		if b.activeBox == constants.SplashBoxActive {
+		if b.activeBox == constants.SplashBoxActive && b.inputRequested {
+			b.inputRequested = false
 			b.activeBox = constants.PrimaryBoxActive
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		} else {
 			b.activeBox = constants.SplashBoxActive
 			b.inputRequested = true
-			b.textInput.Focus()
 			b.textInput.Placeholder = "KSP Directory..."
-			b.splashViewport.SetContent(b.inputKspView())
-			cmds = append(cmds, textinput.Blink)
+			b.textInput.Focus()
+			b.textInput.Reset()
+			return textinput.Blink
 		}
 	}
 
