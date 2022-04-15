@@ -58,14 +58,19 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
 	log.Printf("Cleaning .ckan files and adding to database")
-	var ckan Ckan
+	//var ckan Ckan
 	//var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	err = db.Update(func(tx *buntdb.Tx) error {
-		var err error
+		//var err error
 		var byteValue []byte
+		//ckan := Ckan{}
 		for i := range filesToScan {
 			// Parse .ckan from repo into JSON
-			ckan, _ = parseCKAN(fs, filesToScan[i])
+			ckan, err := parseCKAN(fs, filesToScan[i])
+			if err != nil {
+				//log.Printf("Error parsing CKAN: %v", err)
+				continue
+			}
 
 			// Ckan to []byte]
 			byteValue, err = json.Marshal(ckan)
@@ -84,33 +89,36 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 }
 
 // Parse .ckan file into JSON string
-func parseCKAN(repo billy.Filesystem, filePath string) (Ckan, error) {
-	var ckan Ckan
+func parseCKAN(repo billy.Filesystem, filePath string) (*Ckan, error) {
+	ckan := Ckan{}
 
 	// Read .ckan from filesystem
 	file, err := repo.Open(filePath)
 	if err != nil {
-		return ckan, err
+		return &ckan, err
 	}
 	defer file.Close()
 
 	// parse ckan data
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		return ckan, err
+		return &ckan, err
 	}
 
 	// Store .ckan in struct and interface
 	var raw map[string]interface{}
 	err = json.Unmarshal(byteValue, &raw)
 	if err != nil {
-		return ckan, err
+		return &ckan, err
 	}
 
 	// clean extra data into struct
-	ckan.Init(raw)
+	err = ckan.Init(raw)
+	if err != nil {
+		return nil, err
+	}
 
-	return ckan, nil
+	return &ckan, err
 }
 
 // Checks for changes to the repo by comparing commit hashes

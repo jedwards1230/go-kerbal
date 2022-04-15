@@ -62,7 +62,7 @@ func (c *Ckan) Init(raw map[string]interface{}) error {
 
 	err = c.cleanVersions(raw)
 	if err != nil {
-		log.Printf("cleanVersions error: %v", err)
+		//log.Printf("cleanVersions error: %v", err)
 		return err
 	}
 
@@ -128,36 +128,64 @@ func (c *Ckan) cleanAuthors(raw map[string]interface{}) error {
 }
 
 func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
-	v := raw["version"]
-	if v != nil {
+	if raw["version"] != nil && strings.TrimSpace(raw["version"].(string)) != "" {
+		v := raw["version"]
 		modVersion, epoch, err := c.cleanModVersion(v.(string))
 		if err != nil {
-			// TODO: Only minor errors come through but could be fixed with better filtering
-			return nil
+			return fmt.Errorf("Error: %v, v: %v", err, raw["version"].(string))
 		}
 		c.Version = modVersion
 		c.Epoch = epoch
+		c.VersionKspMin = ""
+		c.VersionKspMax = ""
 
-		v = raw["ksp_version_max"]
-		if v != nil {
-			vMax, _, err := c.cleanModVersion(v.(string))
-			if err != nil {
-				return err
-			}
+		if raw["ksp_version_max"] != nil && strings.TrimSpace(raw["ksp_version_max"].(string)) != "" {
+			v = raw["ksp_version_max"]
+			vMax, _, _ := c.cleanModVersion(v.(string))
 			c.VersionKspMax = vMax
 		}
 
-		v = raw["ksp_version_min"]
-		if v != nil {
-			vMin, _, err := c.cleanModVersion(v.(string))
-			if err != nil {
-				return err
-			}
+		if raw["ksp_version_min"] != nil && strings.TrimSpace(raw["ksp_version_min"].(string)) != "" {
+			v = raw["ksp_version_min"]
+			vMin, _, _ := c.cleanModVersion(v.(string))
 			c.VersionKspMin = vMin
 		}
+
+		if raw["ksp_version"] != nil && strings.TrimSpace(raw["ksp_version"].(string)) != "" {
+			v = raw["ksp_version"]
+			cfg := config.GetConfig()
+
+			if v == "any" {
+				c.VersionKspMax = cfg.Settings.KerbalVer
+				c.VersionKspMin = "0.0"
+				return nil
+			}
+
+			vKsp, _, _ := c.cleanModVersion(v.(string))
+
+			if c.VersionKspMax == "" {
+				c.VersionKspMax = vKsp
+			}
+			if c.VersionKspMin == "" {
+				c.VersionKspMin = vKsp
+			}
+		}
+
+		if c.VersionKspMax == "" && c.VersionKspMin != "" {
+			cfg := config.GetConfig()
+
+			c.VersionKspMax = cfg.Settings.KerbalVer
+		} else if c.VersionKspMin == "" && c.VersionKspMax != "" {
+			c.VersionKspMin = "0.0"
+		}
+
+		if c.VersionKspMin == "" || c.VersionKspMax == "" {
+			return fmt.Errorf("Error: ksp: %v, min: %v, max: %v", raw["ksp_version"], raw["ksp_version_min"], raw["ksp_version_max"])
+		}
+
 		return nil
 	} else {
-		return errors.New("no version available")
+		return errors.New("Error: no version available")
 	}
 }
 
