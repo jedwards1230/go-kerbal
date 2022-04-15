@@ -36,6 +36,7 @@ type (
 // located at ~/.config/config.json.
 func LoadConfig() {
 
+	// place config file
 	/* if runtime.GOOS != "windows" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
