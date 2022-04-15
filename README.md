@@ -21,7 +21,6 @@ go build && ./go-kerbal
 ## TODO:
  * More metadata cleaning
  * Find mods currently installed on system
- * Request filepath input if KSP game folder not found
  * Implement downloader
  * Implement installer
  * Implement search box
