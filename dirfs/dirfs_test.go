@@ -4,23 +4,26 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	"github.com/jedwards1230/go-kerbal/cmd/config"
 )
 
 func TestMain(m *testing.M) {
-	f, err := os.OpenFile(RootDir()+"/test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile("../test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Print(err)
 	}
 	defer f.Close()
+	config.LoadConfig("../")
 	log.SetOutput(f)
 	log.Println()
 	log.Println("*****************")
 	log.Println("Testing DirFS")
 	log.Println("*****************")
 
-	code := m.Run()
+	_ = m.Run()
 
-	os.Exit(code)
+	//os.Exit(code)
 }
 
 func TestFindKspPath(t *testing.T) {
@@ -40,5 +43,12 @@ func BenchmarkFindKspPath(b *testing.B) {
 		if s == "" {
 			b.Errorf("Error finding KSP path: %v", s)
 		}
+	}
+}
+
+func TestDownloadMod(t *testing.T) {
+	err := DownloadMod("https://github.com/linuxgurugamer/BetterTimeWarpContinued/releases/download/2.3.13/BetterTimeWarp-1.12.0-2.3.13.zip")
+	if err != nil {
+		t.Errorf("error downloading mod: %v", err)
 	}
 }

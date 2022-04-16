@@ -1,14 +1,17 @@
 package dirfs
 
 import (
+	"archive/zip"
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -17,13 +20,6 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/hashicorp/go-version"
 )
-
-// useeful for keeping unit tests on track with created directories
-func RootDir() string {
-	_, b, _, _ := runtime.Caller(0)
-	d := path.Join(path.Dir(b))
-	return filepath.Dir(d)
-}
 
 // CreateDirectory creates a new directory given a name.
 func CreateDirectory(name string) error {
@@ -157,4 +153,90 @@ func Strip(s string) string {
 		}
 	}
 	return result.String()
+}
+
+func DownloadMod(url string) error {
+	//cfg := config.GetConfig()
+	// get response from url
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	log.Println("status", resp.Status)
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("invalid response status from server")
+	}
+
+	// convert zip to bytevalue
+	log.Printf("Storing zip in memory")
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// create zip reader from download
+	log.Printf("Storing zip in reader")
+	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// get GameData folder
+	modDir := "/Users/jedwards/Library/Application Support/Steam/steamapps/common/Kerbal Space Program/"
+	log.Printf("ModDir: %s", modDir)
+	destination, err := filepath.Abs(modDir)
+	if err != nil {
+		return err
+	}
+
+	// unzip all into GameData folder
+	for _, f := range zipReader.File {
+		err := unzipFile(f, destination)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func unzipFile(f *zip.File, destination string) error {
+	// 4. Check if file paths are not vulnerable to Zip Slip
+	filePath := filepath.Join(destination, f.Name)
+	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
+		return fmt.Errorf("invalid file path: %s", filePath)
+	}
+
+	// 5. Create directory tree
+	if f.FileInfo().IsDir() {
+		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
+		return err
+	}
+
+	// 6. Create a destination file for unzipped content
+	destinationFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
+
+	// 7. Unzip the content of a file and copy it to the destination file
+	zippedFile, err := f.Open()
+	if err != nil {
+		return err
+	}
+	defer zippedFile.Close()
+
+	if _, err := io.Copy(destinationFile, zippedFile); err != nil {
+		return err
+	}
+	return nil
 }
