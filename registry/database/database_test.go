@@ -6,14 +6,13 @@ import (
 	"testing"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/tidwall/buntdb"
 )
 
 var db *CkanDB
 
 func TestMain(m *testing.M) {
-	f, err := os.OpenFile(dirfs.RootDir()+"/test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile("../../test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Print(err)
 	}
@@ -24,7 +23,7 @@ func TestMain(m *testing.M) {
 	log.Println("Testing Database")
 	log.Println("*****************")
 
-	config.LoadConfig()
+	config.LoadConfig("../../")
 	log.Printf("Initializing test-db")
 	db, err = GetTestDB()
 	if err != nil {
@@ -46,7 +45,7 @@ func TestMain(m *testing.M) {
 // Open database file
 func GetTestDB() (*CkanDB, error) {
 	var db *CkanDB
-	database, err := buntdb.Open(dirfs.RootDir() + "/test-data.db")
+	database, err := buntdb.Open("../../test-data.db")
 	if err != nil {
 		return db, err
 	}
@@ -55,7 +54,7 @@ func GetTestDB() (*CkanDB, error) {
 }
 
 func DeleteTestDB() {
-	err := os.Remove(dirfs.RootDir() + "/test-data.db")
+	err := os.Remove("../../test-data.db")
 	if err != nil {
 		log.Print(err)
 	}

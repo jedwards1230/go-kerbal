@@ -26,7 +26,7 @@ type CkanDB struct {
 
 // Open database file
 func GetDB() *CkanDB {
-	database, _ := buntdb.Open(dirfs.RootDir() + "/data.db")
+	database, _ := buntdb.Open("../../data.db")
 	db := &CkanDB{DB: database}
 	return db
 }
@@ -58,17 +58,12 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
 	log.Printf("Cleaning .ckan files and adding to database")
-	//var ckan Ckan
-	//var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	err = db.Update(func(tx *buntdb.Tx) error {
-		//var err error
 		var byteValue []byte
-		//ckan := Ckan{}
 		for i := range filesToScan {
 			// Parse .ckan from repo into JSON
 			ckan, err := parseCKAN(fs, filesToScan[i])
 			if err != nil {
-				//log.Printf("Error parsing CKAN: %v", err)
 				continue
 			}
 

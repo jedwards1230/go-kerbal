@@ -6,8 +6,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-
-	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
 // SettingsConfig struct represents the config for the settings.
@@ -34,7 +32,7 @@ type (
 
 // LoadConfig loads a users config and creates the config if it does not exist
 // located at ~/.config/config.json.
-func LoadConfig() {
+func LoadConfig(dir string) {
 
 	// place config file
 	/* if runtime.GOOS != "windows" {
@@ -53,7 +51,7 @@ func LoadConfig() {
 		viper.AddConfigPath("$HOME")
 	} */
 
-	viper.AddConfigPath(dirfs.RootDir())
+	viper.AddConfigPath(dir)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
