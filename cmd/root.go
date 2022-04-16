@@ -45,13 +45,19 @@ func Execute() {
 		if kerbalDir == "" {
 			viper.Set("settings.kerbal_dir", "")
 			viper.Set("settings.kerbal_ver", "1.12.3")
-			viper.WriteConfigAs(viper.ConfigFileUsed())
+			err := viper.WriteConfigAs(viper.ConfigFileUsed())
+			if err != nil {
+				log.Printf("Error saving log: %v", err)
+			}
 			log.Printf("***** TODO: FIND KSP DIR FOR LINUX *****")
 		} else {
 			kerbalVer := dirfs.FindKspVersion(kerbalDir)
 			viper.Set("settings.kerbal_dir", kerbalDir)
 			viper.Set("settings.kerbal_ver", kerbalVer.String())
-			viper.WriteConfigAs(viper.ConfigFileUsed())
+			err := viper.WriteConfigAs(viper.ConfigFileUsed())
+			if err != nil {
+				log.Printf("Error saving log: %v", err)
+			}
 			log.Printf("Kerbal dir: " + kerbalDir + "/")
 			log.Printf("Kerbal Version: %v", kerbalVer)
 		}
@@ -70,8 +76,9 @@ func Execute() {
 
 	// If mousewheel is enabled, append it to the program options.
 	if cfg.Settings.EnableMouseWheel {
-		opts = append(opts, tea.WithMouseAllMotion())
+		opts = append(opts, tea.WithMouseCellMotion())
 	}
+
 	p := tea.NewProgram(m, opts...)
 	log.Println("Program initialized")
 	if err := p.Start(); err != nil {
