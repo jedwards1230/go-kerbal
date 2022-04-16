@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/hashicorp/go-version"
+	"github.com/jedwards1230/go-kerbal/cmd/config"
 )
 
 // CreateDirectory creates a new directory given a name.
@@ -156,7 +157,7 @@ func Strip(s string) string {
 }
 
 func DownloadMod(url string) error {
-	//cfg := config.GetConfig()
+	cfg := config.GetConfig()
 	// get response from url
 	resp, err := http.Get(url)
 	if err != nil {
@@ -183,10 +184,8 @@ func DownloadMod(url string) error {
 		log.Fatal(err)
 	}
 
-	// get GameData folder
-	modDir := "/Users/jedwards/Library/Application Support/Steam/steamapps/common/Kerbal Space Program/"
-	log.Printf("ModDir: %s", modDir)
-	destination, err := filepath.Abs(modDir)
+	// get Kerbal folder
+	destination, err := filepath.Abs(cfg.Settings.KerbalDir)
 	if err != nil {
 		return err
 	}
@@ -203,13 +202,13 @@ func DownloadMod(url string) error {
 }
 
 func unzipFile(f *zip.File, destination string) error {
-	// 4. Check if file paths are not vulnerable to Zip Slip
+	// check file paths are not vulnerable to Zip Slip
 	filePath := filepath.Join(destination, f.Name)
 	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
 		return fmt.Errorf("invalid file path: %s", filePath)
 	}
 
-	// 5. Create directory tree
+	// create directory tree
 	if f.FileInfo().IsDir() {
 		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
 			return err
@@ -221,14 +220,14 @@ func unzipFile(f *zip.File, destination string) error {
 		return err
 	}
 
-	// 6. Create a destination file for unzipped content
+	// create a destination file for unzipped data
 	destinationFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 	if err != nil {
 		return err
 	}
 	defer destinationFile.Close()
 
-	// 7. Unzip the content of a file and copy it to the destination file
+	// unzip data and copy it to the destination file
 	zippedFile, err := f.Open()
 	if err != nil {
 		return err
