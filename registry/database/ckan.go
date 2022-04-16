@@ -294,7 +294,7 @@ func (c *Ckan) CheckCompatible() bool {
 	if c.VersionKspMax != "" {
 		max, err := version.NewVersion(c.VersionKspMax)
 		if err != nil {
-			log.Printf("Error with kerbal min version: %v", err)
+			log.Printf("Error with kerbal max version: %v", err)
 		}
 		if max.LessThan(kerbalVer) {
 			return false
