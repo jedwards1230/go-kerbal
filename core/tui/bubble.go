@@ -24,13 +24,18 @@ type Bubble struct {
 	sortOptions       registry.SortOptions
 	help              help.Bubble
 	keyMap            KeyMap
+	nav               Nav
 	ready             bool
 	activeBox         int
-	cursor            int
-	selected          int
 	width             int
 	height            int
 	logs              []string
+}
+
+type Nav struct {
+	listCursor        int
+	listSelected      int
+	mainButtonsCursor int
 }
 
 func InitialModel() Bubble {
@@ -42,7 +47,7 @@ func InitialModel() Bubble {
 		SortOrder: "ascend",
 	}
 
-	iRequested := true
+	iRequested := false
 	if cfg.Settings.KerbalDir == "" {
 		iRequested = true
 	}
@@ -99,6 +104,11 @@ func InitialModel() Bubble {
 			{Key: "5", Description: "Download selected mod"},
 		})
 
+	nav := Nav{
+		listSelected:      -1,
+		mainButtonsCursor: 0,
+	}
+
 	return Bubble{
 		appConfig:         cfg,
 		theme:             theme,
@@ -110,7 +120,7 @@ func InitialModel() Bubble {
 		registry:          reg,
 		sortOptions:       sortOpts,
 		help:              h,
-		selected:          -1,
+		nav:               nav,
 		activeBox:         constants.PrimaryBoxActive,
 		logs:              []string{"Initializing"},
 		keyMap:            DefaultKeyMap(),

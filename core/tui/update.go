@@ -20,7 +20,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Update mod list
 	case ModListUpdatedMsg:
-		b.selected = 0
+		b.nav.listSelected = 0
 		b.registry.ModList = msg
 		b.registry.SortModList(b.sortOptions)
 		b.logs = append(b.logs, "Mod list updated")
@@ -70,9 +70,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
-		b.primaryViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
+		b.primaryViewport.Height = msg.Height - (constants.StatusBarHeight * 3) - b.primaryViewport.Style.GetVerticalFrameSize()
 		b.secondaryViewport.Width = (msg.Width / 2) - b.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.secondaryViewport.Height = msg.Height - constants.StatusBarHeight - b.secondaryViewport.Style.GetVerticalFrameSize()
+		b.secondaryViewport.Height = msg.Height - (constants.StatusBarHeight * 3) - b.secondaryViewport.Style.GetVerticalFrameSize()
 
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
@@ -121,6 +121,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Quit
 	case key.Matches(msg, b.keyMap.Quit):
 		b.logs = append(b.logs, "Quitting")
+		log.Print("Quitting")
+		b.inputRequested = false
 		return tea.Quit
 	// Down
 	case key.Matches(msg, b.keyMap.Down):
@@ -130,10 +132,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.scrollView("up")
 	// Space
 	case key.Matches(msg, b.keyMap.Space):
-		if b.selected == b.cursor {
-			b.selected = -1
+		if b.nav.listSelected == b.nav.listCursor {
+			b.nav.listSelected = -1
 		} else {
-			b.selected = b.cursor
+			b.nav.listSelected = b.nav.listCursor
 		}
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.SetContent(b.modListView())
@@ -216,7 +218,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
-		var mod = b.registry.SortedModList[b.selected]
+		var mod = b.registry.SortedModList[b.nav.listSelected]
 		b.logs = append(b.logs, "Downloading mod")
 		cmds = append(cmds, b.downloadModCmd(mod.Download))
 	}
@@ -232,17 +234,17 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		top := b.primaryViewport.YOffset - 3
 		bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 4
 
-		if b.cursor < top {
+		if b.nav.listCursor < top {
 			b.primaryViewport.LineUp(1)
-		} else if b.cursor > bottom {
+		} else if b.nav.listCursor > bottom {
 			b.primaryViewport.LineDown(1)
 		}
 
-		if b.cursor > len(b.registry.SortedModList)-1 {
-			b.cursor = 0
+		if b.nav.listCursor > len(b.registry.SortedModList)-1 {
+			b.nav.listCursor = 0
 			b.primaryViewport.GotoTop()
-		} else if b.cursor < 0 {
-			b.cursor = len(b.registry.SortedModList) - 1
+		} else if b.nav.listCursor < 0 {
+			b.nav.listCursor = len(b.registry.SortedModList) - 1
 			b.primaryViewport.GotoBottom()
 		}
 	case constants.SecondaryBoxActive:
@@ -266,7 +268,7 @@ func (b *Bubble) scrollView(dir string) {
 	case "up":
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
-			b.cursor--
+			b.nav.listCursor--
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 		case constants.SecondaryBoxActive:
@@ -280,7 +282,7 @@ func (b *Bubble) scrollView(dir string) {
 	case "down":
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
-			b.cursor++
+			b.nav.listCursor++
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 		case constants.SecondaryBoxActive:

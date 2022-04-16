@@ -20,6 +20,7 @@ go build && ./go-kerbal
 ![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true)
 ![Mod Selected](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/modInfo.png?raw=true)
 ![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true)
+![Input Directory View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/inputDir.png?raw=true)
 
 ## TODO:
  * More metadata cleaning
@@ -33,4 +34,3 @@ go build && ./go-kerbal
    * Multi-select mods
    * Progress bars
    * Live logging? (currently updates log view on TUI event, not when logs are called)
-   * Better UI for Kerbal Directory input

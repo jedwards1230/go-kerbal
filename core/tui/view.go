@@ -19,9 +19,11 @@ func (b Bubble) View() string {
 		var primaryBox string
 		var secondaryBox string
 
+		// set colors
 		primaryBoxBorderColor := b.theme.InactiveBoxBorderColor
 		secondaryBoxBorderColor := b.theme.InactiveBoxBorderColor
 
+		// format active box
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
@@ -30,6 +32,7 @@ func (b Bubble) View() string {
 
 		}
 
+		// format views
 		primaryBoxBorder := lipgloss.NormalBorder()
 		b.primaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
@@ -46,8 +49,10 @@ func (b Bubble) View() string {
 			BorderForeground(secondaryBoxBorderColor)
 		secondaryBox = b.secondaryViewport.View()
 
+		// organize views
 		view = lipgloss.JoinVertical(
 			lipgloss.Top,
+			b.getMainButtonsView(),
 			lipgloss.JoinHorizontal(
 				lipgloss.Top,
 				primaryBox,
@@ -84,11 +89,11 @@ func (b Bubble) modListView() string {
 	s := "\n  Mod List\n\n"
 	for i := range b.registry.SortedModList {
 		cursor := " "
-		if b.cursor == i {
+		if b.nav.listCursor == i {
 			cursor = ">"
 		}
 		checked := " "
-		if i == b.selected {
+		if i == b.nav.listSelected {
 			checked = "x"
 		}
 		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, b.registry.SortedModList[i].Name)
@@ -102,8 +107,8 @@ func (b Bubble) modListView() string {
 
 func (b Bubble) modInfoView() string {
 	s := "\n"
-	if b.selected >= 0 {
-		var mod = b.registry.SortedModList[b.selected]
+	if b.nav.listSelected >= 0 {
+		var mod = b.registry.SortedModList[b.nav.listSelected]
 
 		s += "Mod\n\n"
 		s += fmt.Sprintf(
@@ -135,22 +140,8 @@ func (b Bubble) modInfoView() string {
 		Render(s)
 }
 
-func (b Bubble) loadingView() string {
-	s := "Loading Screen\n"
-	for i := range b.logs {
-		s += b.logs[i] + "\n"
-	}
-	return lipgloss.NewStyle().
-		Width(b.splashViewport.Width).
-		Height(b.splashViewport.Height).
-		Render(s)
-}
-
 func (b Bubble) logView() string {
 	s := "Logs\n"
-	/* for i := range b.logs {
-		s += b.logs[i] + "\n"
-	} */
 
 	content, err := ioutil.ReadFile("debug.log")
 	if err != nil {
@@ -179,6 +170,7 @@ func (b Bubble) inputKspView() string {
 		inText = b.textInput.View()
 	} else {
 		inText = b.textInput.Value()
+		inText += "\n\nPress Esc to close"
 	}
 
 	inTextStyle := constants.BoldTextStyle.Copy()
@@ -199,7 +191,7 @@ func (b Bubble) statusBarView() string {
 	var status = "Status: " + b.logs[len(b.logs)-1]
 
 	width := lipgloss.Width
-	var fileCount = fmt.Sprintf("Mod: %d/%d", b.cursor+1, len(b.registry.SortedModList))
+	var fileCount = fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.SortedModList))
 
 	fileCountStyle := constants.BoldTextStyle.Copy()
 	fileCountColumn := fileCountStyle.
@@ -247,5 +239,55 @@ func (b Bubble) statusBarView() string {
 		sortOptionsColumn,
 		showCompatibleColumn,
 		fileCountColumn,
+	)
+}
+
+func (b *Bubble) getMainButtonsView() string {
+	refreshStyle := lipgloss.NewStyle().
+		Underline(true)
+	refreshColumn := refreshStyle.
+		Align(lipgloss.Right).
+		Padding(0, 2).
+		Height(constants.StatusBarHeight).
+		Render("1. Refresh")
+
+	hideIncompatibleStyle := lipgloss.NewStyle().
+		Underline(true)
+	hideIncompatibleColumn := hideIncompatibleStyle.
+		Align(lipgloss.Right).
+		Padding(0, 2).
+		Height(constants.StatusBarHeight).
+		Render("2. Hide Incompatible")
+
+	sortOrderStyle := lipgloss.NewStyle().
+		Underline(true)
+	sortOrderColumn := sortOrderStyle.
+		Align(lipgloss.Right).
+		Padding(0, 2).
+		Height(constants.StatusBarHeight).
+		Render("3. Sort Order")
+
+	enterDirStyle := lipgloss.NewStyle().
+		Underline(true)
+	enterDirColumn := enterDirStyle.
+		Align(lipgloss.Right).
+		Padding(0, 2).
+		Height(constants.StatusBarHeight).
+		Render("4. Enter KSP Dir")
+
+	downloadStyle := lipgloss.NewStyle().
+		Underline(true)
+	downloadColumn := downloadStyle.
+		Align(lipgloss.Right).
+		Padding(0, 2).
+		Height(constants.StatusBarHeight).
+		Render("5. Download mod")
+
+	return lipgloss.JoinHorizontal(lipgloss.Top,
+		refreshColumn,
+		hideIncompatibleColumn,
+		sortOrderColumn,
+		enterDirColumn,
+		downloadColumn,
 	)
 }

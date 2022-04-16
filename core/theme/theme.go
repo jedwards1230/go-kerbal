@@ -84,7 +84,7 @@ var themeMap = map[string]Theme{
 	"default": {
 		SelectedTreeItemColor:                lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},
 		UnselectedTreeItemColor:              lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
-		ActiveBoxBorderColor:                 lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},
+		ActiveBoxBorderColor:                 lipgloss.AdaptiveColor{Dark: colors.holidayGreen, Light: colors.holidayGreen},
 		InactiveBoxBorderColor:               lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
 		SpinnerColor:                         lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},
 		StatusBarSelectedFileForegroundColor: lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.white},
