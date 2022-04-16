@@ -18,7 +18,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	// Update mod list
 	case ModListUpdatedMsg:
+		b.selected = 0
 		b.registry.ModList = msg
 		b.registry.SortModList(b.sortOptions)
 		b.logs = append(b.logs, "Mod list updated")
@@ -27,6 +29,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	// Update KSP dir
 	case UpdateKspDirMsg:
 		if msg {
 			log.Print("Kerbal directory updated")
@@ -40,6 +43,15 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.textInput.Placeholder = "Try again..."
 		}
 		b.splashViewport.SetContent(b.inputKspView())
+	case DownloadModMsg:
+		if msg {
+			b.logs = append(b.logs, "Mod Downloaded")
+		} else {
+			b.logs = append(b.logs, "Error Downloading mod")
+		}
+	case ErrorMsg:
+		log.Printf("Error message in update: %v", msg)
+	// Window resize
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -64,8 +76,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !b.ready {
 			b.ready = true
 		}
+	// Key pressed
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
+	// Mouse input
 	case tea.MouseMsg:
 		// TODO: fix scrolling beyond page. breaks things.
 		switch msg.Type {
@@ -94,13 +108,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	cfg := config.GetConfig()
 
 	switch {
+	// Quit
 	case key.Matches(msg, b.keyMap.Quit):
 		b.logs = append(b.logs, "Quitting")
 		return tea.Quit
+	// Down
 	case key.Matches(msg, b.keyMap.Down):
 		b.scrollView("down")
+	// Up
 	case key.Matches(msg, b.keyMap.Up):
 		b.scrollView("up")
+	// Space
 	case key.Matches(msg, b.keyMap.Space):
 		if b.selected == b.cursor {
 			b.selected = -1
@@ -110,10 +128,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
 		}
+	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
 		b.inputRequested = false
 		b.textInput.Reset()
@@ -121,6 +141,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.activeBox = constants.PrimaryBoxActive
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
 		case constants.PrimaryBoxActive:
@@ -130,6 +151,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		case constants.SplashBoxActive:
 			b.activeBox = constants.PrimaryBoxActive
 		}
+	// Show logs
 	case key.Matches(msg, b.keyMap.ShowLogs):
 		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
 			b.activeBox = constants.PrimaryBoxActive
@@ -141,14 +163,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.splashViewport.SetContent(b.logView())
 			b.splashViewport.GotoBottom()
 		}
+	// Refresh list
 	case key.Matches(msg, b.keyMap.RefreshList):
 		b.logs = append(b.logs, "Getting mod list")
 		cmds = append(cmds, b.getAvailableModsCmd())
+	// Hide incompatible
 	case key.Matches(msg, b.keyMap.HideIncompatible):
 		b.logs = append(b.logs, "Toggling compatible mod view")
 		viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
 		viper.WriteConfigAs(viper.ConfigFileUsed())
 		cmds = append(cmds, b.getAvailableModsCmd())
+	// Swap sort order
 	case key.Matches(msg, b.keyMap.SwapSortOrder):
 		if b.sortOptions.SortOrder == "ascend" {
 			b.sortOptions.SortOrder = "descend"
@@ -163,6 +188,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+	// Input KSP dir
 	case key.Matches(msg, b.keyMap.EnterKspDir):
 		if b.activeBox == constants.SplashBoxActive && b.inputRequested {
 			b.inputRequested = false
@@ -177,6 +203,11 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.textInput.Reset()
 			return textinput.Blink
 		}
+	// Download selected mod
+	case key.Matches(msg, b.keyMap.Download):
+		var mod = b.registry.SortedModList[b.selected]
+		b.logs = append(b.logs, "Downlaoding mod")
+		cmds = append(cmds, b.downloadModCmd(mod.Download))
 	}
 
 	return tea.Batch(cmds...)

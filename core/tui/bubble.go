@@ -97,6 +97,7 @@ func InitialModel() Bubble {
 			{Key: "2", Description: "Toggle hiding incompatible mods"},
 			{Key: "3", Description: "Toggle sort order (ascend/descend)"},
 			{Key: "4", Description: "Update KSP directory"},
+			{Key: "5", Description: "Download selected mod"},
 		})
 
 	return Bubble{

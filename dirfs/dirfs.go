@@ -161,40 +161,37 @@ func DownloadMod(url string) error {
 	// get response from url
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reaching server: %v", err)
 	}
 	defer resp.Body.Close()
 
-	log.Println("status", resp.Status)
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("invalid response status from server")
 	}
 
 	// convert zip to bytevalue
-	log.Printf("Storing zip in memory")
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error reading download: %v", err)
 	}
 
 	// create zip reader from download
-	log.Printf("Storing zip in reader")
 	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error converting download to zip: %v", err)
 	}
 
 	// get Kerbal folder
 	destination, err := filepath.Abs(cfg.Settings.KerbalDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting KSP dir: %v", err)
 	}
 
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
 		err := unzipFile(f, destination)
 		if err != nil {
-			return err
+			return fmt.Errorf("error unzipping file to filesystem: %v", err)
 		}
 	}
 

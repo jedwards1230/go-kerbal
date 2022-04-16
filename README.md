@@ -24,12 +24,12 @@ go build && ./go-kerbal
 ## TODO:
  * More metadata cleaning
  * Find mods currently installed on system
+ * Check mod conflicts/dependencies 
  * Implement search box
  * Make the TUI prettier
  * Tweak the TUI
    * More colors
    * Add buttons
-   * Add installer
    * Multi-select mods
    * Progress bars
    * Live logging? (currently updates log view on TUI event, not when logs are called)

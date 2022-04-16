@@ -9,8 +9,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ModListUpdatedMsg []database.Ckan
-type UpdateKspDirMsg bool
+type (
+	ModListUpdatedMsg []database.Ckan
+	UpdateKspDirMsg   bool
+	DownloadModMsg    bool
+	ErrorMsg          error
+)
 
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
@@ -25,19 +29,33 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	}
 }
 
+// Manually input KSP directory
 func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 	return func() tea.Msg {
 		log.Printf("Input received: %s", s)
 		kerbalDir, err := dirfs.FindKspPath(s)
-		if err == nil {
-			kerbalVer := dirfs.FindKspVersion(kerbalDir)
-			viper.Set("settings.kerbal_dir", kerbalDir)
-			viper.Set("settings.kerbal_ver", kerbalVer.String())
-			viper.WriteConfigAs(viper.ConfigFileUsed())
-			log.Printf("Kerbal dir: " + kerbalDir + "/")
-			log.Printf("Kerbal Version: %v", kerbalVer)
-			return UpdateKspDirMsg(true)
+		if err != nil {
+			return UpdateKspDirMsg(false)
 		}
-		return UpdateKspDirMsg(false)
+		kerbalVer := dirfs.FindKspVersion(kerbalDir)
+		viper.Set("settings.kerbal_dir", kerbalDir)
+		viper.Set("settings.kerbal_ver", kerbalVer.String())
+		viper.WriteConfigAs(viper.ConfigFileUsed())
+		log.Printf("Kerbal dir: " + kerbalDir + "/")
+		log.Printf("Kerbal Version: %v", kerbalVer)
+		return UpdateKspDirMsg(true)
+	}
+}
+
+// Download selected mods
+func (b Bubble) downloadModCmd(url string) tea.Cmd {
+	return func() tea.Msg {
+		log.Printf("Mod download requested: %s", url)
+		err := dirfs.DownloadMod(url)
+		if err != nil {
+			log.Printf("Error downloading: %v", err)
+			return DownloadModMsg(false)
+		}
+		return DownloadModMsg(true)
 	}
 }
