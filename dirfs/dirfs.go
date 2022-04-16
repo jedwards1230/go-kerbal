@@ -156,6 +156,7 @@ func Strip(s string) string {
 	return result.String()
 }
 
+// Download mod from URL to KSP GameData
 func DownloadMod(url string) error {
 	cfg := config.GetConfig()
 	// get response from url
@@ -195,9 +196,11 @@ func DownloadMod(url string) error {
 		}
 	}
 
+	log.Printf("Mod downloaded and installed")
 	return nil
 }
 
+// Unzip file to specified directory
 func unzipFile(f *zip.File, destination string) error {
 	// check file paths are not vulnerable to Zip Slip
 	filePath := filepath.Join(destination, f.Name)

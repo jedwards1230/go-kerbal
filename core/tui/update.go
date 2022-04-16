@@ -45,9 +45,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.splashViewport.SetContent(b.inputKspView())
 	case DownloadModMsg:
 		if msg {
-			b.logs = append(b.logs, "Mod Downloaded")
+			b.logs = append(b.logs, "Mod downloaded and installed")
 		} else {
-			b.logs = append(b.logs, "Error Downloading mod")
+			b.logs = append(b.logs, "Error downloading mod")
 		}
 	case ErrorMsg:
 		log.Printf("Error message in update: %v", msg)
