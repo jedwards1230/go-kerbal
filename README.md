@@ -11,10 +11,11 @@ go build && ./go-kerbal
 ## Features so far:
  * Automatically keeps metadata up to date
  * Compiles metadata and displays info in the TUI
- * Downloads and installs mods
- * Finds Kerbal game directory (prompts for directory if not found)
  * Sorts and filters mod list (by name and compatibility)
  * Displays logs in-app
+ * Downloads and installs mods
+ * Finds Kerbal game directory (prompts for directory if not found)
+ * Finds installed mods
 
 ## Images
 ![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true)
@@ -24,13 +25,11 @@ go build && ./go-kerbal
 
 ## TODO:
  * More metadata cleaning
- * Find mods currently installed on system
  * Check mod conflicts/dependencies 
  * Implement search box
  * Make the TUI prettier
  * Tweak the TUI
    * More colors
-   * Add buttons
    * Multi-select mods
    * Progress bars
    * Live logging? (currently updates log view on TUI event, not when logs are called)

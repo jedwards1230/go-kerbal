@@ -52,3 +52,13 @@ func TestDownloadMod(t *testing.T) {
 		t.Errorf("error downloading mod: %v", err)
 	}
 }
+
+func TestCheckInstalledMods(t *testing.T) {
+	installedMods, err := CheckInstalledMods()
+	if err != nil {
+		t.Errorf("error checking mods: %v", err)
+	}
+	for i := range installedMods {
+		log.Printf("Found mod: %s", installedMods[i])
+	}
+}

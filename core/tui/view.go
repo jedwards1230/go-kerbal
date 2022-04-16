@@ -109,12 +109,17 @@ func (b Bubble) modInfoView() string {
 	s := "\n"
 	if b.nav.listSelected >= 0 {
 		var mod = b.registry.SortedModList[b.nav.listSelected]
+		installed := false
+		if b.registry.InstalledModList[mod.Identifier] {
+			installed = true
+		}
 
 		s += "Mod\n\n"
 		s += fmt.Sprintf(
 			"Name:             %s\n"+
 				"Identifier:       %s\n"+
 				"Author:           %s\n\n"+
+				"Installed:        %v\n\n"+
 				"Version:          %s\n"+
 				"KSP Max Version:  %s\n"+
 				"KSP Min Version:  %s\n\n"+
@@ -124,6 +129,7 @@ func (b Bubble) modInfoView() string {
 			mod.Name,
 			mod.Identifier,
 			mod.Author,
+			installed,
 			mod.Version,
 			mod.VersionKspMax,
 			mod.VersionKspMin,

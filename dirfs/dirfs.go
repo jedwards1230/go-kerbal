@@ -239,3 +239,29 @@ func unzipFile(f *zip.File, destination string) error {
 	}
 	return nil
 }
+
+func CheckInstalledMods() (map[string]bool, error) {
+	cfg := config.GetConfig()
+	installedMods := make(map[string]bool, 0)
+
+	// get Kerbal folder
+	destination, err := filepath.Abs(cfg.Settings.KerbalDir + "/GameData")
+	if err != nil {
+		return installedMods, fmt.Errorf("error getting KSP dir: %v", err)
+	}
+
+	log.Printf("Checking dir: %v", destination)
+	files, err := ioutil.ReadDir(destination)
+	if err != nil {
+		return installedMods, err
+	}
+
+	for _, f := range files {
+		modName := f.Name()
+		if modName != "Squad" && modName != "SquadExpansion" && f.IsDir() {
+			installedMods[modName] = true
+		}
+	}
+
+	return installedMods, nil
+}

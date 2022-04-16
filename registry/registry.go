@@ -12,12 +12,10 @@ import (
 )
 
 type Registry struct {
-	// Base list of mods in the database
-	ModList []database.Ckan
-	// Sorted list of mods in the database
-	SortedModList []database.Ckan
-	// Database for handling CKAN files
-	DB *database.CkanDB
+	ModList          []database.Ckan
+	SortedModList    []database.Ckan
+	InstalledModList map[string]bool
+	DB               *database.CkanDB
 }
 
 type SortOptions struct {

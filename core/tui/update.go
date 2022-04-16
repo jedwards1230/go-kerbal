@@ -19,7 +19,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	// Update mod list
-	case ModListUpdatedMsg:
+	case UpdatedModListMsg:
 		b.nav.listSelected = 0
 		b.registry.ModList = msg
 		b.registry.SortModList(b.sortOptions)
@@ -32,6 +32,14 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !b.inputRequested {
 			b.activeBox = constants.PrimaryBoxActive
 		}
+	case InstalledModListMsg:
+		b.registry.InstalledModList = msg
+		b.logs = append(b.logs, "Installed mod list updated")
+		for k, v := range msg {
+			log.Printf("%v, %v", k, v)
+		}
+		b.primaryViewport.SetContent(b.modListView())
+		b.secondaryViewport.SetContent(b.modInfoView())
 	// Update KSP dir
 	case UpdateKspDirMsg:
 		if msg {

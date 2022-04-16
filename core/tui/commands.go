@@ -10,22 +10,37 @@ import (
 )
 
 type (
-	ModListUpdatedMsg []database.Ckan
-	UpdateKspDirMsg   bool
-	DownloadModMsg    bool
-	ErrorMsg          error
+	UpdatedModListMsg   []database.Ckan
+	InstalledModListMsg map[string]bool
+	UpdateKspDirMsg     bool
+	DownloadModMsg      bool
+	ErrorMsg            error
 )
 
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
+		log.Print("Checking available mods")
 		b.registry.DB.UpdateDB(false)
 		updatedModList := b.registry.GetModList()
 		if len(updatedModList) == 0 {
 			b.registry.DB.UpdateDB(true)
 			updatedModList = b.registry.GetModList()
 		}
-		return ModListUpdatedMsg(updatedModList)
+		return UpdatedModListMsg(updatedModList)
+	}
+}
+
+// Check filesystem for installed mods
+func (b Bubble) getInstalledModsCmd() tea.Cmd {
+	return func() tea.Msg {
+		log.Print("Checking installed mods")
+		installedModList, err := dirfs.CheckInstalledMods()
+		if err != nil {
+			return ErrorMsg(err)
+		}
+		log.Printf("Found %d mods already installed", len(installedModList))
+		return InstalledModListMsg(installedModList)
 	}
 }
 
