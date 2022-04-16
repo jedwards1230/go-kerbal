@@ -1,6 +1,8 @@
 # go-kerbal (WIP)
  
-This will eventually be a Golang clone of the Kerbal [CKAN Mod Manager](https://github.com/KSP-CKAN/CKAN). This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta).
+This will eventually be a Go clone of the Kerbal [CKAN Mod Manager](https://github.com/KSP-CKAN/CKAN). This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta).
+
+I use CKAN every time I play KSP. This project is mostly to get comfortable with Go. I would like to have this functional and ready to port for KSP 2 whenever that is released.
 
 ## To run
 ```
@@ -9,8 +11,9 @@ go build && ./go-kerbal
 ## Features so far:
  * Automatically keeps metadata up to date
  * Compiles metadata and displays info in the TUI
- * Finds Kerbal game directory
- * Sorts and filters mod list
+ * Downloads and installs mods
+ * Finds Kerbal game directory (offers manual input)
+ * Sorts and filters mod list (by name and compatibility)
  * Displays logs in-app
 
 ## Images
@@ -21,8 +24,13 @@ go build && ./go-kerbal
 ## TODO:
  * More metadata cleaning
  * Find mods currently installed on system
- * Implement downloader
- * Implement installer
  * Implement search box
- * Keep adding to the TUI
- * And a lot more...
+ * Make the TUI prettier
+ * Tweak the TUI
+   * More colors
+   * Add buttons
+   * Add installer
+   * Multi-select mods
+   * Progress bars
+   * Live logging? (currently updates log view on TUI event, not when logs are called)
+   * Better UI for Kerbal Directory input
