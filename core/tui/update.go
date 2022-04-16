@@ -24,17 +24,21 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.registry.ModList = msg
 		b.registry.SortModList(b.sortOptions)
 		b.logs = append(b.logs, "Mod list updated")
-		b.activeBox = constants.PrimaryBoxActive
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
+		// checks to not overwrite any required input screens
+		if !b.inputRequested {
+			b.activeBox = constants.PrimaryBoxActive
+		}
 	// Update KSP dir
 	case UpdateKspDirMsg:
 		if msg {
+			cfg := config.GetConfig()
 			log.Print("Kerbal directory updated")
 			b.textInput.Reset()
-			b.textInput.SetValue(fmt.Sprintf("Success!: %v", msg))
+			b.textInput.SetValue(fmt.Sprintf("Success!: %v", cfg.Settings.KerbalDir))
 			b.textInput.Blur()
 			b.inputRequested = false
 		} else {
@@ -91,8 +95,14 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if b.inputRequested {
+		b.activeBox = constants.SplashBoxActive
+		b.textInput.Placeholder = "KSP Directory..."
+		b.textInput.Focus()
+		b.textInput.Reset()
 		b.splashViewport.SetContent(b.inputKspView())
+		cmds = append(cmds, textinput.Blink)
 	}
+
 	b.textInput, cmd = b.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -135,12 +145,14 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
-		b.inputRequested = false
-		b.textInput.Reset()
-		b.textInput.Blur()
-		b.activeBox = constants.PrimaryBoxActive
-		b.primaryViewport.SetContent(b.modListView())
-		b.secondaryViewport.SetContent(b.modInfoView())
+		if !b.inputRequested {
+			//b.inputRequested = false
+			b.textInput.Reset()
+			b.textInput.Blur()
+			b.activeBox = constants.PrimaryBoxActive
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
+		}
 	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
@@ -158,7 +170,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		} else {
-			b.inputRequested = false
 			b.activeBox = constants.SplashBoxActive
 			b.splashViewport.SetContent(b.logView())
 			b.splashViewport.GotoBottom()
@@ -190,7 +201,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.secondaryViewport.SetContent(b.modInfoView())
 	// Input KSP dir
 	case key.Matches(msg, b.keyMap.EnterKspDir):
-		if b.activeBox == constants.SplashBoxActive && b.inputRequested {
+		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
 			b.inputRequested = false
 			b.activeBox = constants.PrimaryBoxActive
 			b.primaryViewport.SetContent(b.modListView())
@@ -206,7 +217,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
 		var mod = b.registry.SortedModList[b.selected]
-		b.logs = append(b.logs, "Downlaoding mod")
+		b.logs = append(b.logs, "Downloading mod")
 		cmds = append(cmds, b.downloadModCmd(mod.Download))
 	}
 

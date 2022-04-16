@@ -12,7 +12,7 @@ go build && ./go-kerbal
  * Automatically keeps metadata up to date
  * Compiles metadata and displays info in the TUI
  * Downloads and installs mods
- * Finds Kerbal game directory (offers manual input)
+ * Finds Kerbal game directory (prompts for directory if not found)
  * Sorts and filters mod list (by name and compatibility)
  * Displays logs in-app
 

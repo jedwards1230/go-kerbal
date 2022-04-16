@@ -66,8 +66,6 @@ func Execute() {
 		log.Printf("Kerbal Version: %v", cfg.Settings.KerbalVer)
 	}
 
-	// TODO: Handle custom folderpath input for game directory if not found
-
 	m := tui.InitialModel()
 	var opts []tea.ProgramOption
 

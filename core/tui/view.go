@@ -165,18 +165,33 @@ func (b Bubble) logView() string {
 }
 
 func (b Bubble) inputKspView() string {
-	s := "Please enter the path to your Kerbal Space Program directory:\n\n\n"
+	title := "Please enter the path to your Kerbal Space Program directory:"
 
+	titleStyle := constants.BoldTextStyle.Copy()
+	titleColumn := titleStyle.
+		Align(lipgloss.Left).
+		Width(b.width).
+		Padding(1).
+		Render(title)
+
+	inText := ""
 	if b.inputRequested {
-		s += b.textInput.View()
+		inText = b.textInput.View()
 	} else {
-		s += b.textInput.Value()
+		inText = b.textInput.Value()
 	}
 
-	return lipgloss.NewStyle().
-		Width(b.splashViewport.Width).
-		Height(b.splashViewport.Height).
-		Render(s)
+	inTextStyle := constants.BoldTextStyle.Copy()
+	inTextColumn := inTextStyle.
+		Align(lipgloss.Left).
+		Width(b.width).
+		Padding(1).
+		Render(inText)
+
+	return lipgloss.JoinVertical(lipgloss.Top,
+		titleColumn,
+		inTextColumn,
+	)
 }
 
 func (b Bubble) statusBarView() string {

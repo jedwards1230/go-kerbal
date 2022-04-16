@@ -42,7 +42,7 @@ func InitialModel() Bubble {
 		SortOrder: "ascend",
 	}
 
-	iRequested := false
+	iRequested := true
 	if cfg.Settings.KerbalDir == "" {
 		iRequested = true
 	}
@@ -57,7 +57,6 @@ func InitialModel() Bubble {
 	t := textinput.New()
 	t.Prompt = "❯ "
 	t.CharLimit = 0
-	//t.EchoMode = textinput.EchoMode(textinput.EchoNormal)
 	t.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
 	primaryVP := viewport.New(0, 0)
@@ -85,7 +84,7 @@ func InitialModel() Bubble {
 		theme.DefaultTextColor,
 		"go-kerbal help!",
 		[]help.HelpEntry{
-			{Key: "ctrl+c", Description: "Exit FM"},
+			{Key: "ctrl+c", Description: "Exit"},
 			{Key: "up", Description: "Move up"},
 			{Key: "down", Description: "Move down"},
 			{Key: "spacebar", Description: "Select an entry"},
@@ -121,9 +120,6 @@ func InitialModel() Bubble {
 func (b Bubble) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	cmds = append(cmds, b.getAvailableModsCmd())
-	cmds = append(cmds, textinput.Blink)
-
-	b.splashViewport.SetContent(b.loadingView())
 
 	return tea.Batch(cmds...)
 }
