@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
+	"github.com/jedwards1230/go-kerbal/core/help"
 	"github.com/jedwards1230/go-kerbal/core/theme"
-	"github.com/jedwards1230/go-kerbal/help"
 	"github.com/jedwards1230/go-kerbal/registry"
 )
 
