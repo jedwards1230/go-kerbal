@@ -211,9 +211,9 @@ func (b Bubble) statusBarView() string {
 
 	var showCompatible string
 	if cfg.Settings.HideIncompatibleMods {
-		showCompatible = "Hide incompatible mods"
+		showCompatible = "Hiding incompatible mods"
 	} else {
-		showCompatible = "Show incompatible mods"
+		showCompatible = "Showing incompatible mods"
 	}
 
 	showCompatibleStyle := constants.BoldTextStyle.Copy()
@@ -243,6 +243,7 @@ func (b Bubble) statusBarView() string {
 }
 
 func (b *Bubble) getMainButtonsView() string {
+	cfg := config.GetConfig()
 	refreshStyle := lipgloss.NewStyle().
 		Underline(true)
 	refreshColumn := refreshStyle.
@@ -251,13 +252,20 @@ func (b *Bubble) getMainButtonsView() string {
 		Height(constants.StatusBarHeight).
 		Render("1. Refresh")
 
+	showCompatible := "2. Hide incompatible mods"
+	if !cfg.Settings.HideIncompatibleMods {
+		showCompatible = "2. Hide incompatible mods"
+	} else {
+		showCompatible = "2. Show incompatible mods"
+	}
+
 	hideIncompatibleStyle := lipgloss.NewStyle().
 		Underline(true)
 	hideIncompatibleColumn := hideIncompatibleStyle.
 		Align(lipgloss.Right).
 		Padding(0, 2).
 		Height(constants.StatusBarHeight).
-		Render("2. Hide Incompatible")
+		Render(showCompatible)
 
 	sortOrderStyle := lipgloss.NewStyle().
 		Underline(true)

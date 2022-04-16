@@ -70,9 +70,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		b.primaryViewport.Width = (msg.Width / 2) - b.primaryViewport.Style.GetHorizontalFrameSize()
-		b.primaryViewport.Height = msg.Height - (constants.StatusBarHeight * 3) - b.primaryViewport.Style.GetVerticalFrameSize()
+		b.primaryViewport.Height = msg.Height - (constants.StatusBarHeight * 2) - b.primaryViewport.Style.GetVerticalFrameSize()
 		b.secondaryViewport.Width = (msg.Width / 2) - b.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.secondaryViewport.Height = msg.Height - (constants.StatusBarHeight * 3) - b.secondaryViewport.Style.GetVerticalFrameSize()
+		b.secondaryViewport.Height = msg.Height - (constants.StatusBarHeight * 2) - b.secondaryViewport.Style.GetVerticalFrameSize()
 
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
@@ -202,6 +202,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	// Input KSP dir
+	// TODO: This has been hanging/acting slow. Something is wrong.
 	case key.Matches(msg, b.keyMap.EnterKspDir):
 		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
 			b.inputRequested = false
