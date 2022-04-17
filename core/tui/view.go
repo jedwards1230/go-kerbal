@@ -105,10 +105,18 @@ func (b Bubble) modListView() string {
 				Background(b.theme.SelectedListItemColor).
 				Foreground(b.theme.UnselectedListItemColor).
 				Width(b.primaryViewport.Width).
-				Render(fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name))
+				Render(truncate.StringWithTail(
+					fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name),
+					uint(b.primaryViewport.Width-2),
+					"..."),
+				)
 		} else {
 			s += lipgloss.NewStyle().
-				Render(fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name))
+				Render(truncate.StringWithTail(
+					fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name),
+					uint(b.primaryViewport.Width-2),
+					"..."),
+				)
 		}
 		s += "\n"
 	}
