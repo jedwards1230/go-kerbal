@@ -24,8 +24,9 @@ type Ckan struct {
 	Epoch                string
 	Resources            resource
 	SearchTags           map[string]interface{}
-	ModDepends           map[string]interface{}
+	ModDepends           dependencies
 	ModConflicts         map[string]interface{}
+	InstallInfo          install
 	Installed            bool
 	IsCompatible         bool
 	SpecVersion          string
@@ -37,6 +38,15 @@ type Ckan struct {
 	SearchableIdentifier string
 }
 
+type dependencies struct {
+	Name []string
+}
+
+type install struct {
+	Find      string
+	InstallTo string
+}
+
 type resource struct {
 	Homepage    string `json:"homepage"`
 	Spacedock   string `json:"spacedock"`
@@ -46,6 +56,10 @@ type resource struct {
 
 // Initialize struct values in-place
 func (c *Ckan) Init(raw map[string]interface{}) error {
+	/* for k, v := range raw {
+		log.Printf("%v: %v", k, v)
+	}
+	log.Panic() */
 	err := c.cleanNames(raw)
 	if err != nil {
 		return err
@@ -63,7 +77,6 @@ func (c *Ckan) Init(raw map[string]interface{}) error {
 
 	err = c.cleanVersions(raw)
 	if err != nil {
-		//log.Printf("cleanVersions error: %v", err)
 		return err
 	}
 
@@ -77,6 +90,11 @@ func (c *Ckan) Init(raw map[string]interface{}) error {
 	}
 
 	err = c.cleanDownload(raw)
+	if err != nil {
+		return err
+	}
+
+	err = c.cleanInstall(raw)
 	if err != nil {
 		return err
 	}
@@ -104,9 +122,27 @@ func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
 	return nil
 }
 
+func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
+	if raw["install"] != nil {
+		var installInfo install
+		rawI := raw["install"].([]interface{})
+		if len(rawI) > 0 {
+			rawInstall := rawI[0].(map[string]interface{})
+			if rawInstall["find"] != nil && rawInstall["install_to"] != nil {
+				installInfo.Find = rawInstall["find"].(string)
+				installInfo.InstallTo = rawInstall["install_to"].(string)
+
+				if installInfo.Find != "" && installInfo.InstallTo != "" {
+					c.InstallInfo = installInfo
+					return nil
+				}
+			}
+		}
+	}
+	return fmt.Errorf("error proccessing install info: %v", raw["install"])
+}
+
 // Clean author name data.
-//
-//
 func (c *Ckan) cleanAuthors(raw map[string]interface{}) error {
 	switch author := raw["author"].(type) {
 	case []interface{}:

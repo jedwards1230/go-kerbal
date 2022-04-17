@@ -71,18 +71,20 @@ func (r *Registry) GetModList() []database.Ckan {
 	var newList []database.Ckan
 	r.DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
+			// extract mod
 			err := json.Unmarshal([]byte(value), &ckan)
 			if err != nil {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
-			// TODO: compare InstalledModList value to proper install dir value of mod
-			if r.InstalledModList[ckan.Identifier] {
+			// check if mod is installed
+			if r.InstalledModList[ckan.InstallInfo.Find] {
 				ckan.Installed = true
 			} else {
 				ckan.Installed = false
 			}
 
+			// add to list
 			newList = append(newList, ckan)
 			return true
 		})
