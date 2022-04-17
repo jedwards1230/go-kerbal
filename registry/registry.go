@@ -4,6 +4,7 @@ import (
 	"log"
 	"sort"
 
+	"github.com/hashicorp/go-version"
 	"github.com/segmentio/encoding/json"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
@@ -98,20 +99,46 @@ func getCompatibleModList(modList []database.Ckan) []database.Ckan {
 
 // Filters list by unique identifiers to ensure duplicate mods are not displayed
 func getUniqueModList(modList []database.Ckan) []database.Ckan {
-	var sortedModList []database.Ckan
-	idList := make(map[string]bool)
+	//idVersionList := make(map[string]*version.Version)
+	sortedModMap := make(map[string]database.Ckan)
 	countGood := 0
 	countBad := 0
 	for _, mod := range modList {
-		// TODO: Compare mod versions
-		if idList[mod.Identifier] {
+		// convert to proper version type for comparison
+		foundVersion, err := version.NewVersion(mod.Version)
+		if err != nil {
+			log.Printf("Error creating version: %v", err)
+		}
+
+		// check if mod is stored already
+		if sortedModMap[mod.Identifier].Identifier != "" {
+			// convert to proper version type for comparison
+			storedVersion, err := version.NewVersion(sortedModMap[mod.Identifier].Version)
+			if err != nil {
+				log.Printf("Error creating version: %v", err)
+			}
+
+			// compare versions and store most recent
+			if foundVersion.GreaterThan(storedVersion) {
+				// replace old mod
+				sortedModMap[mod.Identifier] = mod
+			}
 			countBad += 1
 		} else {
-			sortedModList = append(sortedModList, mod)
-			idList[mod.Identifier] = true
+			// store mod if slot is empty
+			sortedModMap[mod.Identifier] = mod
 			countGood += 1
 		}
 	}
+
+	// map to slice
+	//
+	// TODO: this is only done because i originally had a slice for this. check if keeping it as a map is better
+	sortedModList := make([]database.Ckan, 0, countGood)
+	for _, v := range sortedModMap {
+		sortedModList = append(sortedModList, v)
+	}
+
 	log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
 	return sortedModList
 }
