@@ -35,9 +35,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case InstalledModListMsg:
 		b.registry.InstalledModList = msg
 		b.logs = append(b.logs, "Installed mod list updated")
-		for k, v := range msg {
-			log.Printf("%v, %v", k, v)
-		}
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	// Update KSP dir

@@ -26,7 +26,7 @@ type CkanDB struct {
 
 // Open database file
 func GetDB() *CkanDB {
-	database, _ := buntdb.Open("../../data.db")
+	database, _ := buntdb.Open("./data.db")
 	db := &CkanDB{DB: database}
 	return db
 }
