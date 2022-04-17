@@ -13,7 +13,7 @@ import (
 )
 
 func Execute() {
-	config.LoadConfig("../")
+	config.LoadConfig("./")
 	cfg := config.GetConfig()
 
 	// If logging is enabled, logs will be output to debug.log.
