@@ -59,6 +59,15 @@ func TestCheckInstalledMods(t *testing.T) {
 		t.Errorf("error checking mods: %v", err)
 	}
 	for i := range installedMods {
-		log.Printf("Found mod: %s", installedMods[i])
+		log.Printf("Found mod: %v", installedMods[i])
+	}
+}
+
+func BenchmarkCheckInstalledMods(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		installedMods, err := CheckInstalledMods()
+		if err != nil || installedMods == nil {
+			b.Errorf("error checking mods: %v", err)
+		}
 	}
 }
