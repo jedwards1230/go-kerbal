@@ -86,23 +86,42 @@ func (b Bubble) View() string {
 
 func (b Bubble) modListView() string {
 	// construct list
-	s := "\n  Mod List\n\n"
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Width(b.primaryViewport.Width).
+		Height(3).
+		Padding(1).
+		Render("Mod List")
+
+	s := ""
 	for i := range b.registry.SortedModList {
-		cursor := " "
-		if b.nav.listCursor == i {
-			cursor = ">"
-		}
 		checked := " "
 		if i == b.nav.listSelected {
 			checked = "x"
 		}
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, b.registry.SortedModList[i].Name)
+
+		if b.nav.listCursor == i {
+			s += lipgloss.NewStyle().
+				Background(b.theme.SelectedListItemColor).
+				Foreground(b.theme.UnselectedListItemColor).
+				Width(b.primaryViewport.Width).
+				Render(fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name))
+		} else {
+			s += lipgloss.NewStyle().
+				Render(fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name))
+		}
+		s += "\n"
 	}
 
-	return lipgloss.NewStyle().
-		Width(b.secondaryViewport.Width).
-		Height(b.secondaryViewport.Height).
+	modList := lipgloss.NewStyle().
+		Width(b.primaryViewport.Width).
+		Height(b.primaryViewport.Height - 3).
 		Render(s)
+
+	return lipgloss.JoinVertical(lipgloss.Top,
+		title,
+		modList,
+	)
 }
 
 func (b Bubble) modInfoView() string {
@@ -158,14 +177,12 @@ func (b Bubble) logView() string {
 }
 
 func (b Bubble) inputKspView() string {
-	title := "Please enter the path to your Kerbal Space Program directory:"
-
 	titleStyle := constants.BoldTextStyle.Copy()
-	titleColumn := titleStyle.
+	title := titleStyle.
 		Align(lipgloss.Left).
 		Width(b.width).
 		Padding(1).
-		Render(title)
+		Render("Please enter the path to your Kerbal Space Program directory:")
 
 	inText := ""
 	if b.inputRequested {
@@ -183,7 +200,7 @@ func (b Bubble) inputKspView() string {
 		Render(inText)
 
 	return lipgloss.JoinVertical(lipgloss.Top,
-		titleColumn,
+		title,
 		inTextColumn,
 	)
 }

@@ -4,6 +4,8 @@ import "github.com/charmbracelet/lipgloss"
 
 // Theme represents the properties that make up a theme.
 type Theme struct {
+	SelectedListItemColor                lipgloss.AdaptiveColor
+	UnselectedListItemColor              lipgloss.AdaptiveColor
 	SelectedTreeItemColor                lipgloss.AdaptiveColor
 	UnselectedTreeItemColor              lipgloss.AdaptiveColor
 	ActiveBoxBorderColor                 lipgloss.AdaptiveColor
@@ -82,6 +84,8 @@ var colors = appColors{
 // themeMap represents the mapping of different themes.
 var themeMap = map[string]Theme{
 	"default": {
+		SelectedListItemColor:                lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
+		UnselectedListItemColor:              lipgloss.AdaptiveColor{Dark: colors.black, Light: colors.white},
 		SelectedTreeItemColor:                lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},
 		UnselectedTreeItemColor:              lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
 		ActiveBoxBorderColor:                 lipgloss.AdaptiveColor{Dark: colors.holidayGreen, Light: colors.holidayGreen},
