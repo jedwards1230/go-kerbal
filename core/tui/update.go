@@ -33,8 +33,13 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.activeBox = constants.PrimaryBoxActive
 		}
 	case InstalledModListMsg:
-		b.registry.InstalledModList = msg
-		b.logs = append(b.logs, "Installed mod list updated")
+		if len(b.registry.InstalledModList) != len(msg) {
+			b.logs = append(b.logs, "Installed mod list updated")
+			log.Printf("Updated installed mod list")
+			b.registry.InstalledModList = msg
+		} else {
+			b.logs = append(b.logs, "No changes made")
+		}
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	// Update KSP dir
@@ -52,12 +57,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.textInput.Placeholder = "Try again..."
 		}
 		b.splashViewport.SetContent(b.inputKspView())
-	case DownloadModMsg:
-		if msg {
-			b.logs = append(b.logs, "Mod downloaded and installed")
-		} else {
-			b.logs = append(b.logs, "Error downloading mod")
-		}
 	case ErrorMsg:
 		log.Printf("Error message in update: %v", msg)
 	// Window resize
@@ -226,7 +225,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Download):
 		var mod = b.registry.SortedModList[b.nav.listSelected]
 		b.logs = append(b.logs, "Downloading mod")
-		cmds = append(cmds, b.downloadModCmd(mod.Download))
+		cmds = append(cmds, b.downloadModCmd(mod))
 	}
 
 	return tea.Batch(cmds...)

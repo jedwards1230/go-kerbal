@@ -13,7 +13,6 @@ type (
 	UpdatedModListMsg   []database.Ckan
 	InstalledModListMsg map[string]bool
 	UpdateKspDirMsg     bool
-	DownloadModMsg      bool
 	ErrorMsg            error
 )
 
@@ -28,19 +27,6 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 			updatedModList = b.registry.GetModList()
 		}
 		return UpdatedModListMsg(updatedModList)
-	}
-}
-
-// Check filesystem for installed mods
-func (b Bubble) getInstalledModsCmd() tea.Cmd {
-	return func() tea.Msg {
-		log.Print("Checking installed mods")
-		installedModList, err := dirfs.CheckInstalledMods()
-		if err != nil {
-			return ErrorMsg(err)
-		}
-		log.Printf("Found %d mods already installed", len(installedModList))
-		return InstalledModListMsg(installedModList)
 	}
 }
 
@@ -63,14 +49,26 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 }
 
 // Download selected mods
-func (b Bubble) downloadModCmd(url string) tea.Cmd {
+func (b Bubble) downloadModCmd(mod database.Ckan) tea.Cmd {
 	return func() tea.Msg {
-		log.Printf("Mod download requested: %s", url)
-		err := dirfs.DownloadMod(url)
+		// TODO: find links for dependencies
+		if len(mod.ModDepends) > 0 {
+			for i := range mod.ModDepends {
+				log.Printf("Depends on: %v", mod.ModDepends[i])
+			}
+		} else {
+			log.Print("No dependencies detected")
+		}
+		log.Printf("Mod download requested: %s", mod.Download)
+		err := dirfs.DownloadMod(mod.Download)
 		if err != nil {
 			log.Printf("Error downloading: %v", err)
-			return DownloadModMsg(false)
+			return ErrorMsg(err)
 		}
-		return DownloadModMsg(true)
+		installedModList, err := dirfs.CheckInstalledMods()
+		if err != nil {
+			return ErrorMsg(err)
+		}
+		return InstalledModListMsg(installedModList)
 	}
 }

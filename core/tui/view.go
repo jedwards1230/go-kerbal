@@ -132,25 +132,27 @@ func (b Bubble) modInfoView() string {
 		s += "Mod\n\n"
 		s += fmt.Sprintf(
 			"Name:             %s\n"+
-				"Identifier:       %s\n"+
 				"Author:           %s\n\n"+
+				"Identifier:       %s\n"+
 				"Installed:        %v\n\n"+
 				"Version:          %s\n"+
 				"KSP Max Version:  %s\n"+
 				"KSP Min Version:  %s\n\n"+
 				"Abstract:         %s\n\n"+
 				"License:          %s\n\n"+
-				"Download:         %s\n\n",
+				"Download:         %s\n\n"+
+				"Dependencies:         %s\n\n",
 			mod.Name,
-			mod.Identifier,
 			mod.Author,
+			mod.Identifier,
 			mod.Installed,
 			mod.Version,
 			mod.VersionKspMax,
 			mod.VersionKspMin,
 			mod.Abstract,
 			mod.License,
-			mod.Download)
+			mod.Download,
+			mod.ModDepends)
 	} else {
 		s += b.help.View()
 	}

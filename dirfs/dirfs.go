@@ -263,5 +263,6 @@ func CheckInstalledMods() (map[string]bool, error) {
 		}
 	}
 
+	log.Printf("Found %d mods installed", len(installedMods))
 	return installedMods, nil
 }

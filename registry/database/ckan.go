@@ -24,7 +24,7 @@ type Ckan struct {
 	Epoch                string
 	Resources            resource
 	SearchTags           map[string]interface{}
-	ModDepends           dependencies
+	ModDepends           []string
 	ModConflicts         map[string]interface{}
 	InstallInfo          install
 	Installed            bool
@@ -36,10 +36,6 @@ type Ckan struct {
 	SearchableName       string
 	SearchableAbstract   string
 	SearchableIdentifier string
-}
-
-type dependencies struct {
-	Name []string
 }
 
 type install struct {
@@ -99,6 +95,11 @@ func (c *Ckan) Init(raw map[string]interface{}) error {
 		return err
 	}
 
+	err = c.cleanDependencies(raw)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
@@ -140,6 +141,26 @@ func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
 		}
 	}
 	return fmt.Errorf("error proccessing install info: %v", raw["install"])
+}
+
+func (c *Ckan) cleanDependencies(raw map[string]interface{}) error {
+	if raw["depends"] != nil {
+		dependsInfo := make([]string, 0)
+		rawI := raw["depends"].([]interface{})
+		if len(rawI) > 0 {
+			rawDepends := rawI[0].(map[string]interface{})
+			if rawDepends["name"] != nil {
+				dependsInfo = append(dependsInfo, rawDepends["name"].(string))
+
+				if len(dependsInfo) > 0 {
+					c.ModDepends = dependsInfo
+					return nil
+				}
+				return fmt.Errorf("error proccessing install dependencies: %v", raw["depends"])
+			}
+		}
+	}
+	return nil
 }
 
 // Clean author name data.
