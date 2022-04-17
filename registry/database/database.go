@@ -32,8 +32,6 @@ func GetDB() *CkanDB {
 }
 
 // Update the database by checking the repo and applying any new changes
-//
-// TODO: compare speeds between downloading to memory vs storage. currently uses <= 7GB of memory on git clones.
 func (db *CkanDB) UpdateDB(force_update bool) error {
 	log.Printf("Updating DB. Force Update: %v", force_update)
 	// Check if update is required

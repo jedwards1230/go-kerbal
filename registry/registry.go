@@ -8,6 +8,7 @@ import (
 	"github.com/segmentio/encoding/json"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
+	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/tidwall/buntdb"
 )
@@ -27,9 +28,14 @@ type SortOptions struct {
 // Initializes database and registry
 func GetRegistry() Registry {
 	db := database.GetDB()
+	installedList, err := dirfs.CheckInstalledMods()
+	if err != nil {
+		log.Printf("Error checking installed mods: %v", err)
+	}
 
 	return Registry{
-		DB: db,
+		DB:               db,
+		InstalledModList: installedList,
 	}
 }
 
@@ -70,6 +76,13 @@ func (r *Registry) GetModList() []database.Ckan {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
+			// TODO: compare InstalledModList value to proper install dir value of mod
+			if r.InstalledModList[ckan.Identifier] {
+				ckan.Installed = true
+			} else {
+				ckan.Installed = false
+			}
+
 			newList = append(newList, ckan)
 			return true
 		})
@@ -99,7 +112,6 @@ func getCompatibleModList(modList []database.Ckan) []database.Ckan {
 
 // Filters list by unique identifiers to ensure duplicate mods are not displayed
 func getUniqueModList(modList []database.Ckan) []database.Ckan {
-	//idVersionList := make(map[string]*version.Version)
 	sortedModMap := make(map[string]database.Ckan)
 	countGood := 0
 	countBad := 0

@@ -26,6 +26,7 @@ type Ckan struct {
 	SearchTags           map[string]interface{}
 	ModDepends           map[string]interface{}
 	ModConflicts         map[string]interface{}
+	Installed            bool
 	IsCompatible         bool
 	SpecVersion          string
 	Version              string
