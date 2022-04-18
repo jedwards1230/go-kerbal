@@ -4,12 +4,17 @@ import "github.com/charmbracelet/lipgloss"
 
 // Theme represents the properties that make up a theme.
 type Theme struct {
-	SelectedListItemColor                lipgloss.AdaptiveColor
-	UnselectedListItemColor              lipgloss.AdaptiveColor
+	// Light: black | Dark: white
+	SelectedListItemColor lipgloss.AdaptiveColor
+	// Light: white | Dark: black
+	UnselectedListItemColor lipgloss.AdaptiveColor
+	// Light: green | Dark: green
+	InstalledListItemColor lipgloss.AdaptiveColor
+	ActiveBoxBorderColor   lipgloss.AdaptiveColor
+	InactiveBoxBorderColor lipgloss.AdaptiveColor
+
 	SelectedTreeItemColor                lipgloss.AdaptiveColor
 	UnselectedTreeItemColor              lipgloss.AdaptiveColor
-	ActiveBoxBorderColor                 lipgloss.AdaptiveColor
-	InactiveBoxBorderColor               lipgloss.AdaptiveColor
 	SpinnerColor                         lipgloss.AdaptiveColor
 	StatusBarSelectedFileForegroundColor lipgloss.AdaptiveColor
 	StatusBarSelectedFileBackgroundColor lipgloss.AdaptiveColor
@@ -25,10 +30,12 @@ type Theme struct {
 
 // appColors contains the different types of colors.
 type appColors struct {
-	white              string
+	white string
+	black string
+	green string
+
 	darkGray           string
 	red                string
-	black              string
 	defaultPink        string
 	defaultLightPurple string
 	defaultDarkPurple  string
@@ -54,10 +61,12 @@ type appColors struct {
 
 // Colors contains the different kinds of colors and their values.
 var colors = appColors{
-	white:              "#FFFDF5",
+	white: "#FFFDF5",
+	black: "#000000",
+	green: "#00ff00",
+
 	darkGray:           "#3c3836",
 	red:                "#cc241d",
-	black:              "#000000",
 	defaultPink:        "#F25D94",
 	defaultLightPurple: "#A550DF",
 	defaultDarkPurple:  "#6124DF",
@@ -84,12 +93,14 @@ var colors = appColors{
 // themeMap represents the mapping of different themes.
 var themeMap = map[string]Theme{
 	"default": {
-		SelectedListItemColor:                lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
-		UnselectedListItemColor:              lipgloss.AdaptiveColor{Dark: colors.black, Light: colors.white},
+		SelectedListItemColor:   lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
+		UnselectedListItemColor: lipgloss.AdaptiveColor{Dark: colors.black, Light: colors.white},
+		InstalledListItemColor:  lipgloss.AdaptiveColor{Dark: colors.green, Light: colors.green},
+		ActiveBoxBorderColor:    lipgloss.AdaptiveColor{Dark: colors.holidayGreen, Light: colors.holidayGreen},
+		InactiveBoxBorderColor:  lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
+
 		SelectedTreeItemColor:                lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},
 		UnselectedTreeItemColor:              lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
-		ActiveBoxBorderColor:                 lipgloss.AdaptiveColor{Dark: colors.holidayGreen, Light: colors.holidayGreen},
-		InactiveBoxBorderColor:               lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.black},
 		SpinnerColor:                         lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},
 		StatusBarSelectedFileForegroundColor: lipgloss.AdaptiveColor{Dark: colors.white, Light: colors.white},
 		StatusBarSelectedFileBackgroundColor: lipgloss.AdaptiveColor{Dark: colors.defaultPink, Light: colors.defaultPink},

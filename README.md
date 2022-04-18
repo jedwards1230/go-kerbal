@@ -24,10 +24,12 @@ go build && ./go-kerbal
 ![Input Directory View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/inputDir.png?raw=true)
 
 ## TODO:
+ * KSP repair script
+ * Reliable way to find current KSP version
+ * More precise install functions/validation
  * More metadata cleaning
  * Check mod conflicts/dependencies 
  * Implement search box
- * Make the TUI prettier
  * Tweak the TUI
    * More colors
    * Multi-select mods
