@@ -237,6 +237,16 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Download):
 		b.logs = append(b.logs, "Downloading mod")
 		cmds = append(cmds, b.downloadModCmd())
+	case key.Matches(msg, b.keyMap.Settings):
+		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
+			b.activeBox = constants.PrimaryBoxActive
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
+		} else {
+			b.activeBox = constants.SplashBoxActive
+			b.splashViewport.SetContent(b.settingsView())
+			b.splashViewport.GotoTop()
+		}
 	}
 
 	return tea.Batch(cmds...)

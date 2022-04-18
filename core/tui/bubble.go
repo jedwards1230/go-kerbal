@@ -88,7 +88,6 @@ func InitialModel() Bubble {
 
 	h := help.New(
 		theme.DefaultTextColor,
-		"go-kerbal help!",
 		[]help.HelpEntry{
 			{Key: "ctrl+c", Description: "Exit"},
 			{Key: "up", Description: "Move up"},
@@ -97,13 +96,15 @@ func InitialModel() Bubble {
 			{Key: "enter", Description: "Select mod for install"},
 			{Key: "tab", Description: "Swap active views"},
 			{},
-			{Key: "O", Description: "Show logs if debugging enabled"},
+			{Key: "shift + o", Description: "Show logs if debugging enabled"},
 			{},
 			{Key: "1", Description: "Refresh mod list"},
 			{Key: "2", Description: "Toggle hiding incompatible mods"},
 			{Key: "3", Description: "Toggle sort order (ascend/descend)"},
 			{Key: "4", Description: "Update KSP directory"},
 			{Key: "5", Description: "Download selected mod"},
+			{},
+			{Key: "0", Description: "View settings"},
 		})
 
 	nav := Nav{

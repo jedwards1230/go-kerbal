@@ -213,6 +213,41 @@ func (b Bubble) logView() string {
 	)
 }
 
+func (b *Bubble) settingsView() string {
+	cfg := config.GetConfig()
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Width(b.splashViewport.Width).
+		Height(3).
+		Padding(1).
+		Render("Settings")
+
+	lineStyle := lipgloss.NewStyle().
+		Padding(1).
+		Align(lipgloss.Left).
+		Width(b.splashViewport.Width)
+
+	content := lineStyle.Render(fmt.Sprintf("Kerbal Directory: %v", cfg.Settings.KerbalDir))
+	content += lineStyle.Render(fmt.Sprintf("Kerbal Version: %v", cfg.Settings.KerbalVer))
+	content += lineStyle.Render(fmt.Sprintf("Logging: %v", cfg.Settings.EnableLogging))
+	content += lineStyle.Render(fmt.Sprintf("Mousewheel: %v", cfg.Settings.EnableMouseWheel))
+	content += lineStyle.Render(fmt.Sprintf("Hide incompatible: %v", cfg.Settings.HideIncompatibleMods))
+	content += lineStyle.Render(fmt.Sprintf("Metadata Repo: %v", cfg.Settings.MetaRepo))
+	content += lineStyle.Render(fmt.Sprintf("Last Repo Hash: %v", cfg.Settings.LastRepoHash))
+	content += lineStyle.Render(fmt.Sprintf("Theme: %v", cfg.AppTheme))
+
+	body := lipgloss.NewStyle().
+		Width(b.splashViewport.Width).
+		Height(b.splashViewport.Height - 3).
+		Render(content)
+
+	return lipgloss.JoinVertical(lipgloss.Top,
+		title,
+		body,
+	)
+}
+
 func (b Bubble) inputKspView() string {
 	title := lipgloss.NewStyle().
 		Bold(true).
@@ -281,6 +316,7 @@ func (b Bubble) statusBarView() string {
 
 	status := "Status: " + b.logs[len(b.logs)-1]
 	statusColumn := statusBarStyle.
+		Align(lipgloss.Left).
 		Padding(0, 1).
 		Width(b.width - width(fileCountColumn) - width(sortOptionsColumn) - width(showCompatibleColumn)).
 		Render(truncate.StringWithTail(

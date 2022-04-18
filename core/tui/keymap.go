@@ -21,6 +21,7 @@ type KeyMap struct {
 	SwapSortOrder    key.Binding
 	EnterKspDir      key.Binding
 	Download         key.Binding
+	Settings         key.Binding
 }
 
 // DefaultKeyMap returns a set of pager-like default keybindings.
@@ -77,6 +78,10 @@ func DefaultKeyMap() KeyMap {
 		Download: key.NewBinding(
 			key.WithKeys("5"),
 			key.WithHelp("5", "download selected mod"),
+		),
+		Settings: key.NewBinding(
+			key.WithKeys("0"),
+			key.WithHelp("0", "open settings"),
 		),
 	}
 }
