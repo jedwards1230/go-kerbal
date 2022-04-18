@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/hashicorp/go-version"
@@ -85,7 +86,7 @@ func (r *Registry) GetModList() []database.Ckan {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
-			// TODO: better check for isntalled mods. this is not accurate at all.
+			// TODO: better check for installed mods. this is not accurate at all.
 			// check if mod is installed
 			if r.InstalledModList[ckan.InstallInfo.Find] {
 				ckan.Installed = true
@@ -300,13 +301,16 @@ func installMod(mod database.Ckan) error {
 		return fmt.Errorf("error getting KSP dir: %v", err)
 	}
 
-	// TODO: validate mod is being installed to proper location
-
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
-		err := dirfs.UnzipFile(f, destination)
-		if err != nil {
-			return fmt.Errorf("error unzipping file to filesystem: %v", err)
+		// verify mod being isntalled to folder location in metadata
+		if strings.Contains(f.Name, mod.InstallInfo.InstallTo) {
+			err := dirfs.UnzipFile(f, destination)
+			if err != nil {
+				return fmt.Errorf("error unzipping file to filesystem: %v", err)
+			}
+		} else {
+			return fmt.Errorf("error unzipping: %v", f.Name)
 		}
 	}
 

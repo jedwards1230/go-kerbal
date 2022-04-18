@@ -213,7 +213,7 @@ func (b Bubble) logView() string {
 	)
 }
 
-func (b *Bubble) settingsView() string {
+func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
 	title := lipgloss.NewStyle().
 		Bold(true).
@@ -333,7 +333,7 @@ func (b Bubble) statusBarView() string {
 	)
 }
 
-func (b *Bubble) getMainButtonsView() string {
+func (b Bubble) getMainButtonsView() string {
 	cfg := config.GetConfig()
 
 	buttonStyle := lipgloss.NewStyle().
