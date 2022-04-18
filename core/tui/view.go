@@ -33,19 +33,17 @@ func (b Bubble) View() string {
 		}
 
 		// format views
-		primaryBoxBorder := lipgloss.NormalBorder()
 		b.primaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
 			PaddingRight(constants.BoxPadding).
-			Border(primaryBoxBorder).
+			Border(lipgloss.NormalBorder()).
 			BorderForeground(primaryBoxBorderColor)
 		primaryBox = b.primaryViewport.View()
 
-		secondaryBoxBorder := lipgloss.NormalBorder()
 		b.secondaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
 			PaddingRight(constants.BoxPadding).
-			Border(secondaryBoxBorder).
+			Border(lipgloss.NormalBorder()).
 			BorderForeground(secondaryBoxBorderColor)
 		secondaryBox = b.secondaryViewport.View()
 
@@ -63,11 +61,10 @@ func (b Bubble) View() string {
 	case constants.SplashBoxActive:
 		var splashBox string
 
-		splashBoxBorder := lipgloss.NormalBorder()
 		b.splashViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(constants.BoxPadding).
 			PaddingRight(constants.BoxPadding).
-			Border(splashBoxBorder).
+			Border(lipgloss.NormalBorder()).
 			BorderForeground(b.theme.ActiveBoxBorderColor)
 		splashBox = b.splashViewport.View()
 
@@ -85,7 +82,6 @@ func (b Bubble) View() string {
 }
 
 func (b Bubble) modListView() string {
-	// construct list
 	title := lipgloss.NewStyle().
 		Bold(true).
 		Align(lipgloss.Center).
@@ -97,6 +93,7 @@ func (b Bubble) modListView() string {
 	s := ""
 	for i := range b.registry.SortedModList {
 		mod := b.registry.SortedModList[i]
+
 		checked := " "
 		if b.nav.installSelected[mod.Identifier] {
 			checked = "x"
@@ -126,74 +123,106 @@ func (b Bubble) modListView() string {
 		s += "\n"
 	}
 
-	modList := lipgloss.NewStyle().
+	body := lipgloss.NewStyle().
 		Width(b.primaryViewport.Width).
 		Height(b.primaryViewport.Height - 3).
 		Render(s)
 
 	return lipgloss.JoinVertical(lipgloss.Top,
 		title,
-		modList,
+		body,
 	)
 }
 
 func (b Bubble) modInfoView() string {
-	s := "\n"
+	var title, body string
+
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Width(b.secondaryViewport.Width).
+		Height(3).
+		Padding(1)
+
+	bodyStyle := lipgloss.NewStyle().
+		Width(b.secondaryViewport.Width).
+		Height(b.secondaryViewport.Height - 3)
+
 	if b.nav.listSelected >= 0 {
 		var mod = b.registry.SortedModList[b.nav.listSelected]
 
-		s += "Mod\n\n"
-		s += fmt.Sprintf(
-			"Name:             %s\n"+
-				"Author:           %s\n\n"+
-				"Identifier:       %s\n"+
+		title = titleStyle.Render(mod.Name)
+
+		s := fmt.Sprintf(
+			""+
+				"Author:           %v\n\n"+
 				"Installed:        %v\n\n"+
-				"Version:          %s\n"+
-				"KSP Max Version:  %s\n"+
-				"KSP Min Version:  %s\n\n"+
-				"Abstract:         %s\n\n"+
-				"License:          %s\n\n"+
-				"Download:         %s\n\n"+
-				"Dependencies:         %s\n\n",
-			mod.Name,
+				"Abstract:         %v\n\n"+
+				"Identifier:       %v\n"+
+				"Version:          %v\n"+
+				"KSP Version:      %v - %v\n"+
+				"Dependencies:     %v\n\n"+
+				"License:          %v\n\n"+
+				"Download:         %v\n\n",
 			mod.Author,
-			mod.Identifier,
 			mod.Installed,
-			mod.Version,
-			mod.VersionKspMax,
-			mod.VersionKspMin,
 			mod.Abstract,
+			mod.Identifier,
+			mod.Version,
+			mod.VersionKspMin,
+			mod.VersionKspMax,
+			mod.ModDepends,
 			mod.License,
-			mod.Download,
-			mod.ModDepends)
+			mod.Download)
+
+		body = bodyStyle.Render(s)
 	} else {
-		s += b.help.View()
+		title = titleStyle.Render("Help Menu")
+		body = bodyStyle.Render(b.help.View())
 	}
 
-	return lipgloss.NewStyle().
-		Width(b.secondaryViewport.Width).
-		Height(b.secondaryViewport.Height).
-		Render(s)
+	return lipgloss.JoinVertical(lipgloss.Top,
+		title,
+		body,
+	)
 }
 
 func (b Bubble) logView() string {
-	s := "Logs\n"
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Width(b.splashViewport.Width).
+		Height(3).
+		Padding(1).
+		Render("Logs")
 
 	content, err := ioutil.ReadFile("debug.log")
 	if err != nil {
 		log.Fatal(err)
 	}
-	s += string(content)
+	s := string(content)
 
-	return lipgloss.NewStyle().
+	body := lipgloss.NewStyle().
 		Width(b.splashViewport.Width).
-		Height(b.splashViewport.Height).
+		Height(b.splashViewport.Height - 3).
 		Render(s)
+
+	return lipgloss.JoinVertical(lipgloss.Top,
+		title,
+		body,
+	)
 }
 
 func (b Bubble) inputKspView() string {
-	titleStyle := constants.BoldTextStyle.Copy()
-	title := titleStyle.
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Width(b.splashViewport.Width).
+		Height(3).
+		Padding(1).
+		Render("Kerbal Space Program Directory")
+
+	question := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Width(b.width).
 		Padding(1).
@@ -207,8 +236,7 @@ func (b Bubble) inputKspView() string {
 		inText += "\n\nPress Esc to close"
 	}
 
-	inTextStyle := constants.BoldTextStyle.Copy()
-	inTextColumn := inTextStyle.
+	inText = lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Width(b.width).
 		Padding(1).
@@ -216,31 +244,28 @@ func (b Bubble) inputKspView() string {
 
 	return lipgloss.JoinVertical(lipgloss.Top,
 		title,
-		inTextColumn,
+		question,
+		inText,
 	)
 }
 
 func (b Bubble) statusBarView() string {
 	cfg := config.GetConfig()
-	var status = "Status: " + b.logs[len(b.logs)-1]
-
 	width := lipgloss.Width
-	var fileCount = fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.SortedModList))
 
-	fileCountStyle := constants.BoldTextStyle.Copy()
-	fileCountColumn := fileCountStyle.
+	statusBarStyle := lipgloss.NewStyle().
+		Height(constants.StatusBarHeight)
+
+	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.SortedModList))
+	fileCountColumn := statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 1).
-		Height(constants.StatusBarHeight).
 		Render(fileCount)
 
 	sortOptions := fmt.Sprintf("Sort: %s by %s", b.sortOptions.SortOrder, b.sortOptions.SortTag)
-
-	sortOptionsStyle := constants.BoldTextStyle.Copy()
-	sortOptionsColumn := sortOptionsStyle.
+	sortOptionsColumn := statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 3).
-		Height(constants.StatusBarHeight).
 		Render(sortOptions)
 
 	var showCompatible string
@@ -249,18 +274,14 @@ func (b Bubble) statusBarView() string {
 	} else {
 		showCompatible = "Showing incompatible mods"
 	}
-
-	showCompatibleStyle := constants.BoldTextStyle.Copy()
-	showCompatibleColumn := showCompatibleStyle.
+	showCompatibleColumn := statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 3).
-		Height(constants.StatusBarHeight).
 		Render(showCompatible)
 
-	statusStyle := constants.BoldTextStyle.Copy()
-	statusColumn := statusStyle.
+	status := "Status: " + b.logs[len(b.logs)-1]
+	statusColumn := statusBarStyle.
 		Padding(0, 1).
-		Height(constants.StatusBarHeight).
 		Width(b.width - width(fileCountColumn) - width(sortOptionsColumn) - width(showCompatibleColumn)).
 		Render(truncate.StringWithTail(
 			status,
@@ -278,13 +299,14 @@ func (b Bubble) statusBarView() string {
 
 func (b *Bubble) getMainButtonsView() string {
 	cfg := config.GetConfig()
-	refreshStyle := lipgloss.NewStyle().
-		Underline(true)
-	refreshColumn := refreshStyle.
+
+	buttonStyle := lipgloss.NewStyle().
+		Underline(true).
 		Align(lipgloss.Right).
 		Padding(0, 2).
-		Height(constants.StatusBarHeight).
-		Render("1. Refresh")
+		Height(constants.StatusBarHeight)
+
+	refreshColumn := buttonStyle.Render("1. Refresh")
 
 	showCompatible := "2. Hide incompatible mods"
 	if !cfg.Settings.HideIncompatibleMods {
@@ -292,38 +314,13 @@ func (b *Bubble) getMainButtonsView() string {
 	} else {
 		showCompatible = "2. Show incompatible mods"
 	}
+	hideIncompatibleColumn := buttonStyle.Render(showCompatible)
 
-	hideIncompatibleStyle := lipgloss.NewStyle().
-		Underline(true)
-	hideIncompatibleColumn := hideIncompatibleStyle.
-		Align(lipgloss.Right).
-		Padding(0, 2).
-		Height(constants.StatusBarHeight).
-		Render(showCompatible)
+	sortOrderColumn := buttonStyle.Render("3. Sort Order")
 
-	sortOrderStyle := lipgloss.NewStyle().
-		Underline(true)
-	sortOrderColumn := sortOrderStyle.
-		Align(lipgloss.Right).
-		Padding(0, 2).
-		Height(constants.StatusBarHeight).
-		Render("3. Sort Order")
+	enterDirColumn := buttonStyle.Render("4. Enter KSP Dir")
 
-	enterDirStyle := lipgloss.NewStyle().
-		Underline(true)
-	enterDirColumn := enterDirStyle.
-		Align(lipgloss.Right).
-		Padding(0, 2).
-		Height(constants.StatusBarHeight).
-		Render("4. Enter KSP Dir")
-
-	downloadStyle := lipgloss.NewStyle().
-		Underline(true)
-	downloadColumn := downloadStyle.
-		Align(lipgloss.Right).
-		Padding(0, 2).
-		Height(constants.StatusBarHeight).
-		Render("5. Download mod")
+	downloadColumn := buttonStyle.Render("5. Download mod")
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		refreshColumn,
