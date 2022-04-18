@@ -18,7 +18,7 @@ go build && ./go-kerbal
    * if installed (TODO)
    * tag (TODO)
  * Displays logs in-app
- * Downloads and installs mods
+ * Downloads and installs multiple mods
  * Finds Kerbal game directory (prompts for directory if not found)
  * Finds installed mods
 
@@ -29,9 +29,8 @@ go build && ./go-kerbal
 ![Input Directory View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/inputDir.png?raw=true)
 
 ## TODO:
- * KSP repair script
  * Reliable way to find current KSP version
- * More precise install functions/validation
+ * More precise mod install functions/validation
  * More metadata cleaning
  * Check mod conflicts/dependencies 
  * Implement search box
@@ -39,3 +38,4 @@ go build && ./go-kerbal
    * More colors
    * Progress bars
    * Live logging? (currently updates log view on TUI event, not when logs are called)
+   * Structured logging?
