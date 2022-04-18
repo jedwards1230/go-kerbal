@@ -148,6 +148,18 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
+		} else {
+			// add/remove mods from selected list
+			mod := b.registry.SortedModList[b.nav.listCursor]
+			if b.nav.installSelected[mod.Identifier] {
+				b.nav.installSelected[mod.Identifier] = false
+			} else {
+				b.nav.installSelected[mod.Identifier] = true
+			}
+			b.nav.listSelected = b.nav.listCursor
+			b.checkActiveViewPortBounds()
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
 		}
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):

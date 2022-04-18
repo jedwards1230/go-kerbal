@@ -88,6 +88,7 @@ func (b Bubble) modListView() string {
 	// construct list
 	title := lipgloss.NewStyle().
 		Bold(true).
+		Align(lipgloss.Center).
 		Width(b.primaryViewport.Width).
 		Height(3).
 		Padding(1).
@@ -95,13 +96,14 @@ func (b Bubble) modListView() string {
 
 	s := ""
 	for i := range b.registry.SortedModList {
+		mod := b.registry.SortedModList[i]
 		checked := " "
-		if i == b.nav.listSelected {
+		if b.nav.installSelected[mod.Identifier] {
 			checked = "x"
 		}
 
 		line := truncate.StringWithTail(
-			fmt.Sprintf("[%s] %s", checked, b.registry.SortedModList[i].Name),
+			fmt.Sprintf("[%s] %s", checked, mod.Name),
 			uint(b.primaryViewport.Width-2),
 			"...")
 
@@ -112,7 +114,7 @@ func (b Bubble) modListView() string {
 				Width(b.primaryViewport.Width).
 				Render(line)
 		} else {
-			if b.registry.SortedModList[i].Installed {
+			if mod.Installed {
 				s += lipgloss.NewStyle().
 					Foreground(b.theme.InstalledListItemColor).
 					Render(line)

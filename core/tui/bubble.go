@@ -35,6 +35,7 @@ type Bubble struct {
 type Nav struct {
 	listCursor        int
 	listSelected      int
+	installSelected   map[string]bool
 	mainButtonsCursor int
 }
 
@@ -92,7 +93,8 @@ func InitialModel() Bubble {
 			{Key: "ctrl+c", Description: "Exit"},
 			{Key: "up", Description: "Move up"},
 			{Key: "down", Description: "Move down"},
-			{Key: "spacebar", Description: "Select an entry"},
+			{Key: "spacebar", Description: "Toggle mod info"},
+			{Key: "enter", Description: "Select mod for install"},
 			{Key: "tab", Description: "Swap active views"},
 			{},
 			{Key: "O", Description: "Show logs if debugging enabled"},
@@ -107,6 +109,7 @@ func InitialModel() Bubble {
 	nav := Nav{
 		listSelected:      -1,
 		mainButtonsCursor: 0,
+		installSelected:   make(map[string]bool),
 	}
 
 	return Bubble{

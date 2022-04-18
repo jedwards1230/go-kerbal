@@ -37,6 +37,5 @@ go build && ./go-kerbal
  * Implement search box
  * Tweak the TUI
    * More colors
-   * Multi-select mods
    * Progress bars
    * Live logging? (currently updates log view on TUI event, not when logs are called)
