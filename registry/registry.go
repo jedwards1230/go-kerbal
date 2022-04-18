@@ -1,8 +1,16 @@
 package registry
 
 import (
+	"archive/zip"
+	"errors"
+	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"os"
+	"path/filepath"
 	"sort"
+	"sync"
 
 	"github.com/hashicorp/go-version"
 	"github.com/segmentio/encoding/json"
@@ -77,6 +85,7 @@ func (r *Registry) GetModList() []database.Ckan {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
+			// TODO: better check for isntalled mods. this is not accurate at all.
 			// check if mod is installed
 			if r.InstalledModList[ckan.InstallInfo.Find] {
 				ckan.Installed = true
@@ -174,6 +183,135 @@ func getSortedModList(modList []database.Ckan, tag, order string) []database.Cka
 		}
 	}
 	return sortedModList
+}
+
+func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, error) {
+	var mods []database.Ckan
+	if len(toDownload) > 0 {
+		// mods and dependencies to download
+		for i := range r.SortedModList {
+			mod := r.SortedModList[i]
+			if toDownload[mod.Identifier] {
+				log.Printf("Mod download requested: %s", mod.Name)
+
+				// TODO: find links for dependencies.
+				if len(mod.ModDepends) > 0 {
+					for i := range mod.ModDepends {
+						log.Printf("Depends on: %v", mod.ModDepends[i])
+					}
+				} else {
+					log.Print("No dependencies detected")
+				}
+
+				mods = append(mods, mod)
+			}
+		}
+	} else {
+		return mods, errors.New("no mods provided")
+	}
+
+	// download mods
+	if len(mods) > 0 {
+		var wg sync.WaitGroup
+		n := len(mods)
+		wg.Add(n)
+		for i := range mods {
+			go func(i int) {
+				err := downloadMod(mods[i])
+				if err != nil {
+					log.Printf("Error downloading %s: %v", mods[i].Name, err)
+				}
+				wg.Done()
+			}(i)
+		}
+		wg.Wait()
+		log.Printf("Downloaded %d mods", n)
+	} else {
+		return mods, errors.New("no URLS provided")
+	}
+	return mods, nil
+}
+
+func downloadMod(mod database.Ckan) error {
+	log.Printf("Downloading mod: %s", mod.Name)
+	resp, err := http.Get(mod.Download)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("invalid response from server: %v", resp.StatusCode)
+	}
+
+	// Create tmp dir
+	err = os.MkdirAll("./tmp", os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("error creating tmp dir: %v", err)
+	}
+
+	// Create zip file
+	out, err := os.Create("./tmp/" + mod.Identifier + ".zip")
+	if err != nil {
+		return fmt.Errorf("error creating file: %v", err)
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("could not copy contents to file: %v", err)
+	}
+
+	log.Printf("Successfully downloaded: %v", mod.Name)
+
+	return nil
+}
+
+func InstallMods(mods []database.Ckan) error {
+	var wg sync.WaitGroup
+	wg.Add(len(mods))
+	for i := range mods {
+		go func(i int) {
+			err := installMod(mods[i])
+			if err != nil {
+				log.Printf("Error installing mod: %v", err)
+			}
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
+	return nil
+}
+
+func installMod(mod database.Ckan) error {
+	cfg := config.GetConfig()
+	// open zip
+	zipReader, err := zip.OpenReader("./tmp/" + mod.Identifier + ".zip")
+	if err != nil {
+		return fmt.Errorf("error opening zip file: %v", err)
+	}
+	defer zipReader.Close()
+
+	// get Kerbal folder
+	destination, err := filepath.Abs(cfg.Settings.KerbalDir)
+	if err != nil {
+		return fmt.Errorf("error getting KSP dir: %v", err)
+	}
+
+	// TODO: validate mod is being installed to proper location
+
+	// unzip all into GameData folder
+	for _, f := range zipReader.File {
+		err := dirfs.UnzipFile(f, destination)
+		if err != nil {
+			return fmt.Errorf("error unzipping file to filesystem: %v", err)
+		}
+	}
+
+	log.Printf("Installed: %v", mod.Name)
+	return nil
 }
 
 /* func (r *Registry) removeMod(i int) {

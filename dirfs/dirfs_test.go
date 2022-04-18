@@ -46,20 +46,10 @@ func BenchmarkFindKspPath(b *testing.B) {
 	}
 }
 
-func TestDownloadMod(t *testing.T) {
-	err := DownloadMod("https://github.com/linuxgurugamer/BetterTimeWarpContinued/releases/download/2.3.13/BetterTimeWarp-1.12.0-2.3.13.zip")
-	if err != nil {
-		t.Errorf("error downloading mod: %v", err)
-	}
-}
-
 func TestCheckInstalledMods(t *testing.T) {
-	installedMods, err := CheckInstalledMods()
+	_, err := CheckInstalledMods()
 	if err != nil {
 		t.Errorf("error checking mods: %v", err)
-	}
-	for i := range installedMods {
-		log.Printf("Found mod: %v", installedMods[i])
 	}
 }
 

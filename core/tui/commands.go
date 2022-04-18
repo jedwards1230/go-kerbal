@@ -5,6 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/spf13/viper"
 )
@@ -49,22 +50,20 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 }
 
 // Download selected mods
-func (b Bubble) downloadModCmd(mod database.Ckan) tea.Cmd {
+func (b Bubble) downloadModCmd() tea.Cmd {
 	return func() tea.Msg {
-		// TODO: find links for dependencies
-		if len(mod.ModDepends) > 0 {
-			for i := range mod.ModDepends {
-				log.Printf("Depends on: %v", mod.ModDepends[i])
-			}
-		} else {
-			log.Print("No dependencies detected")
-		}
-		log.Printf("Mod download requested: %s", mod.Download)
-		err := dirfs.DownloadMod(mod.Download)
+		mods, err := b.registry.DownloadMods(b.nav.installSelected)
 		if err != nil {
 			log.Printf("Error downloading: %v", err)
 			return ErrorMsg(err)
 		}
+
+		err = registry.InstallMods(mods)
+		if err != nil {
+			log.Printf("Error downloading: %v", err)
+			return ErrorMsg(err)
+		}
+
 		installedModList, err := dirfs.CheckInstalledMods()
 		if err != nil {
 			return ErrorMsg(err)

@@ -3,14 +3,12 @@ package dirfs
 import (
 	"archive/zip"
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -156,52 +154,8 @@ func Strip(s string) string {
 	return result.String()
 }
 
-// Download mod from URL to KSP GameData
-func DownloadMod(url string) error {
-	cfg := config.GetConfig()
-	// get response from url
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("error reaching server: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("invalid response status from server")
-	}
-
-	// convert zip to bytevalue
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error reading download: %v", err)
-	}
-
-	// create zip reader from download
-	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
-	if err != nil {
-		return fmt.Errorf("error converting download to zip: %v", err)
-	}
-
-	// get Kerbal folder
-	destination, err := filepath.Abs(cfg.Settings.KerbalDir)
-	if err != nil {
-		return fmt.Errorf("error getting KSP dir: %v", err)
-	}
-
-	// unzip all into GameData folder
-	for _, f := range zipReader.File {
-		err := unzipFile(f, destination)
-		if err != nil {
-			return fmt.Errorf("error unzipping file to filesystem: %v", err)
-		}
-	}
-
-	log.Printf("Mod downloaded and installed")
-	return nil
-}
-
 // Unzip file to specified directory
-func unzipFile(f *zip.File, destination string) error {
+func UnzipFile(f *zip.File, destination string) error {
 	// check file paths are not vulnerable to Zip Slip
 	filePath := filepath.Join(destination, f.Name)
 	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {

@@ -20,7 +20,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Update mod list
 	case UpdatedModListMsg:
-		b.nav.listSelected = 0
 		b.registry.ModList = msg
 		b.registry.SortModList(b.sortOptions)
 		b.logs = append(b.logs, "Mod list updated")
@@ -40,6 +39,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			b.logs = append(b.logs, "No changes made")
 		}
+		cmds = append(cmds, b.getAvailableModsCmd())
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 	// Update KSP dir
@@ -235,9 +235,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
-		var mod = b.registry.SortedModList[b.nav.listSelected]
 		b.logs = append(b.logs, "Downloading mod")
-		cmds = append(cmds, b.downloadModCmd(mod))
+		cmds = append(cmds, b.downloadModCmd())
 	}
 
 	return tea.Batch(cmds...)
