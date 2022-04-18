@@ -11,7 +11,12 @@ go build && ./go-kerbal
 ## Features so far:
  * Automatically keeps metadata up to date
  * Compiles metadata and displays info in the TUI
- * Sorts and filters mod list (by name and compatibility)
+ * Sorts by:
+   * name
+ * Filters by:
+   * compatibility
+   * if installed (TODO)
+   * tag (TODO)
  * Displays logs in-app
  * Downloads and installs mods
  * Finds Kerbal game directory (prompts for directory if not found)
