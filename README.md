@@ -29,13 +29,4 @@ go build && ./go-kerbal
 ![Input Directory View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/inputDir.png?raw=true)
 
 ## TODO:
- * Reliable way to find current KSP version
- * More precise mod install functions/validation
- * More metadata cleaning
- * Check mod conflicts/dependencies 
- * Implement search box
- * Tweak the TUI
-   * More colors
-   * Progress bars
-   * Live logging? (currently updates log view on TUI event, not when logs are called)
-   * Structured logging?
+Check out the [Projects](https://github.com/jedwards1230/go-kerbal/projects?type=beta) tab.
