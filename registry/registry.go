@@ -189,23 +189,29 @@ func getSortedModList(modList []database.Ckan, tag, order string) []database.Cka
 
 func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, error) {
 	var mods []database.Ckan
+	dependencies := make(map[string]bool)
 	if len(toDownload) > 0 {
+		log.Printf("Checking %d mods", len(toDownload))
 		// mods and dependencies to download
 		for i := range r.SortedModList {
 			mod := r.SortedModList[i]
 			if toDownload[mod.Identifier] {
-				log.Printf("Mod download requested: %s", mod.Name)
 
 				// TODO: find links for dependencies.
 				if len(mod.ModDepends) > 0 {
 					for i := range mod.ModDepends {
-						log.Printf("Depends on: %v", mod.ModDepends[i])
+						dependencies[mod.ModDepends[i]] = true
 					}
-				} else {
-					log.Print("No dependencies detected")
 				}
 
 				mods = append(mods, mod)
+			}
+		}
+		if len(dependencies) > 0 {
+			for i := range r.SortedModList {
+				if dependencies[r.SortedModList[i].Identifier] {
+					mods = append(mods, r.SortedModList[i])
+				}
 			}
 		}
 	} else {
@@ -214,6 +220,7 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 
 	// download mods
 	if len(mods) > 0 {
+		log.Printf("Downloading %d mods (after checking dependencies)", len(mods))
 		var wg sync.WaitGroup
 		n := len(mods)
 		wg.Add(n)
@@ -235,7 +242,6 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 }
 
 func downloadMod(mod database.Ckan) error {
-	log.Printf("Downloading mod: %s", mod.Name)
 	resp, err := http.Get(mod.Download)
 	if err != nil {
 		return err
@@ -265,7 +271,7 @@ func downloadMod(mod database.Ckan) error {
 		return fmt.Errorf("could not copy contents to file: %v", err)
 	}
 
-	log.Printf("Successfully downloaded: %v", mod.Name)
+	log.Printf("Downloaded: %v", mod.Name)
 
 	return nil
 }
@@ -287,6 +293,7 @@ func InstallMods(mods []database.Ckan) error {
 	return nil
 }
 
+// TODO: more reliable installing to directory. really gotta validate the paths and compare whats in the zip.
 func installMod(mod database.Ckan) error {
 	cfg := config.GetConfig()
 	// open zip
@@ -304,14 +311,14 @@ func installMod(mod database.Ckan) error {
 
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
-		// verify mod being isntalled to folder location in metadata
+		// verify mod being installed to folder location in metadata
 		if strings.Contains(f.Name, mod.InstallInfo.InstallTo) {
 			err := dirfs.UnzipFile(f, destination)
 			if err != nil {
 				return fmt.Errorf("error unzipping file to filesystem: %v", err)
 			}
 		} else {
-			return fmt.Errorf("error unzipping: %v", f.Name)
+			log.Printf("error unzipping: %v", f.Name)
 		}
 	}
 
