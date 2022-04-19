@@ -3,7 +3,6 @@ package database
 import (
 	// Using standard json encoder here because benchmarks showed segmentio to be slightly slower
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"strconv"
@@ -62,18 +61,19 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 			// Parse .ckan from repo into JSON
 			ckan, err := parseCKAN(fs, filesToScan[i])
 			if err != nil {
+				//log.Printf("Error parsing CKAN: %v", err)
 				continue
 			}
 
 			// Ckan to []byte]
 			byteValue, err = json.Marshal(ckan)
 			if err != nil {
-				fmt.Printf("Error: %s", err)
+				log.Printf("Error: %s", err)
 				return err
 			}
 
 			// Store in DB
-			tx.Set(strconv.Itoa(i), string(byteValue), nil)
+			tx.Set("mod:"+strconv.Itoa(i), string(byteValue), nil)
 		}
 		return nil
 	})

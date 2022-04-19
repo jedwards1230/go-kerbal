@@ -21,7 +21,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Update mod list
 	case UpdatedModListMsg:
 		b.registry.ModList = msg
-		b.registry.SortModList(b.sortOptions)
+		b.registry.SortModList()
 		b.logs = append(b.logs, "Mod list updated")
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()
@@ -204,14 +204,14 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		cmds = append(cmds, b.getAvailableModsCmd())
 	// Swap sort order
 	case key.Matches(msg, b.keyMap.SwapSortOrder):
-		if b.sortOptions.SortOrder == "ascend" {
-			b.sortOptions.SortOrder = "descend"
-		} else if b.sortOptions.SortOrder == "descend" {
-			b.sortOptions.SortOrder = "ascend"
+		if b.registry.SortOptions.SortOrder == "ascend" {
+			b.registry.SortOptions.SortOrder = "descend"
+		} else if b.registry.SortOptions.SortOrder == "descend" {
+			b.registry.SortOptions.SortOrder = "ascend"
 		}
-		b.logs = append(b.logs, "Swapping sort order to "+b.sortOptions.SortOrder)
-		log.Printf("Swapping sort order to %s", b.sortOptions.SortOrder)
-		b.registry.SortModList(b.sortOptions)
+		b.logs = append(b.logs, "Swapping sort order to "+b.registry.SortOptions.SortOrder)
+		log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
+		b.registry.SortModList()
 		b.activeBox = constants.PrimaryBoxActive
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()

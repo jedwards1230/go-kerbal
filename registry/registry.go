@@ -27,6 +27,7 @@ type Registry struct {
 	SortedModList    []database.Ckan
 	InstalledModList map[string]bool
 	DB               *database.CkanDB
+	SortOptions      SortOptions
 }
 
 type SortOptions struct {
@@ -48,8 +49,8 @@ func GetRegistry() Registry {
 	}
 }
 
-func (r *Registry) SortModList(opts SortOptions) {
-	log.Printf("Sorting %d mods. Order: %s by %s", len(r.ModList), opts.SortOrder, opts.SortTag)
+func (r *Registry) SortModList() {
+	log.Printf("Sorting %d mods. Order: %s by %s", len(r.ModList), r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
 	var sortedModList []database.Ckan
 
@@ -66,7 +67,7 @@ func (r *Registry) SortModList(opts SortOptions) {
 	// TODO: Filter by tag
 
 	// Sort by order
-	sortedModList = getSortedModList(sortedModList, opts.SortTag, opts.SortOrder)
+	sortedModList = getSortedModList(sortedModList, r.SortOptions.SortTag, r.SortOptions.SortOrder)
 
 	log.Printf("Sort result: %d/%d", len(sortedModList), len(r.ModList))
 	r.SortedModList = sortedModList

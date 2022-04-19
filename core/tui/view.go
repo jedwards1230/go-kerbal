@@ -297,7 +297,7 @@ func (b Bubble) statusBarView() string {
 		Padding(0, 1).
 		Render(fileCount)
 
-	sortOptions := fmt.Sprintf("Sort: %s by %s", b.sortOptions.SortOrder, b.sortOptions.SortTag)
+	sortOptions := fmt.Sprintf("Sort: %s by %s", b.registry.SortOptions.SortOrder, b.registry.SortOptions.SortTag)
 	sortOptionsColumn := statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 3).

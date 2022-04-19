@@ -39,7 +39,9 @@ type Ckan struct {
 }
 
 type install struct {
+	FindRegex string
 	Find      string
+	File      string
 	InstallTo string
 }
 
@@ -90,9 +92,11 @@ func (c *Ckan) Init(raw map[string]interface{}) error {
 		return err
 	}
 
-	err = c.cleanInstall(raw)
-	if err != nil {
-		return err
+	if raw["install"] != nil {
+		err = c.cleanInstall(raw)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = c.cleanDependencies(raw)
@@ -124,23 +128,34 @@ func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
 }
 
 func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
-	if raw["install"] != nil {
-		var installInfo install
-		rawI := raw["install"].([]interface{})
-		if len(rawI) > 0 {
-			rawInstall := rawI[0].(map[string]interface{})
-			if rawInstall["find"] != nil && rawInstall["install_to"] != nil {
-				installInfo.Find = rawInstall["find"].(string)
-				installInfo.InstallTo = rawInstall["install_to"].(string)
+	var installInfo install
+	rawI := raw["install"].([]interface{})
+	if len(rawI) > 0 {
+		rawInstall := rawI[0].(map[string]interface{})
+		pathFound := false
 
-				if installInfo.Find != "" && installInfo.InstallTo != "" {
-					c.InstallInfo = installInfo
-					return nil
-				}
-			}
+		switch {
+		case rawInstall["find"] != nil:
+			installInfo.Find = rawInstall["find"].(string)
+			pathFound = true
+		case rawInstall["file"] != nil:
+			installInfo.File = rawInstall["file"].(string)
+			pathFound = true
+		case rawInstall["find_regexp"] != nil:
+			installInfo.FindRegex = rawInstall["find_regexp"].(string)
+			pathFound = true
+		}
+
+		if rawInstall["install_to"] != nil {
+			installInfo.InstallTo = rawInstall["install_to"].(string)
+		}
+
+		if pathFound && installInfo.InstallTo != "" {
+			c.InstallInfo = installInfo
+			return nil
 		}
 	}
-	return fmt.Errorf("error proccessing install info: %v", raw["install"])
+	return fmt.Errorf("install interface empty: %v", raw["install"])
 }
 
 func (c *Ckan) cleanDependencies(raw map[string]interface{}) error {
@@ -219,7 +234,10 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 				return nil
 			}
 
-			vKsp, _, _ := c.cleanModVersion(v.(string))
+			vKsp, _, err := c.cleanModVersion(v.(string))
+			if err != nil {
+				log.Printf("Error cleaning mod version: %v", err)
+			}
 
 			if c.VersionKspMax == "" {
 				c.VersionKspMax = vKsp
@@ -286,7 +304,7 @@ func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 		c.Download = ""
 	}
 	if c.Download == "" {
-		return errors.New("invalid download path")
+		return fmt.Errorf("invalid download path: %v", raw["download"])
 	}
 	return nil
 }

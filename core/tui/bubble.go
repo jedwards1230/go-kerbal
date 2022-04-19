@@ -21,7 +21,6 @@ type Bubble struct {
 	textInput         textinput.Model
 	inputRequested    bool
 	registry          registry.Registry
-	sortOptions       registry.SortOptions
 	help              help.Bubble
 	keyMap            KeyMap
 	nav               Nav
@@ -43,7 +42,8 @@ func InitialModel() Bubble {
 	cfg := config.GetConfig()
 	theme := theme.GetTheme(cfg.AppTheme)
 	reg := registry.GetRegistry()
-	sortOpts := registry.SortOptions{
+
+	reg.SortOptions = registry.SortOptions{
 		SortTag:   "name",
 		SortOrder: "ascend",
 	}
@@ -122,7 +122,6 @@ func InitialModel() Bubble {
 		textInput:         t,
 		inputRequested:    iRequested,
 		registry:          reg,
-		sortOptions:       sortOpts,
 		help:              h,
 		nav:               nav,
 		activeBox:         constants.PrimaryBoxActive,
