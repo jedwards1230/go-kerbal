@@ -52,58 +52,57 @@ type resource struct {
 }
 
 // Initialize struct values in-place
-func (c *Ckan) Init(raw map[string]interface{}) error {
+func CreateCkan(raw map[string]interface{}) (Ckan, error) {
+	var mod Ckan
 	/* for k, v := range raw {
 		log.Printf("%v: %v", k, v)
 	}
 	log.Panic() */
-	err := c.cleanNames(raw)
+	err := mod.cleanNames(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	err = c.cleanIdentifiers(raw)
+	err = mod.cleanIdentifiers(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	err = c.cleanAuthors(raw)
+	err = mod.cleanAuthors(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	err = c.cleanVersions(raw)
+	err = mod.cleanVersions(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	c.IsCompatible = c.CheckCompatible()
+	mod.IsCompatible = mod.CheckCompatible()
 
-	_ = c.cleanAbstract(raw)
+	_ = mod.cleanAbstract(raw)
 
-	err = c.cleanLicense(raw)
+	err = mod.cleanLicense(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	err = c.cleanDownload(raw)
+	err = mod.cleanInstall(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	if raw["install"] != nil {
-		err = c.cleanInstall(raw)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = c.cleanDependencies(raw)
+	err = mod.cleanDownload(raw)
 	if err != nil {
-		return err
+		return mod, err
 	}
 
-	return err
+	err = mod.cleanDependencies(raw)
+	if err != nil {
+		return mod, err
+	}
+
+	return mod, err
 }
 
 // Compares installed KSP version to min/max compatible for the mod.

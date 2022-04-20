@@ -55,12 +55,14 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
 	log.Printf("Cleaning .ckan files and adding to database")
+	errCount := 0
 	err = db.Update(func(tx *buntdb.Tx) error {
 		var byteValue []byte
 		for i := range filesToScan {
 			// Parse .ckan from repo into JSON
 			ckan, err := parseCKAN(fs, filesToScan[i])
 			if err != nil {
+				errCount += 1
 				//log.Printf("Error parsing CKAN: %v", err)
 				continue
 			}
@@ -77,41 +79,42 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 		}
 		return nil
 	})
-	log.Printf("Database updated with %d entries", len(filesToScan))
+	log.Printf("Database updated with %d entries | %d errors", len(filesToScan), errCount)
 	return err
 }
 
 // Parse .ckan file into JSON string
 func parseCKAN(repo billy.Filesystem, filePath string) (*Ckan, error) {
-	ckan := Ckan{}
+	mod := Ckan{}
 
 	// Read .ckan from filesystem
 	file, err := repo.Open(filePath)
 	if err != nil {
-		return &ckan, err
+		return &mod, err
 	}
 	defer file.Close()
 
 	// parse ckan data
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		return &ckan, err
+		return &mod, err
 	}
 
 	// Store .ckan in struct and interface
 	var raw map[string]interface{}
 	err = json.Unmarshal(byteValue, &raw)
 	if err != nil {
-		return &ckan, err
+		return &mod, err
 	}
 
 	// clean extra data into struct
-	err = ckan.Init(raw)
+	mod, err = CreateCkan(raw)
 	if err != nil {
+		//log.Printf("Initialization error: %v", err)
 		return nil, err
 	}
 
-	return &ckan, err
+	return &mod, err
 }
 
 // Checks for changes to the repo by comparing commit hashes

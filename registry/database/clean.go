@@ -33,31 +33,33 @@ func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
 }
 
 func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
-	var installInfo install
-	rawI := raw["install"].([]interface{})
-	if len(rawI) > 0 {
-		rawInstall := rawI[0].(map[string]interface{})
-		pathFound := false
+	if raw["install"] != nil {
+		var installInfo install
+		rawI := raw["install"].([]interface{})
+		if len(rawI) > 0 {
+			rawInstall := rawI[0].(map[string]interface{})
+			pathFound := false
 
-		switch {
-		case rawInstall["find"] != nil:
-			installInfo.Find = rawInstall["find"].(string)
-			pathFound = true
-		case rawInstall["file"] != nil:
-			installInfo.File = rawInstall["file"].(string)
-			pathFound = true
-		case rawInstall["find_regexp"] != nil:
-			installInfo.FindRegex = rawInstall["find_regexp"].(string)
-			pathFound = true
-		}
+			switch {
+			case rawInstall["find"] != nil:
+				installInfo.Find = rawInstall["find"].(string)
+				pathFound = true
+			case rawInstall["file"] != nil:
+				installInfo.File = rawInstall["file"].(string)
+				pathFound = true
+			case rawInstall["find_regexp"] != nil:
+				installInfo.FindRegex = rawInstall["find_regexp"].(string)
+				pathFound = true
+			}
 
-		if rawInstall["install_to"] != nil {
-			installInfo.InstallTo = rawInstall["install_to"].(string)
-		}
+			if rawInstall["install_to"] != nil {
+				installInfo.InstallTo = rawInstall["install_to"].(string)
+			}
 
-		if pathFound && installInfo.InstallTo != "" {
-			c.Install = installInfo
-			return nil
+			if pathFound && installInfo.InstallTo != "" {
+				c.Install = installInfo
+				return nil
+			}
 		}
 	}
 	return fmt.Errorf("install interface empty: %v", raw["install"])
@@ -138,7 +140,7 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 
 			newVKsp, _, err := c.cleanModVersion(v.(string))
 			if err != nil {
-				log.Printf("Error cleaning mod version: %v", err)
+				return fmt.Errorf("could not read mod version: %v", err)
 			}
 
 			if vMax == nil {
@@ -202,15 +204,18 @@ func (c *Ckan) cleanLicense(raw map[string]interface{}) error {
 }
 
 func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
-	switch download := raw["download"].(type) {
-	case string:
-		c.Install.Download = strings.TrimSpace(string(download))
-	default:
-		c.Install.Download = ""
+	if raw["download"] != nil {
+		c.Install.Download = strings.TrimSpace(raw["download"].(string))
+	} else {
+		log.Printf("cannot read download field: %v", raw["download"])
+		return fmt.Errorf("cannot read download field: %v", raw["download"])
 	}
+
 	if c.Install.Download == "" {
+		log.Printf("invalid download path: %v", raw["download"])
 		return fmt.Errorf("invalid download path: %v", raw["download"])
 	}
+
 	return nil
 }
 
