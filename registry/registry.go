@@ -89,10 +89,10 @@ func (r *Registry) GetModList() []database.Ckan {
 
 			// TODO: better check for installed mods. this is not accurate at all.
 			// check if mod is installed
-			if r.InstalledModList[ckan.InstallInfo.Find] {
-				ckan.Installed = true
+			if r.InstalledModList[ckan.Install.Find] {
+				ckan.Install.Installed = true
 			} else {
-				ckan.Installed = false
+				ckan.Install.Installed = false
 			}
 
 			// add to list
@@ -130,7 +130,7 @@ func getUniqueModList(modList []database.Ckan) []database.Ckan {
 	countBad := 0
 	for _, mod := range modList {
 		// convert to proper version type for comparison
-		foundVersion, err := version.NewVersion(mod.Versions.VersionMod)
+		foundVersion, err := version.NewVersion(mod.Versions.Mod)
 		if err != nil {
 			log.Printf("Error creating version: %v", err)
 		}
@@ -138,7 +138,7 @@ func getUniqueModList(modList []database.Ckan) []database.Ckan {
 		// check if mod is stored already
 		if sortedModMap[mod.Identifier].Identifier != "" {
 			// convert to proper version type for comparison
-			storedVersion, err := version.NewVersion(sortedModMap[mod.Identifier].Versions.VersionMod)
+			storedVersion, err := version.NewVersion(sortedModMap[mod.Identifier].Versions.Mod)
 			if err != nil {
 				log.Printf("Error creating version: %v", err)
 			}
@@ -242,7 +242,7 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 }
 
 func downloadMod(mod database.Ckan) error {
-	resp, err := http.Get(mod.Download)
+	resp, err := http.Get(mod.Install.Download)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func installMod(mod database.Ckan) error {
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
 		// verify mod being installed to folder location in metadata
-		if strings.Contains(f.Name, mod.InstallInfo.InstallTo) {
+		if strings.Contains(f.Name, mod.Install.InstallTo) {
 			err := dirfs.UnzipFile(f, destination)
 			if err != nil {
 				return fmt.Errorf("error unzipping file to filesystem: %v", err)

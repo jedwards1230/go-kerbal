@@ -56,7 +56,7 @@ func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
 		}
 
 		if pathFound && installInfo.InstallTo != "" {
-			c.InstallInfo = installInfo
+			c.Install = installInfo
 			return nil
 		}
 	}
@@ -115,7 +115,7 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error: %v, v: %v", err, raw["version"].(string))
 		}
-		c.Epoch = epoch
+		c.Versions.Epoch = epoch
 
 		if raw["ksp_version_max"] != nil && strings.TrimSpace(raw["ksp_version_max"].(string)) != "" {
 			v = raw["ksp_version_max"]
@@ -160,9 +160,9 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 			return fmt.Errorf("error: ksp: %v, min: %v, max: %v", raw["ksp_version"], raw["ksp_version_min"], raw["ksp_version_max"])
 		}
 
-		c.Versions.VersionMod = vMod.String()
-		c.Versions.VersionKspMin = vMin.String()
-		c.Versions.VersionKspMax = vMax.String()
+		c.Versions.Mod = vMod.String()
+		c.Versions.KspMin = vMin.String()
+		c.Versions.KspMax = vMax.String()
 
 		return nil
 	} else {
@@ -204,11 +204,11 @@ func (c *Ckan) cleanLicense(raw map[string]interface{}) error {
 func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 	switch download := raw["download"].(type) {
 	case string:
-		c.Download = strings.TrimSpace(string(download))
+		c.Install.Download = strings.TrimSpace(string(download))
 	default:
-		c.Download = ""
+		c.Install.Download = ""
 	}
-	if c.Download == "" {
+	if c.Install.Download == "" {
 		return fmt.Errorf("invalid download path: %v", raw["download"])
 	}
 	return nil

@@ -14,30 +14,30 @@ type Ckan struct {
 	Name                 string
 	Author               string
 	Abstract             string
-	Download             string
 	License              string
-	Epoch                string
-	Resources            resource
 	SearchTags           map[string]interface{}
-	ModDepends           []string
 	ModConflicts         map[string]interface{}
-	InstallInfo          install
-	Installed            bool
+	ModDepends           []string
 	IsCompatible         bool
-	SpecVersion          string
-	Versions             Versions
+	Versions             versions
+	Install              install
+	Resources            resource
 	SearchableName       string
 	SearchableAbstract   string
 	SearchableIdentifier string
 }
 
-type Versions struct {
-	VersionMod    string
-	VersionKspMin string
-	VersionKspMax string
+type versions struct {
+	Epoch  string
+	Mod    string
+	KspMin string
+	KspMax string
+	Spec   string
 }
 
 type install struct {
+	Installed bool
+	Download  string
 	FindRegex string
 	Find      string
 	File      string
@@ -117,8 +117,8 @@ func (c Ckan) CheckCompatible() bool {
 		log.Printf("Error with kerbal version: %v", err)
 	}
 
-	if c.Versions.VersionKspMin != "" {
-		min, err := version.NewVersion(c.Versions.VersionKspMin)
+	if c.Versions.KspMin != "" {
+		min, err := version.NewVersion(c.Versions.KspMin)
 		if err != nil {
 			log.Printf("Error with kerbal min version: %v", err)
 		}
@@ -126,8 +126,8 @@ func (c Ckan) CheckCompatible() bool {
 			return false
 		}
 	}
-	if c.Versions.VersionKspMax != "" {
-		max, err := version.NewVersion(c.Versions.VersionKspMax)
+	if c.Versions.KspMax != "" {
+		max, err := version.NewVersion(c.Versions.KspMax)
 		if err != nil {
 			log.Printf("Error with kerbal max version: %v", err)
 		}

@@ -111,7 +111,7 @@ func (b Bubble) modListView() string {
 				Width(b.primaryViewport.Width).
 				Render(line)
 		} else {
-			if mod.Installed {
+			if mod.Install.Installed {
 				s += lipgloss.NewStyle().
 					Foreground(b.theme.InstalledListItemColor).
 					Render(line)
@@ -166,16 +166,16 @@ func (b Bubble) modInfoView() string {
 				"License:          %v\n\n"+
 				"Download:         %v\n\n",
 			mod.Author,
-			mod.Installed,
-			mod.InstallInfo.InstallTo,
+			mod.Install.Installed,
+			mod.Install.InstallTo,
 			mod.Abstract,
 			mod.Identifier,
-			mod.Versions.VersionMod,
-			mod.Versions.VersionKspMin,
-			mod.Versions.VersionKspMax,
+			mod.Versions.Mod,
+			mod.Versions.KspMin,
+			mod.Versions.KspMax,
 			mod.ModDepends,
 			mod.License,
-			mod.Download)
+			mod.Install.Download)
 
 		body = bodyStyle.Render(s)
 	} else {
