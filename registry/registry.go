@@ -130,7 +130,7 @@ func getUniqueModList(modList []database.Ckan) []database.Ckan {
 	countBad := 0
 	for _, mod := range modList {
 		// convert to proper version type for comparison
-		foundVersion, err := version.NewVersion(mod.Version)
+		foundVersion, err := version.NewVersion(mod.Versions.VersionMod)
 		if err != nil {
 			log.Printf("Error creating version: %v", err)
 		}
@@ -138,7 +138,7 @@ func getUniqueModList(modList []database.Ckan) []database.Ckan {
 		// check if mod is stored already
 		if sortedModMap[mod.Identifier].Identifier != "" {
 			// convert to proper version type for comparison
-			storedVersion, err := version.NewVersion(sortedModMap[mod.Identifier].Version)
+			storedVersion, err := version.NewVersion(sortedModMap[mod.Identifier].Versions.VersionMod)
 			if err != nil {
 				log.Printf("Error creating version: %v", err)
 			}
