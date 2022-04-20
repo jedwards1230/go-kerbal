@@ -340,7 +340,6 @@ func (b Bubble) getMainButtonsView() string {
 
 	buttonStyle := lipgloss.NewStyle().
 		Underline(true).
-		Align(lipgloss.Right).
 		Padding(0, 2).
 		Height(constants.StatusBarHeight)
 
@@ -360,11 +359,14 @@ func (b Bubble) getMainButtonsView() string {
 
 	downloadColumn := buttonStyle.Render("5. Download mod")
 
+	settingsColumn := buttonStyle.Render("0. Settings")
+
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		refreshColumn,
 		hideIncompatibleColumn,
 		sortOrderColumn,
 		enterDirColumn,
 		downloadColumn,
+		settingsColumn,
 	)
 }
