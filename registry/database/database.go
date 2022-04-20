@@ -175,13 +175,3 @@ func cloneRepo() (billy.Filesystem, error) {
 
 	return fs, nil
 }
-
-/* func compareVersions(stored, mod Ckan, i int) {
-	if stored.Version.LessThan(mod.Version) {
-		log.Printf("%d | %s is less than %s", i, stored.Version, mod.Version)
-	} else if stored.Version.GreaterThan(mod.Version) {
-		log.Printf("%d | %s is greater than %s", i, stored.Version, mod.Version)
-	} else {
-		log.Printf("%d | %s is equal to %s", i, stored.Version, mod.Version)
-	}
-} */

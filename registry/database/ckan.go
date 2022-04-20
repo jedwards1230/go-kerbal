@@ -58,51 +58,44 @@ func CreateCkan(raw map[string]interface{}) (Ckan, error) {
 		log.Printf("%v: %v", k, v)
 	}
 	log.Panic() */
-	err := mod.cleanNames(raw)
-	if err != nil {
+
+	if err := mod.cleanNames(raw); err != nil {
 		return mod, err
 	}
 
-	err = mod.cleanIdentifiers(raw)
-	if err != nil {
+	if err := mod.cleanIdentifiers(raw); err != nil {
 		return mod, err
 	}
 
-	err = mod.cleanAuthors(raw)
-	if err != nil {
+	if err := mod.cleanAuthors(raw); err != nil {
 		return mod, err
 	}
 
-	err = mod.cleanVersions(raw)
-	if err != nil {
+	if err := mod.cleanVersions(raw); err != nil {
 		return mod, err
 	}
 
-	mod.IsCompatible = mod.CheckCompatible()
-
-	_ = mod.cleanAbstract(raw)
-
-	err = mod.cleanLicense(raw)
-	if err != nil {
+	if err := mod.cleanAbstract(raw); err != nil {
 		return mod, err
 	}
 
-	err = mod.cleanInstall(raw)
-	if err != nil {
+	if err := mod.cleanLicense(raw); err != nil {
 		return mod, err
 	}
 
-	err = mod.cleanDownload(raw)
-	if err != nil {
+	if err := mod.cleanInstall(raw); err != nil {
 		return mod, err
 	}
 
-	err = mod.cleanDependencies(raw)
-	if err != nil {
+	if err := mod.cleanDownload(raw); err != nil {
 		return mod, err
 	}
 
-	return mod, err
+	if err := mod.cleanDependencies(raw); err != nil {
+		return mod, err
+	}
+
+	return mod, nil
 }
 
 // Compares installed KSP version to min/max compatible for the mod.

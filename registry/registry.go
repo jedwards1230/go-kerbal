@@ -326,10 +326,3 @@ func installMod(mod database.Ckan) error {
 	log.Printf("Installed: %v", mod.Name)
 	return nil
 }
-
-/* func (r *Registry) removeMod(i int) {
-	r.ModList[i] = r.ModList[len(r.ModList)-1]
-	list := r.ModList[:len(r.ModList)-1]
-	r.ModList = list
-}
-*/
