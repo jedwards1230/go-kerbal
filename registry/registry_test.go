@@ -83,7 +83,7 @@ func TestGetCompatibleModList(t *testing.T) {
 	}
 }
 
-func BenchmarkGgetCompatibleModList(b *testing.B) {
+func BenchmarkGetCompatibleModList(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		modlist := getCompatibleModList(reg.ModList)
 		if modlist == nil && len(modlist) > 0 {
