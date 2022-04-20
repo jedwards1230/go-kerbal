@@ -221,6 +221,13 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 	// download mods
 	if len(mods) > 0 {
 		log.Printf("Downloading %d mods (after checking dependencies)", len(mods))
+
+		// Create tmp dir
+		err := os.MkdirAll("./tmp", os.ModePerm)
+		if err != nil {
+			return mods, fmt.Errorf("error creating tmp dir: %v", err)
+		}
+
 		var wg sync.WaitGroup
 		n := len(mods)
 		wg.Add(n)
@@ -250,12 +257,6 @@ func downloadMod(mod database.Ckan) error {
 
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("invalid response from server: %v", resp.StatusCode)
-	}
-
-	// Create tmp dir
-	err = os.MkdirAll("./tmp", os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("error creating tmp dir: %v", err)
 	}
 
 	// Create zip file

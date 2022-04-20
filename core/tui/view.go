@@ -198,7 +198,7 @@ func (b Bubble) logView() string {
 		Padding(1).
 		Render("Logs")
 
-	content, err := ioutil.ReadFile("debug.log")
+	content, err := ioutil.ReadFile("./logs/debug.log")
 	if err != nil {
 		log.Fatal(err)
 	}

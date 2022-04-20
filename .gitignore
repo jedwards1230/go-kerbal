@@ -22,7 +22,7 @@ go.work
 
 config.json
 go-kerbal
-*debug.log
+logs
 *data.db
 __debug_bin
 tmp

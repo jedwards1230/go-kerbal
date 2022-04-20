@@ -18,14 +18,20 @@ func Execute() {
 
 	// If logging is enabled, logs will be output to debug.log.
 	if cfg.Settings.EnableLogging {
-		// clear debug file
-		if _, err := os.Stat("debug.log"); err == nil {
-			if err := os.Truncate("debug.log", 0); err != nil {
-				log.Printf("Failed to clear debug.log: %v", err)
+		// Create log dir
+		err := os.MkdirAll("./logs", os.ModePerm)
+		if err != nil {
+			log.Fatalf("error creating tmp dir: %v", err)
+		}
+
+		// clear previous logs
+		if _, err := os.Stat("./logs/debug.log"); err == nil {
+			if err := os.Truncate("./logs/debug.log", 0); err != nil {
+				log.Printf("Failed to clear ./logs/debug.log: %v", err)
 			}
 		}
 
-		f, err := tea.LogToFile("debug.log", "")
+		f, err := tea.LogToFile("./logs/debug.log", "")
 		if err != nil {
 			log.Fatal(err)
 		}

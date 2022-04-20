@@ -12,13 +12,27 @@ import (
 var db *CkanDB
 
 func TestMain(m *testing.M) {
-	f, err := os.OpenFile("../../test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	// Create log dir
+	err := os.MkdirAll("../../logs", os.ModePerm)
+	if err != nil {
+		log.Fatalf("error creating tmp dir: %v", err)
+	}
+
+	// clear previous logs
+	if _, err := os.Stat("../../logs/database_test.log"); err == nil {
+		if err := os.Truncate("../../logs/database_test.log", 0); err != nil {
+			log.Printf("Failed to clear ../../logs/database_test.log: %v", err)
+		}
+	}
+
+	// write new logs to file
+	f, err := os.OpenFile("../../logs/database_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Print(err)
 	}
 	defer f.Close()
 	log.SetOutput(f)
-	log.Println()
+
 	log.Println("*****************")
 	log.Println("Testing Database")
 	log.Println("*****************")
@@ -60,7 +74,7 @@ func DeleteTestDB() {
 	}
 }
 func TestUpdateDB(t *testing.T) {
-	err := db.UpdateDB(false)
+	err := db.UpdateDB(true)
 	if err != nil {
 		t.Errorf("Error updating database %v", err)
 	}

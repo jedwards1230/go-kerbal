@@ -9,14 +9,29 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	f, err := os.OpenFile("../test-debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	// Create log dir
+	err := os.MkdirAll("../logs", os.ModePerm)
+	if err != nil {
+		log.Fatalf("error creating tmp dir: %v", err)
+	}
+
+	// clear previous logs
+	if _, err := os.Stat("../logs/dirfs_test.log"); err == nil {
+		if err := os.Truncate("../logs/dirfs_test.log", 0); err != nil {
+			log.Printf("Failed to clear ../logs/dirfs_test.log: %v", err)
+		}
+	}
+
+	// write new logs to file
+	f, err := os.OpenFile("../logs/dirfs_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Print(err)
 	}
 	defer f.Close()
-	config.LoadConfig("../")
 	log.SetOutput(f)
-	log.Println()
+
+	config.LoadConfig("../")
+
 	log.Println("*****************")
 	log.Println("Testing DirFS")
 	log.Println("*****************")
