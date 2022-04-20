@@ -64,7 +64,7 @@ func (r *Registry) SortModList() {
 	// Get list by unique identifiers
 	sortedModList = getUniqueModList(sortedModList)
 
-	// TODO: Filter by tag
+	// todo: Filter by tag
 
 	// Sort by order
 	sortedModList = getSortedModList(sortedModList, r.SortOptions.SortTag, r.SortOptions.SortOrder)
@@ -87,7 +87,7 @@ func (r *Registry) GetModList() []database.Ckan {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
-			// TODO: better check for installed mods. this is not accurate at all.
+			// todo: better check for installed mods. this is not accurate at all.
 			// check if mod is installed
 			if r.InstalledModList[ckan.Install.Find] {
 				ckan.Install.Installed = true
@@ -158,7 +158,7 @@ func getUniqueModList(modList []database.Ckan) []database.Ckan {
 
 	// map to slice
 	//
-	// TODO: this is only done because i originally had a slice for this. check if keeping it as a map is better
+	// todo: this is only done because i originally had a slice for this. check if keeping it as a map is better
 	sortedModList := make([]database.Ckan, 0, countGood)
 	for _, v := range sortedModMap {
 		sortedModList = append(sortedModList, v)
@@ -190,14 +190,14 @@ func getSortedModList(modList []database.Ckan, tag, order string) []database.Cka
 func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, error) {
 	var mods []database.Ckan
 	dependencies := make(map[string]bool)
+	// collect all mods and dependencies
 	if len(toDownload) > 0 {
 		log.Printf("Checking %d mods", len(toDownload))
-		// mods and dependencies to download
 		for i := range r.SortedModList {
 			mod := r.SortedModList[i]
 			if toDownload[mod.Identifier] {
 
-				// TODO: find links for dependencies.
+				// todo: find links for dependencies.
 				if len(mod.ModDepends) > 0 {
 					for i := range mod.ModDepends {
 						dependencies[mod.ModDepends[i]] = true
@@ -217,6 +217,27 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 	} else {
 		return mods, errors.New("no mods provided")
 	}
+
+	// check for conflicts
+	//
+	// todo: could probably be a lot faster
+	for i := range mods {
+		if len(mods[i].ModConflicts) > 0 {
+			for _, conflict := range mods[i].ModConflicts {
+				// todo: link conflicts to install folder so filesystem can be checked for conflicts
+				/* if r.InstalledModList[conflict.Install.Find] {
+					return mods, fmt.Errorf("%v conflicts with %v", mods[i].Name, mods[j].Name)
+				} */
+
+				for j := range mods {
+					if mods[j].Identifier == conflict {
+						return mods, fmt.Errorf("%v conflicts with %v", mods[i].Name, mods[j].Name)
+					}
+				}
+			}
+		}
+	}
+	log.Printf("No conflicts found")
 
 	// download mods
 	if len(mods) > 0 {
@@ -294,7 +315,7 @@ func InstallMods(mods []database.Ckan) error {
 	return nil
 }
 
-// TODO: more reliable installing to directory. really gotta validate the paths and compare whats in the zip.
+// todo: more reliable installing to directory. really gotta validate the paths and compare whats in the zip.
 func installMod(mod database.Ckan) error {
 	cfg := config.GetConfig()
 	// open zip
