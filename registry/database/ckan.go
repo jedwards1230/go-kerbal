@@ -16,7 +16,7 @@ type Ckan struct {
 	Abstract             string
 	License              string
 	SearchTags           map[string]interface{}
-	ModConflicts         map[string]interface{}
+	ModConflicts         []string
 	ModDepends           []string
 	IsCompatible         bool
 	Versions             versions
@@ -92,6 +92,10 @@ func CreateCkan(raw map[string]interface{}) (Ckan, error) {
 	}
 
 	if err := mod.cleanDependencies(raw); err != nil {
+		return mod, err
+	}
+
+	if err := mod.cleanConflicts(raw); err != nil {
 		return mod, err
 	}
 

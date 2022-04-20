@@ -85,6 +85,27 @@ func (c *Ckan) cleanDependencies(raw map[string]interface{}) error {
 	return nil
 }
 
+func (c *Ckan) cleanConflicts(raw map[string]interface{}) error {
+	if raw["conflicts"] != nil {
+		log.Printf("Conflicts: %v | %T", raw["conflicts"], raw["conflicts"])
+		conflictsInfo := make([]string, 0)
+		rawI := raw["conflicts"].([]interface{})
+		if len(rawI) > 0 {
+			rawConflicts := rawI[0].(map[string]interface{})
+			if rawConflicts["name"] != nil {
+				conflictsInfo = append(conflictsInfo, rawConflicts["name"].(string))
+
+				if len(conflictsInfo) > 0 {
+					c.ModConflicts = conflictsInfo
+					return nil
+				}
+				return fmt.Errorf("error proccessing install conflictions: %v", raw["depends"])
+			}
+		}
+	}
+	return nil
+}
+
 // Clean author name data.
 func (c *Ckan) cleanAuthors(raw map[string]interface{}) error {
 	switch author := raw["author"].(type) {

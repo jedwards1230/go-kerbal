@@ -161,8 +161,9 @@ func (b Bubble) modInfoView() string {
 				"Abstract:         %v\n\n"+
 				"Identifier:       %v\n"+
 				"Version:          %v\n"+
-				"KSP Version:      %v - %v\n"+
-				"Dependencies:     %v\n\n"+
+				"KSP Version:      %v - %v\n\n"+
+				"Dependencies:     %v\n"+
+				"Conflicts:        %v\n\n"+
 				"License:          %v\n\n"+
 				"Download:         %v\n\n",
 			mod.Author,
@@ -173,6 +174,7 @@ func (b Bubble) modInfoView() string {
 			mod.Versions.Mod,
 			mod.Versions.KspMin,
 			mod.Versions.KspMax,
+			mod.ModConflicts,
 			mod.ModDepends,
 			mod.License,
 			mod.Install.Download)
