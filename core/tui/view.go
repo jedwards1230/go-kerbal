@@ -156,7 +156,8 @@ func (b Bubble) modInfoView() string {
 		s := fmt.Sprintf(
 			""+
 				"Author:           %v\n\n"+
-				"Installed:        %v\n\n"+
+				"Installed:        %v\n"+
+				"Installed to:     %v\n\n"+
 				"Abstract:         %v\n\n"+
 				"Identifier:       %v\n"+
 				"Version:          %v\n"+
@@ -166,11 +167,12 @@ func (b Bubble) modInfoView() string {
 				"Download:         %v\n\n",
 			mod.Author,
 			mod.Installed,
+			mod.InstallInfo.InstallTo,
 			mod.Abstract,
 			mod.Identifier,
-			mod.Version,
-			mod.VersionKspMin,
-			mod.VersionKspMax,
+			mod.Versions.VersionMod,
+			mod.Versions.VersionKspMin,
+			mod.Versions.VersionKspMax,
 			mod.ModDepends,
 			mod.License,
 			mod.Download)
