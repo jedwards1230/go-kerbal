@@ -214,6 +214,8 @@ func CheckInstalledMods() (map[string]bool, error) {
 		modName := f.Name()
 		if modName != "Squad" && modName != "SquadExpansion" && f.IsDir() {
 			installedMods[modName] = true
+		} else if filepath.Ext(modName) == ".dll" {
+			installedMods[modName] = true
 		}
 	}
 
