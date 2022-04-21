@@ -384,13 +384,13 @@ func (b Bubble) statusBarView() string {
 		Height(constants.StatusBarHeight)
 
 	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.ModMapIndex))
-	fileCountColumn := statusBarStyle.
+	fileCount = statusBarStyle.
 		Align(lipgloss.Right).
-		Padding(0, 1).
+		Padding(0, 3).
 		Render(fileCount)
 
 	sortOptions := fmt.Sprintf("Sort: %s by %s", b.registry.SortOptions.SortOrder, b.registry.SortOptions.SortTag)
-	sortOptionsColumn := statusBarStyle.
+	sortOptions = statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 3).
 		Render(sortOptions)
@@ -401,13 +401,13 @@ func (b Bubble) statusBarView() string {
 	} else {
 		showCompatible = "Showing incompatible mods"
 	}
-	showCompatibleColumn := statusBarStyle.
+	showCompatible = statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 3).
 		Render(showCompatible)
 
 	var status string
-	statusWidth := b.width - width(fileCountColumn) - width(sortOptionsColumn) - width(showCompatibleColumn)
+	statusWidth := b.width - width(fileCount) - width(sortOptions) - width(showCompatible)
 	if b.searchInput {
 		status = statusBarStyle.
 			Align(lipgloss.Left).
@@ -467,9 +467,9 @@ func (b Bubble) statusBarView() string {
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		status,
-		sortOptionsColumn,
-		showCompatibleColumn,
-		fileCountColumn,
+		sortOptions,
+		showCompatible,
+		fileCount,
 	)
 }
 
