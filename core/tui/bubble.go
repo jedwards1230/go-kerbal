@@ -21,6 +21,7 @@ type Bubble struct {
 	splashViewport    viewport.Model
 	textInput         textinput.Model
 	inputRequested    bool
+	searchInput       bool
 	registry          registry.Registry
 	help              help.Bubble
 	keyMap            KeyMap
@@ -58,7 +59,7 @@ func InitialModel() Bubble {
 
 	t := textinput.New()
 	t.Prompt = "❯ "
-	t.CharLimit = 0
+	t.CharLimit = -1
 	t.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 
 	primaryVP := viewport.New(0, 0)
@@ -99,6 +100,7 @@ func InitialModel() Bubble {
 			{Key: "3", Description: "Toggle sort order (ascend/descend)"},
 			{Key: "4", Description: "Update KSP directory"},
 			{Key: "5", Description: "Download selected mod"},
+			{Key: "6", Description: "Search mods"},
 			{},
 			{Key: "0", Description: "View settings"},
 		})
@@ -117,6 +119,7 @@ func InitialModel() Bubble {
 		splashViewport:    splashVP,
 		textInput:         t,
 		inputRequested:    iRequested,
+		searchInput:       false,
 		registry:          reg,
 		help:              h,
 		nav:               nav,

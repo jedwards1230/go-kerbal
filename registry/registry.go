@@ -23,12 +23,14 @@ import (
 )
 
 type Registry struct {
-	TotalModMap      map[string][]database.Ckan
-	SortedMap        map[string]database.Ckan
-	ModMapIndex      ModIndex
-	InstalledModList map[string]bool
-	DB               *database.CkanDB
-	SortOptions      SortOptions
+	TotalModMap            map[string][]database.Ckan
+	CompatibleModMap       map[string][]database.Ckan
+	SortedCompatibleMap    map[string]database.Ckan
+	SortedNonCompatibleMap map[string]database.Ckan
+	ModMapIndex            ModIndex
+	InstalledModList       map[string]bool
+	DB                     *database.CkanDB
+	SortOptions            SortOptions
 }
 
 type SortOptions struct {
@@ -71,18 +73,15 @@ func (r *Registry) SortModMap() error {
 	log.Printf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
 
-	modMapBuckets := r.TotalModMap
-
-	// Check compatible
-	if cfg.Settings.HideIncompatibleMods {
-		modMapBuckets = getCompatibleModMap(r.TotalModMap)
-	}
-
 	// Get map with most compatible mod
-	r.SortedMap = getLatestVersionMap(modMapBuckets)
+	r.SortedCompatibleMap = getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
+	r.SortedNonCompatibleMap = getLatestVersionMap(r.TotalModMap)
 
-	// Create r.ModMapIndex
-	r.buildModMapIndex(r.SortedMap)
+	if cfg.Settings.HideIncompatibleMods {
+		r.buildModMapIndex(r.SortedCompatibleMap)
+	} else {
+		r.buildModMapIndex(r.SortedNonCompatibleMap)
+	}
 
 	log.Printf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
 	return nil
@@ -138,7 +137,7 @@ func getCompatibleModMap(incompatibleModMap map[string][]database.Ckan) map[stri
 		}
 	}
 
-	log.Printf("Total filtered by compatibility: Compatible: %d | Incompatible: %d", countGood, countBad)
+	log.Printf("Total Compatible: %d | Incompatible: %d", countGood, countBad)
 	return compatibleModMap
 }
 
@@ -185,14 +184,9 @@ func getLatestVersionMap(modMapBuckets map[string][]database.Ckan) map[string]da
 //
 // Sorts by order and tags saved to registry
 func (r *Registry) buildModMapIndex(modMap map[string]database.Ckan) {
-	r.ModMapIndex = make(ModIndex, len(modMap))
-	i := 0
+	r.ModMapIndex = make(ModIndex, 0)
 	for k, v := range modMap {
-		switch r.SortOptions.SortTag {
-		case "name":
-			r.ModMapIndex[i] = Entry{k, v.Name}
-		}
-		i++
+		r.ModMapIndex = append(r.ModMapIndex, Entry{k, v.SearchableName})
 	}
 
 	switch r.SortOptions.SortOrder {
@@ -203,6 +197,38 @@ func (r *Registry) buildModMapIndex(modMap map[string]database.Ckan) {
 	}
 }
 
+func (r *Registry) GetActiveModMap() map[string]database.Ckan {
+	cfg := config.GetConfig()
+	var modMap map[string]database.Ckan
+	if cfg.Settings.HideIncompatibleMods {
+		modMap = r.SortedCompatibleMap
+	} else {
+		modMap = r.SortedNonCompatibleMap
+	}
+	return modMap
+}
+
+func (r *Registry) BuildSearchMapIndex(s string) (ModIndex, error) {
+	modMap := r.GetActiveModMap()
+
+	searchMapIndex := make(ModIndex, 0)
+	for id, mod := range modMap {
+		if strings.Contains(mod.Name, s) || strings.Contains(mod.Identifier, s) || strings.Contains(mod.Abstract, s) {
+			searchMapIndex = append(searchMapIndex, Entry{id, mod.Name})
+		}
+	}
+
+	switch r.SortOptions.SortOrder {
+	case "ascend":
+		sort.Sort(searchMapIndex)
+	case "descend":
+		sort.Sort(sort.Reverse(searchMapIndex))
+	}
+
+	log.Printf("Found %d mods for \"%s\"", len(searchMapIndex), s)
+	return searchMapIndex, nil
+}
+
 func (r *Registry) DownloadMods(toDownload map[string]database.Ckan) ([]database.Ckan, error) {
 	var mods []database.Ckan
 	// collect all mods and dependencies
@@ -211,7 +237,7 @@ func (r *Registry) DownloadMods(toDownload map[string]database.Ckan) ([]database
 		for _, mod := range toDownload {
 			if len(mod.ModDepends) > 0 {
 				for i := range mod.ModDepends {
-					dependent := r.SortedMap[mod.ModDepends[i]]
+					dependent := r.SortedCompatibleMap[mod.ModDepends[i]]
 					if dependent.Identifier != "" {
 						mods = append(mods, dependent)
 					} else {
@@ -230,15 +256,15 @@ func (r *Registry) DownloadMods(toDownload map[string]database.Ckan) ([]database
 	// todo: could probably be a lot faster
 	for i := range mods {
 		if len(mods[i].ModConflicts) > 0 {
-			for _, conflict := range mods[i].ModConflicts {
+			for j, conflict := range mods[i].ModConflicts {
 				// todo: link conflicts to install folder so filesystem can be checked for conflicts
-				/* if r.InstalledModList[conflict.Install.Find] {
-					return mods, fmt.Errorf("%v conflicts with %v", mods[i].Name, mods[j].Name)
-				} */
+				if r.InstalledModList[conflict] {
+					return mods, fmt.Errorf("%v conflicts with installed mod %v", mods[i].Name, mods[j].Name)
+				}
 
 				for j := range mods {
 					if mods[j].Identifier == conflict {
-						return mods, fmt.Errorf("%v conflicts with %v", mods[i].Name, mods[j].Name)
+						return mods, fmt.Errorf("%v conflicts with queued mod %v", mods[i].Name, mods[j].Name)
 					}
 				}
 			}

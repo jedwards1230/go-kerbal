@@ -17,6 +17,14 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
+	if b.inputRequested {
+		b.textInput, cmd = b.textInput.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+
+	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
+	cmds = append(cmds, cmd)
+
 	switch msg := msg.(type) {
 	// Update mod list
 	case UpdatedModMapMsg:
@@ -28,7 +36,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
 		// checks to not overwrite any required input screens
-		if !b.inputRequested {
+		if !b.inputRequested || b.searchInput {
 			b.activeBox = constants.PrimaryBoxActive
 		}
 	case InstalledModListMsg:
@@ -57,6 +65,15 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.textInput.Placeholder = "Try again..."
 		}
 		b.splashViewport.SetContent(b.inputKspView())
+	case SearchMsg:
+		if len(msg.ModIndex) >= 0 {
+			b.nav.listSelected = -1
+			b.registry.ModMapIndex = msg.ModIndex
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
+		} else {
+			log.Print("Error searching")
+		}
 	case ErrorMsg:
 		log.Printf("Error message in update: %v", msg)
 	// Window resize
@@ -67,7 +84,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		b.splashViewport.Width = msg.Width - b.primaryViewport.Style.GetHorizontalFrameSize()
 		b.splashViewport.Height = msg.Height - constants.StatusBarHeight - b.primaryViewport.Style.GetVerticalFrameSize()
-		if b.inputRequested {
+		if b.inputRequested && !b.searchInput {
 			b.splashViewport.SetContent(b.inputKspView())
 		} else {
 			b.splashViewport.SetContent(b.logView())
@@ -86,6 +103,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	// Key pressed
 	case tea.KeyMsg:
+		//log.Printf("Msg: %v %T", msg, msg)
 		cmds = append(cmds, b.handleKeys(msg))
 	// Mouse input
 	case tea.MouseMsg:
@@ -96,22 +114,25 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.MouseWheelDown:
 			b.scrollView("down")
 		}
+		/* default:
+		log.Printf("Msg: %v %T", msg, msg) */
 	}
 
 	if b.inputRequested {
-		b.activeBox = constants.SplashBoxActive
-		b.textInput.Placeholder = "KSP Directory..."
-		b.textInput.Focus()
-		b.textInput.Reset()
-		b.splashViewport.SetContent(b.inputKspView())
-		cmds = append(cmds, textinput.Blink)
+		if b.searchInput {
+			b.activeBox = constants.PrimaryBoxActive
+			b.textInput.Focus()
+			// only search when input is updated
+			_, ok := msg.(tea.KeyMsg)
+			if ok {
+				cmds = append(cmds, b.searchCmd(b.textInput.Value()))
+			}
+		} else {
+			b.activeBox = constants.SplashBoxActive
+			b.textInput.Focus()
+			b.splashViewport.SetContent(b.inputKspView())
+		}
 	}
-
-	b.textInput, cmd = b.textInput.Update(msg)
-	cmds = append(cmds, cmd)
-
-	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
-	cmds = append(cmds, cmd)
 
 	return b, tea.Batch(cmds...)
 }
@@ -126,14 +147,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Quit):
 		b.logs = append(b.logs, "Quitting")
 		log.Print("Quitting")
-		b.inputRequested = false
 		return tea.Quit
 	// Down
 	case key.Matches(msg, b.keyMap.Down):
 		b.scrollView("down")
+		b.inputRequested = false
+		b.textInput.Blur()
 	// Up
 	case key.Matches(msg, b.keyMap.Up):
 		b.scrollView("up")
+		b.inputRequested = false
+		b.textInput.Blur()
 	// Space
 	case key.Matches(msg, b.keyMap.Space):
 		if b.nav.listSelected == b.nav.listCursor {
@@ -147,11 +171,15 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
-			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
+			if b.searchInput {
+				log.Printf("UPDATE: Start searching: %v", b.textInput.Value())
+			} else {
+				cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
+			}
 		} else {
 			// add/remove mods from selected list
 			id := b.registry.ModMapIndex[b.nav.listCursor]
-			mod := b.registry.SortedMap[id.Key]
+			mod := b.registry.SortedCompatibleMap[id.Key]
 			if b.nav.installSelected[mod.Identifier].Identifier != "" {
 				delete(b.nav.installSelected, mod.Identifier)
 			} else {
@@ -164,14 +192,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
-		if !b.inputRequested {
-			//b.inputRequested = false
-			b.textInput.Reset()
+		if !b.inputRequested || b.searchInput {
 			b.textInput.Blur()
+			b.textInput.Reset()
+			b.registry.SortModMap()
+			b.inputRequested = false
+			b.searchInput = false
 			b.activeBox = constants.PrimaryBoxActive
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		}
+		b.textInput.Reset()
 	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
@@ -232,12 +263,33 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.textInput.Placeholder = "KSP Directory..."
 			b.textInput.Focus()
 			b.textInput.Reset()
+			if b.appConfig.Settings.KerbalDir != "" {
+				b.textInput.SetValue(b.appConfig.Settings.KerbalDir)
+			}
 			return textinput.Blink
 		}
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
 		b.logs = append(b.logs, "Downloading mod")
 		cmds = append(cmds, b.downloadModCmd())
+	// Search mods
+	case key.Matches(msg, b.keyMap.Search):
+		if b.searchInput && b.inputRequested {
+			b.inputRequested = false
+			b.textInput.Blur()
+		} else if b.searchInput && !b.inputRequested {
+			b.inputRequested = true
+			b.textInput.Focus()
+			return textinput.Blink
+		} else {
+			b.searchInput = true
+			b.inputRequested = true
+			b.textInput.Reset()
+			b.textInput.Focus()
+			b.textInput.Placeholder = "Search..."
+			return textinput.Blink
+		}
+	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
 		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
 			b.activeBox = constants.PrimaryBoxActive
@@ -267,11 +319,11 @@ func (b *Bubble) checkActiveViewPortBounds() {
 			b.primaryViewport.LineDown(1)
 		}
 
-		if b.nav.listCursor > len(b.registry.SortedMap)-1 {
+		if b.nav.listCursor > len(b.registry.ModMapIndex)-1 {
 			b.nav.listCursor = 0
 			b.primaryViewport.GotoTop()
 		} else if b.nav.listCursor < 0 {
-			b.nav.listCursor = len(b.registry.SortedMap) - 1
+			b.nav.listCursor = len(b.registry.ModMapIndex) - 1
 			b.primaryViewport.GotoBottom()
 		}
 	case constants.SecondaryBoxActive:

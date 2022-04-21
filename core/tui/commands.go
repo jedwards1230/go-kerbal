@@ -17,6 +17,10 @@ type (
 	ErrorMsg            error
 )
 
+type SearchMsg struct {
+	registry.ModIndex
+}
+
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
@@ -41,6 +45,7 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 		}
 		kerbalVer := dirfs.FindKspVersion(kerbalDir)
 		viper.Set("settings.kerbal_dir", kerbalDir)
+		// todo: crashed here setting current ksp dir as new ksp dir in-app
 		viper.Set("settings.kerbal_ver", kerbalVer.String())
 		viper.WriteConfigAs(viper.ConfigFileUsed())
 		log.Printf("Kerbal dir: " + kerbalDir + "/")
@@ -69,5 +74,17 @@ func (b Bubble) downloadModCmd() tea.Cmd {
 			return ErrorMsg(err)
 		}
 		return InstalledModListMsg(installedModList)
+	}
+}
+
+// Download selected mods
+func (b Bubble) searchCmd(s string) tea.Cmd {
+	return func() tea.Msg {
+		searchMapIndex, err := b.registry.BuildSearchMapIndex(s)
+		if err != nil {
+			log.Printf("Error building search index: %v", err)
+			return SearchMsg{searchMapIndex}
+		}
+		return SearchMsg{searchMapIndex}
 	}
 }

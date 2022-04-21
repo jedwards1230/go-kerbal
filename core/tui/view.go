@@ -83,17 +83,23 @@ func (b Bubble) View() string {
 }
 
 func (b Bubble) modListView() string {
-	title := lipgloss.NewStyle().
+	modMap := b.registry.GetActiveModMap()
+
+	titleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Align(lipgloss.Center).
 		Width(b.primaryViewport.Width).
 		Height(3).
-		Padding(1).
-		Render("Mod List")
+		Padding(1)
+	title := titleStyle.Render("Mod List")
+	if b.searchInput {
+		title = titleStyle.Render("Search Mods")
+	}
 
 	s := ""
 	for i, id := range b.registry.ModMapIndex {
-		mod := b.registry.SortedMap[id.Key]
+
+		mod := modMap[id.Key]
 
 		checked := " "
 		if b.nav.installSelected[mod.Identifier].Identifier != "" {
@@ -136,6 +142,8 @@ func (b Bubble) modListView() string {
 }
 
 func (b Bubble) modInfoView() string {
+	modMap := b.registry.GetActiveModMap()
+
 	var title, body string
 
 	titleStyle := lipgloss.NewStyle().
@@ -147,7 +155,7 @@ func (b Bubble) modInfoView() string {
 
 	if b.nav.listSelected >= 0 {
 		id := b.registry.ModMapIndex[b.nav.listSelected]
-		mod := b.registry.SortedMap[id.Key]
+		mod := modMap[id.Key]
 
 		keyStyle := lipgloss.NewStyle().
 			Align(lipgloss.Left).
@@ -195,7 +203,6 @@ func (b Bubble) modInfoView() string {
 			installedValue = valueStyle.
 				Render("Not Installed")
 		}
-		//installedValue = valueStyle.Render(installedValue)
 		installed := lipgloss.JoinHorizontal(lipgloss.Top, installedKey, installedValue)
 
 		installDirKey := keyStyle.Render("Install dir")
@@ -387,19 +394,29 @@ func (b Bubble) statusBarView() string {
 		Padding(0, 3).
 		Render(showCompatible)
 
-	status := "Status: " + b.logs[len(b.logs)-1]
-	statusColumn := statusBarStyle.
-		Align(lipgloss.Left).
-		Padding(0, 1).
-		Width(b.width - width(fileCountColumn) - width(sortOptionsColumn) - width(showCompatibleColumn)).
-		Render(truncate.StringWithTail(
-			status,
-			uint(b.width-width(fileCountColumn)-width(sortOptionsColumn)-width(showCompatibleColumn)-3),
-			"..."),
-		)
+	var status string
+	statusWidth := b.width - width(fileCountColumn) - width(sortOptionsColumn) - width(showCompatibleColumn)
+	if b.searchInput {
+		status = statusBarStyle.
+			Align(lipgloss.Left).
+			Padding(0, 1).
+			Width(statusWidth).
+			Render(b.textInput.View())
+	} else {
+		status = "Status: " + b.logs[len(b.logs)-1]
+		status = statusBarStyle.
+			Align(lipgloss.Left).
+			Padding(0, 1).
+			Width(statusWidth).
+			Render(truncate.StringWithTail(
+				status,
+				uint(statusWidth-3),
+				"..."),
+			)
+	}
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
-		statusColumn,
+		status,
 		sortOptionsColumn,
 		showCompatibleColumn,
 		fileCountColumn,
@@ -409,35 +426,66 @@ func (b Bubble) statusBarView() string {
 func (b Bubble) getMainButtonsView() string {
 	cfg := config.GetConfig()
 
-	buttonStyle := lipgloss.NewStyle().
-		Underline(true).
-		Padding(0, 2).
-		Height(constants.StatusBarHeight)
+	if b.searchInput {
+		buttonStyle := lipgloss.NewStyle().
+			Underline(true).
+			Padding(0, 2).
+			Width(b.width / 2).
+			Height(constants.StatusBarHeight)
 
-	refreshColumn := buttonStyle.Render("1. Refresh")
+		escape := buttonStyle.
+			Align(lipgloss.Left).
+			Render("Esc to close")
 
-	showCompatible := "2. Hide incompatible mods"
-	if !cfg.Settings.HideIncompatibleMods {
-		showCompatible = "2. Hide incompatible mods"
+		enableInput := buttonStyle.
+			Align(lipgloss.Right).
+			Render("6. Enable text input")
+		if b.inputRequested {
+			enableInput = buttonStyle.
+				Align(lipgloss.Right).
+				Render("6. Disable text input")
+		}
+
+		return lipgloss.JoinHorizontal(lipgloss.Top,
+			escape,
+			enableInput,
+		)
 	} else {
-		showCompatible = "2. Show incompatible mods"
+		buttonStyle := lipgloss.NewStyle().
+			Underline(true).
+			Padding(0, 2).
+			Height(constants.StatusBarHeight)
+
+		refresh := buttonStyle.Render("1. Refresh")
+		showCompatible := buttonStyle.Render("2. Hide incompatible mods")
+		if cfg.Settings.HideIncompatibleMods {
+			showCompatible = buttonStyle.Render("2. Show incompatible mods")
+		}
+		sortOrder := buttonStyle.Render("3. Sort Order")
+		enterDir := buttonStyle.Render("4. Enter KSP Dir")
+		download := buttonStyle.Render("5. Download mod")
+		search := buttonStyle.Render("6. Search")
+
+		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
+			refresh,
+			showCompatible,
+			sortOrder,
+			enterDir,
+			download,
+			search,
+		)
+
+		settings := buttonStyle.
+			Align(lipgloss.Right).
+			Render("0. Settings")
+
+		leftColumn = lipgloss.NewStyle().
+			Width(b.width - lipgloss.Width(settings)).
+			Render(leftColumn)
+
+		return lipgloss.JoinHorizontal(lipgloss.Top,
+			leftColumn,
+			settings,
+		)
 	}
-	hideIncompatibleColumn := buttonStyle.Render(showCompatible)
-
-	sortOrderColumn := buttonStyle.Render("3. Sort Order")
-
-	enterDirColumn := buttonStyle.Render("4. Enter KSP Dir")
-
-	downloadColumn := buttonStyle.Render("5. Download mod")
-
-	settingsColumn := buttonStyle.Render("0. Settings")
-
-	return lipgloss.JoinHorizontal(lipgloss.Top,
-		refreshColumn,
-		hideIncompatibleColumn,
-		sortOrderColumn,
-		enterDirColumn,
-		downloadColumn,
-		settingsColumn,
-	)
 }

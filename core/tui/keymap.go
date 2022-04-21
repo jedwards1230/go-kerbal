@@ -21,6 +21,7 @@ type KeyMap struct {
 	SwapSortOrder    key.Binding
 	EnterKspDir      key.Binding
 	Download         key.Binding
+	Search           key.Binding
 	Settings         key.Binding
 }
 
@@ -78,6 +79,10 @@ func DefaultKeyMap() KeyMap {
 		Download: key.NewBinding(
 			key.WithKeys("5"),
 			key.WithHelp("5", "download selected mod"),
+		),
+		Search: key.NewBinding(
+			key.WithKeys("6"),
+			key.WithHelp("6", "search mods"),
 		),
 		Settings: key.NewBinding(
 			key.WithKeys("0"),
