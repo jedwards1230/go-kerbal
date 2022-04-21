@@ -2,6 +2,7 @@ package tui
 
 import (
 	"log"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/dirfs"
@@ -15,6 +16,7 @@ type (
 	InstalledModListMsg map[string]bool
 	UpdateKspDirMsg     bool
 	ErrorMsg            error
+	MyTickMsg           bool
 )
 
 type SearchMsg struct {
@@ -86,5 +88,12 @@ func (b Bubble) searchCmd(s string) tea.Cmd {
 			return SearchMsg{searchMapIndex}
 		}
 		return SearchMsg{searchMapIndex}
+	}
+}
+
+func (b Bubble) MyTickCmd() tea.Cmd {
+	return func() tea.Msg {
+		time.Sleep(1 * time.Second)
+		return MyTickMsg(true)
 	}
 }

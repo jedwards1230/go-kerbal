@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,6 +20,7 @@ type Bubble struct {
 	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
 	splashViewport    viewport.Model
+	spinner           spinner.Model
 	textInput         textinput.Model
 	inputRequested    bool
 	searchInput       bool
@@ -49,6 +51,10 @@ func InitialModel() Bubble {
 	if cfg.Settings.KerbalDir == "" {
 		iRequested = true
 	}
+
+	spin := spinner.New()
+	spin.Spinner = spinner.Dot
+	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
 
 	primaryBoxBorder := lipgloss.NormalBorder()
 	primaryBoxBorderColor := theme.ActiveBoxBorderColor
@@ -117,9 +123,11 @@ func InitialModel() Bubble {
 		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
 		splashViewport:    splashVP,
+		spinner:           spin,
 		textInput:         t,
 		inputRequested:    iRequested,
 		searchInput:       false,
+		ready:             false,
 		registry:          reg,
 		help:              h,
 		nav:               nav,
@@ -131,7 +139,7 @@ func InitialModel() Bubble {
 
 func (b Bubble) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	cmds = append(cmds, b.getAvailableModsCmd())
+	cmds = append(cmds, b.getAvailableModsCmd(), b.spinner.Tick, b.MyTickCmd())
 
 	return tea.Batch(cmds...)
 }

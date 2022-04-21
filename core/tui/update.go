@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
@@ -24,12 +25,17 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
+	if b.ready {
+		b.spinner.Finish()
+	}
+
 	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
 	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
 	// Update mod list
 	case UpdatedModMapMsg:
+		b.ready = true
 		b.registry.TotalModMap = msg
 		b.registry.SortModMap()
 		b.logs = append(b.logs, "Mod list updated")
@@ -37,11 +43,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
 		b.secondaryViewport.SetContent(b.modInfoView())
-		// checks to not overwrite any required input screens
-		if !b.inputRequested || b.searchInput {
-			b.activeBox = constants.PrimaryBoxActive
-		}
 	case InstalledModListMsg:
+		b.ready = true
 		if len(b.registry.InstalledModList) != len(msg) {
 			b.logs = append(b.logs, "Installed mod list updated")
 			log.Printf("Updated installed mod list")
@@ -54,6 +57,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.secondaryViewport.SetContent(b.modInfoView())
 	// Update KSP dir
 	case UpdateKspDirMsg:
+		b.ready = true
 		if msg {
 			cfg := config.GetConfig()
 			log.Print("Kerbal directory updated")
@@ -77,7 +81,18 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Print("Error searching")
 		}
 	case ErrorMsg:
+		b.ready = true
 		log.Printf("Error message in update: %v", msg)
+	case spinner.TickMsg:
+		if !b.ready {
+			if b.activeBox == constants.SplashBoxActive {
+				if !b.inputRequested {
+					b.splashViewport.SetContent(b.logView())
+				}
+			}
+			b.spinner, cmd = b.spinner.Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	// Window resize
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
@@ -118,6 +133,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		/* default:
 		log.Printf("Msg: %v %T", msg, msg) */
+	case MyTickMsg:
+		//log.Printf("my tick: %v", msg)
+		cmds = append(cmds, b.MyTickCmd())
 	}
 
 	if b.inputRequested {
@@ -234,7 +252,9 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Refresh list
 	case key.Matches(msg, b.keyMap.RefreshList):
 		if !b.searchInput && !b.inputRequested {
+			b.ready = false
 			b.logs = append(b.logs, "Getting mod list")
+			cmds = append(cmds, b.spinner.Tick)
 			cmds = append(cmds, b.getAvailableModsCmd())
 		}
 	// Hide incompatible
@@ -286,6 +306,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
 		b.logs = append(b.logs, "Downloading mod")
+		b.ready = false
+		cmds = append(cmds, b.spinner.Tick)
 		cmds = append(cmds, b.downloadModCmd())
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):

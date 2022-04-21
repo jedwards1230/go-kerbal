@@ -415,27 +415,28 @@ func (b Bubble) statusBarView() string {
 			Width(statusWidth).
 			Render(b.textInput.View())
 	} else {
+		// open log file
 		file, err := os.Open("./logs/debug.log")
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer file.Close()
 
+		// read log file
 		bodyList := make([]string, 0)
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			lineWords := strings.Fields(scanner.Text())
-
 			line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords[2:], " "))
-
 			bodyList = append(bodyList, line)
 		}
-
 		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
 		}
 
 		status = "Status: " + bodyList[len(bodyList)-1]
+
+		// format status message
 		status = statusBarStyle.
 			Align(lipgloss.Left).
 			Padding(0, 1).
@@ -445,6 +446,23 @@ func (b Bubble) statusBarView() string {
 				uint(statusWidth-3),
 				"..."),
 			)
+
+		spin := lipgloss.NewStyle().
+			Width(b.spinner.Style.GetWidth()).
+			Padding(0, 0, 0, 1).
+			Render("  ")
+
+		if !b.ready {
+			spin = lipgloss.NewStyle().
+				Width(b.spinner.Style.GetWidth()).
+				Padding(0, 0, 0, 1).
+				Render(b.spinner.View())
+		}
+
+		status = lipgloss.JoinHorizontal(lipgloss.Top,
+			spin,
+			status,
+		)
 	}
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
