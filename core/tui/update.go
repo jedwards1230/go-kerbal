@@ -25,10 +25,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	if b.ready {
-		b.spinner.Finish()
-	}
-
 	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -92,6 +88,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			b.spinner, cmd = b.spinner.Update(msg)
 			cmds = append(cmds, cmd)
+		} else {
+			b.spinner.Finish()
 		}
 	// Window resize
 	case tea.WindowSizeMsg:
@@ -254,8 +252,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		if !b.searchInput && !b.inputRequested {
 			b.ready = false
 			b.logs = append(b.logs, "Getting mod list")
-			cmds = append(cmds, b.spinner.Tick)
-			cmds = append(cmds, b.getAvailableModsCmd())
+			cmds = append(cmds, b.getAvailableModsCmd(), b.spinner.Tick)
 		}
 	// Hide incompatible
 	case key.Matches(msg, b.keyMap.HideIncompatible):
@@ -263,18 +260,21 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.logs = append(b.logs, "Toggling compatible mod view")
 			viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
 			viper.WriteConfigAs(viper.ConfigFileUsed())
-			cmds = append(cmds, b.getAvailableModsCmd())
+			b.ready = false
+			cmds = append(cmds, b.getAvailableModsCmd(), b.spinner.Tick)
 		}
 	// Swap sort order
 	case key.Matches(msg, b.keyMap.SwapSortOrder):
 		if !b.inputRequested {
-			if b.registry.SortOptions.SortOrder == "ascend" {
+			switch b.registry.SortOptions.SortOrder {
+			case "ascend":
 				b.registry.SortOptions.SortOrder = "descend"
-			} else if b.registry.SortOptions.SortOrder == "descend" {
+			case "descend":
 				b.registry.SortOptions.SortOrder = "ascend"
 			}
 			b.logs = append(b.logs, "Swapping sort order to "+b.registry.SortOptions.SortOrder)
 			log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
+
 			b.registry.SortModMap()
 			b.activeBox = constants.PrimaryBoxActive
 			b.checkActiveViewPortBounds()
@@ -307,8 +307,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Download):
 		b.logs = append(b.logs, "Downloading mod")
 		b.ready = false
-		cmds = append(cmds, b.spinner.Tick)
-		cmds = append(cmds, b.downloadModCmd())
+		cmds = append(cmds, b.downloadModCmd(), b.spinner.Tick)
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):
 		if b.searchInput && b.inputRequested {
@@ -339,7 +338,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.splashViewport.GotoTop()
 		}
 	}
-
 	return tea.Batch(cmds...)
 }
 

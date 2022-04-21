@@ -411,7 +411,7 @@ func (b Bubble) statusBarView() string {
 	if b.searchInput {
 		status = statusBarStyle.
 			Align(lipgloss.Left).
-			Padding(0, 1).
+			Padding(0, 2).
 			Width(statusWidth).
 			Render(b.textInput.View())
 	} else {
