@@ -25,8 +25,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
-	cmds = append(cmds, cmd)
+	if b.activeBox == constants.SecondaryBoxActive {
+		b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 
 	switch msg := msg.(type) {
 	// Update mod list

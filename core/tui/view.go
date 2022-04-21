@@ -210,7 +210,7 @@ func (b Bubble) modInfoView() string {
 		installDirValue := valueStyle.Render(mod.Install.InstallTo)
 		installDir := lipgloss.JoinHorizontal(lipgloss.Top, installDirKey, installDirValue)
 
-		downloadKey := keyStyle.Render("License")
+		downloadKey := keyStyle.Render("Download")
 		downloadValue := valueStyle.Render(mod.Install.Download)
 		download := lipgloss.JoinHorizontal(lipgloss.Top, downloadKey, downloadValue)
 
