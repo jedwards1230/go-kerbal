@@ -79,7 +79,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 		}
 		return nil
 	})
-	log.Printf("Database updated with %d entries | %d errors", len(filesToScan), errCount)
+	log.Printf("Database updated with %d mod files | %d errors", len(filesToScan), errCount)
 	return err
 }
 

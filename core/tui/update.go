@@ -19,9 +19,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	// Update mod list
-	case UpdatedModListMsg:
-		b.registry.ModList = msg
-		b.registry.SortModList()
+	case UpdatedModMapMsg:
+		b.registry.TotalModMap = msg
+		b.registry.SortModMap()
 		b.logs = append(b.logs, "Mod list updated")
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()
@@ -150,7 +150,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
 		} else {
 			// add/remove mods from selected list
-			mod := b.registry.SortedModList[b.nav.listCursor]
+			id := b.registry.ModMapIndex[b.nav.listCursor]
+			mod := b.registry.SortedMap[id.Key]
 			if b.nav.installSelected[mod.Identifier] {
 				b.nav.installSelected[mod.Identifier] = false
 			} else {
@@ -211,7 +212,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 		b.logs = append(b.logs, "Swapping sort order to "+b.registry.SortOptions.SortOrder)
 		log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
-		b.registry.SortModList()
+		b.registry.SortModMap()
 		b.activeBox = constants.PrimaryBoxActive
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()
@@ -266,11 +267,11 @@ func (b *Bubble) checkActiveViewPortBounds() {
 			b.primaryViewport.LineDown(1)
 		}
 
-		if b.nav.listCursor > len(b.registry.SortedModList)-1 {
+		if b.nav.listCursor > len(b.registry.SortedMap)-1 {
 			b.nav.listCursor = 0
 			b.primaryViewport.GotoTop()
 		} else if b.nav.listCursor < 0 {
-			b.nav.listCursor = len(b.registry.SortedModList) - 1
+			b.nav.listCursor = len(b.registry.SortedMap) - 1
 			b.primaryViewport.GotoBottom()
 		}
 	case constants.SecondaryBoxActive:

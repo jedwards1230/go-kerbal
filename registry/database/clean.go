@@ -87,7 +87,7 @@ func (c *Ckan) cleanDependencies(raw map[string]interface{}) error {
 
 func (c *Ckan) cleanConflicts(raw map[string]interface{}) error {
 	if raw["conflicts"] != nil {
-		log.Printf("Conflicts: %v | %T", raw["conflicts"], raw["conflicts"])
+		//log.Printf("Conflicts: %v | %T", raw["conflicts"], raw["conflicts"])
 		conflictsInfo := make([]string, 0)
 		rawI := raw["conflicts"].([]interface{})
 		if len(rawI) > 0 {

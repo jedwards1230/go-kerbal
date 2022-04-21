@@ -23,8 +23,9 @@ import (
 )
 
 type Registry struct {
-	ModList          []database.Ckan
-	SortedModList    []database.Ckan
+	TotalModMap      map[string][]database.Ckan
+	SortedMap        map[string]database.Ckan
+	ModMapIndex      ModIndex
 	InstalledModList map[string]bool
 	DB               *database.CkanDB
 	SortOptions      SortOptions
@@ -35,6 +36,17 @@ type SortOptions struct {
 	SortOrder string
 }
 
+type Entry struct {
+	Key   string
+	Value string
+}
+
+type ModIndex []Entry
+
+func (entry ModIndex) Len() int           { return len(entry) }
+func (entry ModIndex) Less(i, j int) bool { return entry[i].Value < entry[j].Value }
+func (entry ModIndex) Swap(i, j int)      { entry[i], entry[j] = entry[j], entry[i] }
+
 // Initializes database and registry
 func GetRegistry() Registry {
 	db := database.GetDB()
@@ -43,148 +55,152 @@ func GetRegistry() Registry {
 		log.Printf("Error checking installed mods: %v", err)
 	}
 
+	sortOpts := SortOptions{
+		SortTag:   "name",
+		SortOrder: "ascend",
+	}
+
 	return Registry{
 		DB:               db,
 		InstalledModList: installedList,
+		SortOptions:      sortOpts,
 	}
 }
 
-func (r *Registry) SortModList() {
-	log.Printf("Sorting %d mods. Order: %s by %s", len(r.ModList), r.SortOptions.SortOrder, r.SortOptions.SortTag)
+func (r *Registry) SortModMap() error {
+	log.Printf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
-	var sortedModList []database.Ckan
+
+	modMapBuckets := r.TotalModMap
 
 	// Check compatible
 	if cfg.Settings.HideIncompatibleMods {
-		sortedModList = getCompatibleModList(r.ModList)
-	} else {
-		sortedModList = r.ModList
+		modMapBuckets = getCompatibleModMap(r.TotalModMap)
 	}
 
-	// Get list by unique identifiers
-	sortedModList = getUniqueModList(sortedModList)
+	// Get map with most compatible mod
+	r.SortedMap = getLatestVersionMap(modMapBuckets)
 
-	// todo: Filter by tag
+	// Create r.ModMapIndex
+	r.buildModMapIndex(r.SortedMap)
 
-	// Sort by order
-	sortedModList = getSortedModList(sortedModList, r.SortOptions.SortTag, r.SortOptions.SortOrder)
-
-	log.Printf("Sort result: %d/%d", len(sortedModList), len(r.ModList))
-	r.SortedModList = sortedModList
+	log.Printf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
+	return nil
 }
 
 // Get list of Ckan objects from database
-func (r *Registry) GetModList() []database.Ckan {
+func (r *Registry) GetTotalModMap() map[string][]database.Ckan {
 	log.Println("Gathering mod list from database")
 
-	var ckan database.Ckan
-	var newList []database.Ckan
+	var mod database.Ckan
+	newMap := make(map[string][]database.Ckan)
+	total := 0
 	r.DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
-			// extract mod
-			err := json.Unmarshal([]byte(value), &ckan)
+			err := json.Unmarshal([]byte(value), &mod)
 			if err != nil {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
 			// todo: better check for installed mods. this is not accurate at all.
 			// check if mod is installed
-			if r.InstalledModList[ckan.Install.Find] {
-				ckan.Install.Installed = true
+			if r.InstalledModList[mod.Install.Find] {
+				mod.Install.Installed = true
 			} else {
-				ckan.Install.Installed = false
+				mod.Install.Installed = false
 			}
 
 			// add to list
-			newList = append(newList, ckan)
+			newMap[mod.Identifier] = append(newMap[mod.Identifier], mod)
+			total += 1
 			return true
 		})
 		return nil
 	})
 
-	log.Printf("Loaded %v mods from database", len(newList))
-	return newList
+	log.Printf("Loaded %v mod files from database", total)
+	return newMap
 }
 
 // Filter out incompatible mods if config is set
-func getCompatibleModList(modList []database.Ckan) []database.Ckan {
+func getCompatibleModMap(incompatibleModMap map[string][]database.Ckan) map[string][]database.Ckan {
 	countGood := 0
 	countBad := 0
-	var compatibleModList []database.Ckan
-	for i := range modList {
-		if modList[i].IsCompatible {
-			countGood += 1
-			compatibleModList = append(compatibleModList, modList[i])
-		} else {
-			countBad += 1
+	compatibleModMap := make(map[string][]database.Ckan, len(incompatibleModMap))
+	for id, modList := range incompatibleModMap {
+		for i := range modList {
+			if modList[i].IsCompatible {
+				countGood += 1
+				compatibleModMap[id] = append(compatibleModMap[id], modList[i])
+			} else {
+				countBad += 1
+			}
 		}
 	}
+
 	log.Printf("Total filtered by compatibility: Compatible: %d | Incompatible: %d", countGood, countBad)
-	return compatibleModList
+	return compatibleModMap
 }
 
 // Filters list by unique identifiers to ensure duplicate mods are not displayed
-func getUniqueModList(modList []database.Ckan) []database.Ckan {
-	sortedModMap := make(map[string]database.Ckan)
+func getLatestVersionMap(modMapBuckets map[string][]database.Ckan) map[string]database.Ckan {
+	modMap := make(map[string]database.Ckan)
 	countGood := 0
 	countBad := 0
-	for _, mod := range modList {
-		// convert to proper version type for comparison
-		foundVersion, err := version.NewVersion(mod.Versions.Mod)
-		if err != nil {
-			log.Printf("Error creating version: %v", err)
-		}
-
-		// check if mod is stored already
-		if sortedModMap[mod.Identifier].Identifier != "" {
+	for id, modList := range modMapBuckets {
+		for _, mod := range modList {
 			// convert to proper version type for comparison
-			storedVersion, err := version.NewVersion(sortedModMap[mod.Identifier].Versions.Mod)
+			foundVersion, err := version.NewVersion(mod.Versions.Mod)
 			if err != nil {
 				log.Printf("Error creating version: %v", err)
 			}
 
-			// compare versions and store most recent
-			if foundVersion.GreaterThan(storedVersion) {
-				// replace old mod
-				sortedModMap[mod.Identifier] = mod
-			}
-			countBad += 1
-		} else {
-			// store mod if slot is empty
-			sortedModMap[mod.Identifier] = mod
-			countGood += 1
-		}
-	}
+			// check if mod is stored already
+			if modMap[id].Identifier != "" {
+				// convert to proper version type for comparison
+				storedVersion, err := version.NewVersion(modMap[id].Versions.Mod)
+				if err != nil {
+					log.Printf("Error creating version: %v", err)
+				}
 
-	// map to slice
-	//
-	// todo: this is only done because i originally had a slice for this. check if keeping it as a map is better
-	sortedModList := make([]database.Ckan, 0, countGood)
-	for _, v := range sortedModMap {
-		sortedModList = append(sortedModList, v)
+				// compare versions and store most recent
+				if foundVersion.GreaterThan(storedVersion) {
+					// replace old mod
+					modMap[id] = mod
+				}
+				countBad += 1
+			} else {
+				// store mod if slot is empty
+				modMap[id] = mod
+				countGood += 1
+			}
+		}
 	}
 
 	log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
-	return sortedModList
+	return modMap
 }
 
-// Sort mods by order
-func getSortedModList(modList []database.Ckan, tag, order string) []database.Ckan {
-	sortedModList := modList
-	switch tag {
-	case "name":
-		switch order {
-		case "ascend":
-			sort.Slice(sortedModList, func(i, j int) bool {
-				return sortedModList[i].SearchableName < sortedModList[j].SearchableName
-			})
-		case "descend":
-			sort.Slice(sortedModList, func(i, j int) bool {
-				return sortedModList[i].SearchableName > sortedModList[j].SearchableName
-			})
+// Create r.ModMapIndex from given modMap
+//
+// Sorts by order and tags saved to registry
+func (r *Registry) buildModMapIndex(modMap map[string]database.Ckan) {
+	r.ModMapIndex = make(ModIndex, len(modMap))
+	i := 0
+	for k, v := range modMap {
+		switch r.SortOptions.SortTag {
+		case "name":
+			r.ModMapIndex[i] = Entry{k, v.Name}
 		}
+		i++
 	}
-	return sortedModList
+
+	switch r.SortOptions.SortOrder {
+	case "ascend":
+		sort.Sort(r.ModMapIndex)
+	case "descend":
+		sort.Sort(sort.Reverse(r.ModMapIndex))
+	}
 }
 
 func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, error) {
@@ -193,10 +209,10 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 	// collect all mods and dependencies
 	if len(toDownload) > 0 {
 		log.Printf("Checking %d mods", len(toDownload))
-		for i := range r.SortedModList {
-			mod := r.SortedModList[i]
-			if toDownload[mod.Identifier] {
+		for _, id := range r.ModMapIndex {
+			mod := r.SortedMap[id.Key]
 
+			if toDownload[mod.Identifier] {
 				// todo: find links for dependencies.
 				if len(mod.ModDepends) > 0 {
 					for i := range mod.ModDepends {
@@ -208,9 +224,9 @@ func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, er
 			}
 		}
 		if len(dependencies) > 0 {
-			for i := range r.SortedModList {
-				if dependencies[r.SortedModList[i].Identifier] {
-					mods = append(mods, r.SortedModList[i])
+			for _, id := range r.ModMapIndex {
+				if dependencies[r.SortedMap[id.Key].Identifier] {
+					mods = append(mods, r.SortedMap[id.Key])
 				}
 			}
 		}

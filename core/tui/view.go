@@ -91,8 +91,8 @@ func (b Bubble) modListView() string {
 		Render("Mod List")
 
 	s := ""
-	for i := range b.registry.SortedModList {
-		mod := b.registry.SortedModList[i]
+	for i, id := range b.registry.ModMapIndex {
+		mod := b.registry.SortedMap[id.Key]
 
 		checked := " "
 		if b.nav.installSelected[mod.Identifier] {
@@ -149,7 +149,8 @@ func (b Bubble) modInfoView() string {
 		Height(b.secondaryViewport.Height - 3)
 
 	if b.nav.listSelected >= 0 {
-		var mod = b.registry.SortedModList[b.nav.listSelected]
+		id := b.registry.ModMapIndex[b.nav.listSelected]
+		mod := b.registry.SortedMap[id.Key]
 
 		title = titleStyle.Render(mod.Name)
 
@@ -295,7 +296,7 @@ func (b Bubble) statusBarView() string {
 	statusBarStyle := lipgloss.NewStyle().
 		Height(constants.StatusBarHeight)
 
-	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.SortedModList))
+	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.ModMapIndex))
 	fileCountColumn := statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 1).

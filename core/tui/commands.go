@@ -11,7 +11,7 @@ import (
 )
 
 type (
-	UpdatedModListMsg   []database.Ckan
+	UpdatedModMapMsg    map[string][]database.Ckan
 	InstalledModListMsg map[string]bool
 	UpdateKspDirMsg     bool
 	ErrorMsg            error
@@ -22,12 +22,12 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
 		log.Print("Checking available mods")
 		b.registry.DB.UpdateDB(false)
-		updatedModList := b.registry.GetModList()
-		if len(updatedModList) == 0 {
+		updatedModMap := b.registry.GetTotalModMap()
+		if len(updatedModMap) == 0 {
 			b.registry.DB.UpdateDB(true)
-			updatedModList = b.registry.GetModList()
+			updatedModMap = b.registry.GetTotalModMap()
 		}
-		return UpdatedModListMsg(updatedModList)
+		return UpdatedModMapMsg(updatedModMap)
 	}
 }
 

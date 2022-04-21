@@ -43,11 +43,6 @@ func InitialModel() Bubble {
 	theme := theme.GetTheme(cfg.AppTheme)
 	reg := registry.GetRegistry()
 
-	reg.SortOptions = registry.SortOptions{
-		SortTag:   "name",
-		SortOrder: "ascend",
-	}
-
 	iRequested := false
 	if cfg.Settings.KerbalDir == "" {
 		iRequested = true

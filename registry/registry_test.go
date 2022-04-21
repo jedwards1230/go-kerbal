@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
+	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/tidwall/buntdb"
 )
@@ -50,7 +51,21 @@ func TestMain(m *testing.M) {
 		log.Print(err)
 	}
 
-	reg = Registry{DB: db}
+	installedList, err := dirfs.CheckInstalledMods()
+	if err != nil {
+		log.Printf("Error checking installed mods: %v", err)
+	}
+
+	sortOpts := SortOptions{
+		SortTag:   "name",
+		SortOrder: "ascend",
+	}
+
+	reg = Registry{
+		DB:               db,
+		InstalledModList: installedList,
+		SortOptions:      sortOpts,
+	}
 
 	code := m.Run()
 	err = os.Remove("../test-data.db")
@@ -72,36 +87,49 @@ func GetTestDB() (*database.CkanDB, error) {
 	return db, err
 }
 
-func TestGetModList(t *testing.T) {
-	modlist := reg.GetModList()
+func TestGetTotalModMap(t *testing.T) {
+	modMap := reg.GetTotalModMap()
+	if modMap == nil && len(modMap) > 0 {
+		t.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modMap), modMap)
+	}
+	reg.TotalModMap = modMap
+}
+func BenchmarkGetTotalModMap(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		modMap := reg.GetTotalModMap()
+		if modMap == nil && len(modMap) > 0 {
+			b.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modMap), modMap)
+		}
+		reg.TotalModMap = modMap
+	}
+}
+
+func TestGetCompatibleModMap(t *testing.T) {
+	modlist := getCompatibleModMap(reg.TotalModMap)
 	if modlist == nil && len(modlist) > 0 {
 		t.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modlist), modlist)
 	}
-	reg.ModList = modlist
 }
 
-func BenchmarkGetModList(b *testing.B) {
+func BenchmarkGetCompatibleModMap(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		modlist := reg.GetModList()
+		modlist := getCompatibleModMap(reg.TotalModMap)
 		if modlist == nil && len(modlist) > 0 {
 			b.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modlist), modlist)
 		}
-		reg.ModList = modlist
 	}
 }
 
-func TestGetCompatibleModList(t *testing.T) {
-	modlist := getCompatibleModList(reg.ModList)
-	if modlist == nil && len(modlist) > 0 {
-		t.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modlist), modlist)
+func TestSortModMap(t *testing.T) {
+	if err := reg.SortModMap(); err != nil {
+		t.Errorf("could not sort mod list: %v", err)
 	}
 }
 
-func BenchmarkGetCompatibleModList(b *testing.B) {
+func BenchmarkSortModMap(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		modlist := getCompatibleModList(reg.ModList)
-		if modlist == nil && len(modlist) > 0 {
-			b.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modlist), modlist)
+		if err := reg.SortModMap(); err != nil {
+			b.Errorf("could not sort mod list: %v", err)
 		}
 	}
 }
