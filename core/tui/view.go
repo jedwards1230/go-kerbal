@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
@@ -144,48 +145,116 @@ func (b Bubble) modInfoView() string {
 		Height(3).
 		Padding(1)
 
-	bodyStyle := lipgloss.NewStyle().
-		Width(b.secondaryViewport.Width).
-		Height(b.secondaryViewport.Height - 3)
-
 	if b.nav.listSelected >= 0 {
 		id := b.registry.ModMapIndex[b.nav.listSelected]
 		mod := b.registry.SortedMap[id.Key]
 
-		title = titleStyle.Render(mod.Name)
+		keyStyle := lipgloss.NewStyle().
+			Align(lipgloss.Left).
+			Bold(true).
+			Width(b.secondaryViewport.Width/4).
+			Padding(0, 2)
 
-		s := fmt.Sprintf(
-			""+
-				"Author:           %v\n\n"+
-				"Installed:        %v\n"+
-				"Installed to:     %v\n\n"+
-				"Abstract:         %v\n\n"+
-				"Identifier:       %v\n"+
-				"Version:          %v\n"+
-				"KSP Version:      %v - %v\n\n"+
-				"Dependencies:     %v\n"+
-				"Conflicts:        %v\n\n"+
-				"License:          %v\n\n"+
-				"Download:         %v\n\n",
-			mod.Author,
-			mod.Install.Installed,
-			mod.Install.InstallTo,
-			mod.Abstract,
-			mod.Identifier,
-			mod.Versions.Mod,
-			mod.Versions.KspMin,
-			mod.Versions.KspMax,
-			mod.ModConflicts,
-			mod.ModDepends,
-			mod.License,
-			mod.Install.Download)
+		valueStyle := lipgloss.NewStyle().
+			Align(lipgloss.Left).
+			Width(b.secondaryViewport.Width*3/4).
+			Padding(0, 5)
 
-		body = bodyStyle.Render(s)
+		title = titleStyle.Render("Mod")
+
+		nameKey := keyStyle.Render("Name")
+		namealue := valueStyle.Render(mod.Name)
+		name := lipgloss.JoinHorizontal(lipgloss.Top, nameKey, namealue)
+
+		identifierKey := keyStyle.Render("Identifier")
+		identifierValue := valueStyle.Render(mod.Identifier)
+		identifier := lipgloss.JoinHorizontal(lipgloss.Top, identifierKey, identifierValue)
+
+		authorKey := keyStyle.Render("Author")
+		authorValue := valueStyle.Render(mod.Author)
+		author := lipgloss.JoinHorizontal(lipgloss.Top, authorKey, authorValue)
+
+		versionKey := keyStyle.Render("Mod Version")
+		versionValue := valueStyle.Render(mod.Versions.Mod)
+		version := lipgloss.JoinHorizontal(lipgloss.Top, versionKey, versionValue)
+
+		versionKspKey := keyStyle.Render("KSP Versions")
+		versionKspValue := fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax)
+		versionKspValue = valueStyle.Render(versionKspValue)
+		versionKsp := lipgloss.JoinHorizontal(lipgloss.Top, versionKspKey, versionKspValue)
+
+		installedKey := keyStyle.
+			Foreground(lipgloss.NoColor{}).
+			Render("Installed?")
+		installedValue := ""
+		if mod.Install.Installed {
+			installedValue = valueStyle.Copy().
+				Foreground(b.theme.InstalledListItemColor).
+				Render("Installed")
+		} else {
+			installedValue = valueStyle.
+				Render("Not Installed")
+		}
+		//installedValue = valueStyle.Render(installedValue)
+		installed := lipgloss.JoinHorizontal(lipgloss.Top, installedKey, installedValue)
+
+		installDirKey := keyStyle.Render("Install dir")
+		installDirValue := valueStyle.Render(mod.Install.InstallTo)
+		installDir := lipgloss.JoinHorizontal(lipgloss.Top, installDirKey, installDirValue)
+
+		downloadKey := keyStyle.Render("License")
+		downloadValue := valueStyle.Render(mod.Install.Download)
+		download := lipgloss.JoinHorizontal(lipgloss.Top, downloadKey, downloadValue)
+
+		abstractKey := keyStyle.Render("Abstract")
+		abstractValue := valueStyle.Render(mod.Abstract)
+		abstract := lipgloss.JoinHorizontal(lipgloss.Top, abstractKey, abstractValue)
+
+		dependenciesKey := keyStyle.Render("Dependencies")
+		dependenciesValue := valueStyle.Render("None")
+		if len(mod.ModDepends) > 0 {
+			dependenciesValue = valueStyle.Render(strings.Join(mod.ModDepends, ", "))
+		}
+		dependencies := lipgloss.JoinHorizontal(lipgloss.Top, dependenciesKey, dependenciesValue)
+
+		conflictsKey := keyStyle.Render("Conflicts")
+		conflictsValue := valueStyle.Render("None")
+		if len(mod.ModConflicts) > 0 {
+			conflictsValue = valueStyle.Render(strings.Join(mod.ModConflicts, ", "))
+		}
+		conflicts := lipgloss.JoinHorizontal(lipgloss.Top, conflictsKey, conflictsValue)
+
+		licenseKey := keyStyle.Render("License")
+		licenseValue := valueStyle.Render(mod.License)
+		license := lipgloss.JoinHorizontal(lipgloss.Top, licenseKey, licenseValue)
+
+		body = lipgloss.JoinVertical(
+			lipgloss.Top,
+			name,
+			identifier,
+			author,
+			"\n",
+			version,
+			versionKsp,
+			"\n",
+			installed,
+			installDir,
+			download,
+			"\n",
+			abstract,
+			"\n",
+			dependencies,
+			conflicts,
+			"\n",
+			license,
+		)
 	} else {
 		title = titleStyle.Render("Help Menu")
-		body = bodyStyle.Render(b.help.View())
+		body = lipgloss.NewStyle().
+			Width(b.secondaryViewport.Width).
+			Height(b.secondaryViewport.Height - 3).
+			Render(b.help.View())
 	}
-
 	return lipgloss.JoinVertical(lipgloss.Top,
 		title,
 		body,
@@ -201,16 +270,15 @@ func (b Bubble) logView() string {
 		Padding(1).
 		Render("Logs")
 
-	content, err := ioutil.ReadFile("./logs/debug.log")
+	file, err := ioutil.ReadFile("./logs/debug.log")
 	if err != nil {
 		log.Fatal(err)
 	}
-	s := string(content)
 
 	body := lipgloss.NewStyle().
 		Width(b.splashViewport.Width).
 		Height(b.splashViewport.Height - 3).
-		Render(s)
+		Render(string(file))
 
 	return lipgloss.JoinVertical(lipgloss.Top,
 		title,
