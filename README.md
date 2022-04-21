@@ -11,12 +11,8 @@ go build && ./go-kerbal
 ## Features so far:
  * Automatically keeps metadata up to date
  * Compiles metadata and displays info in the TUI
- * Sorts by:
-   * name
- * Filters by:
-   * compatibility
-   * if installed (TODO)
-   * tag (TODO)
+ * Search mods with text input
+ * Sort mods
  * Displays logs in-app
  * Downloads and installs multiple mods
  * Finds Kerbal game directory (prompts for directory if not found)
@@ -26,7 +22,7 @@ go build && ./go-kerbal
 ![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true)
 ![Mod Selected](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/modInfo.png?raw=true)
 ![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true)
-![Input Directory View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/inputDir.png?raw=true)
+![Search View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/search.png?raw=true)
 
 ## TODO:
 Check out the [Projects](https://github.com/jedwards1230/go-kerbal/projects?type=beta) tab.

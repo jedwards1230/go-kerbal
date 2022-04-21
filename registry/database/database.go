@@ -154,7 +154,6 @@ func CheckRepoChanges() bool {
 func cloneRepo() (billy.Filesystem, error) {
 	cfg := config.GetConfig()
 	log.Println("Cloning database repo")
-	// Pull metadata repo
 	fs := memfs.New()
 	storer := memory.NewStorage()
 	r, err := git.Clone(storer, fs, &git.CloneOptions{

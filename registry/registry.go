@@ -75,6 +75,7 @@ func (r *Registry) SortModMap() error {
 
 	// Get map with most compatible mod
 	r.SortedCompatibleMap = getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
+	log.Printf("Total Incompatible: %d", len(r.TotalModMap))
 	r.SortedNonCompatibleMap = getLatestVersionMap(r.TotalModMap)
 
 	if cfg.Settings.HideIncompatibleMods {
@@ -213,7 +214,7 @@ func (r *Registry) BuildSearchMapIndex(s string) (ModIndex, error) {
 
 	searchMapIndex := make(ModIndex, 0)
 	for id, mod := range modMap {
-		if strings.Contains(mod.Name, s) || strings.Contains(mod.Identifier, s) || strings.Contains(mod.Abstract, s) {
+		if strings.Contains(mod.SearchSpace, s) {
 			searchMapIndex = append(searchMapIndex, Entry{id, mod.Name})
 		}
 	}

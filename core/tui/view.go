@@ -91,6 +91,7 @@ func (b Bubble) modListView() string {
 		Width(b.primaryViewport.Width).
 		Height(3).
 		Padding(1)
+
 	title := titleStyle.Render("Mod List")
 	if b.searchInput {
 		title = titleStyle.Render("Search Mods")
@@ -98,7 +99,6 @@ func (b Bubble) modListView() string {
 
 	s := ""
 	for i, id := range b.registry.ModMapIndex {
-
 		mod := modMap[id.Key]
 
 		checked := " "
@@ -426,16 +426,29 @@ func (b Bubble) statusBarView() string {
 func (b Bubble) getMainButtonsView() string {
 	cfg := config.GetConfig()
 
-	if b.searchInput {
-		buttonStyle := lipgloss.NewStyle().
-			Underline(true).
-			Padding(0, 2).
-			Width(b.width / 2).
-			Height(constants.StatusBarHeight)
+	buttonStyle := lipgloss.NewStyle().
+		Underline(true).
+		Padding(0, 2).
+		Height(constants.StatusBarHeight)
 
+	showCompatible := buttonStyle.Render("2. Hide incompatible mods")
+	if cfg.Settings.HideIncompatibleMods {
+		showCompatible = buttonStyle.Render("2. Show incompatible mods")
+	}
+	sortOrder := buttonStyle.Render("3. Sort Order")
+	download := buttonStyle.Render("5. Download mod")
+
+	if b.searchInput {
 		escape := buttonStyle.
 			Align(lipgloss.Left).
 			Render("Esc to close")
+
+		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
+			escape,
+			showCompatible,
+			sortOrder,
+			download,
+		)
 
 		enableInput := buttonStyle.
 			Align(lipgloss.Right).
@@ -446,24 +459,15 @@ func (b Bubble) getMainButtonsView() string {
 				Render("6. Disable text input")
 		}
 
+		leftColumn = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(leftColumn)
+
 		return lipgloss.JoinHorizontal(lipgloss.Top,
-			escape,
+			leftColumn,
 			enableInput,
 		)
 	} else {
-		buttonStyle := lipgloss.NewStyle().
-			Underline(true).
-			Padding(0, 2).
-			Height(constants.StatusBarHeight)
-
 		refresh := buttonStyle.Render("1. Refresh")
-		showCompatible := buttonStyle.Render("2. Hide incompatible mods")
-		if cfg.Settings.HideIncompatibleMods {
-			showCompatible = buttonStyle.Render("2. Show incompatible mods")
-		}
-		sortOrder := buttonStyle.Render("3. Sort Order")
 		enterDir := buttonStyle.Render("4. Enter KSP Dir")
-		download := buttonStyle.Render("5. Download mod")
 		search := buttonStyle.Render("6. Search")
 
 		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,

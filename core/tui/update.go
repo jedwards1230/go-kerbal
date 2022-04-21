@@ -3,12 +3,14 @@ package tui
 import (
 	"fmt"
 	"log"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
+	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/spf13/viper"
 )
 
@@ -172,14 +174,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			if b.searchInput {
+				b.textInput.Blur()
+				b.inputRequested = false
 				log.Printf("UPDATE: Start searching: %v", b.textInput.Value())
 			} else {
 				cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
 			}
 		} else {
+			modMap := b.registry.GetActiveModMap()
 			// add/remove mods from selected list
 			id := b.registry.ModMapIndex[b.nav.listCursor]
-			mod := b.registry.SortedCompatibleMap[id.Key]
+			mod := modMap[id.Key]
 			if b.nav.installSelected[mod.Identifier].Identifier != "" {
 				delete(b.nav.installSelected, mod.Identifier)
 			} else {
@@ -193,6 +198,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
 		if !b.inputRequested || b.searchInput {
+			b.nav.listCursor = -1
+			b.nav.installSelected = make(map[string]database.Ckan, 0)
 			b.textInput.Blur()
 			b.textInput.Reset()
 			b.registry.SortModMap()
@@ -226,47 +233,55 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// Refresh list
 	case key.Matches(msg, b.keyMap.RefreshList):
-		b.logs = append(b.logs, "Getting mod list")
-		cmds = append(cmds, b.getAvailableModsCmd())
+		if !b.searchInput && !b.inputRequested {
+			b.logs = append(b.logs, "Getting mod list")
+			cmds = append(cmds, b.getAvailableModsCmd())
+		}
 	// Hide incompatible
 	case key.Matches(msg, b.keyMap.HideIncompatible):
-		b.logs = append(b.logs, "Toggling compatible mod view")
-		viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
-		viper.WriteConfigAs(viper.ConfigFileUsed())
-		cmds = append(cmds, b.getAvailableModsCmd())
+		if !b.inputRequested {
+			b.logs = append(b.logs, "Toggling compatible mod view")
+			viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
+			viper.WriteConfigAs(viper.ConfigFileUsed())
+			cmds = append(cmds, b.getAvailableModsCmd())
+		}
 	// Swap sort order
 	case key.Matches(msg, b.keyMap.SwapSortOrder):
-		if b.registry.SortOptions.SortOrder == "ascend" {
-			b.registry.SortOptions.SortOrder = "descend"
-		} else if b.registry.SortOptions.SortOrder == "descend" {
-			b.registry.SortOptions.SortOrder = "ascend"
+		if !b.inputRequested {
+			if b.registry.SortOptions.SortOrder == "ascend" {
+				b.registry.SortOptions.SortOrder = "descend"
+			} else if b.registry.SortOptions.SortOrder == "descend" {
+				b.registry.SortOptions.SortOrder = "ascend"
+			}
+			b.logs = append(b.logs, "Swapping sort order to "+b.registry.SortOptions.SortOrder)
+			log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
+			b.registry.SortModMap()
+			b.activeBox = constants.PrimaryBoxActive
+			b.checkActiveViewPortBounds()
+			b.primaryViewport.GotoTop()
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
 		}
-		b.logs = append(b.logs, "Swapping sort order to "+b.registry.SortOptions.SortOrder)
-		log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
-		b.registry.SortModMap()
-		b.activeBox = constants.PrimaryBoxActive
-		b.checkActiveViewPortBounds()
-		b.primaryViewport.GotoTop()
-		b.primaryViewport.SetContent(b.modListView())
-		b.secondaryViewport.SetContent(b.modInfoView())
 	// Input KSP dir
 	// TODO: This has been hanging/acting slow. Something is wrong.
 	case key.Matches(msg, b.keyMap.EnterKspDir):
-		if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
-			b.inputRequested = false
-			b.activeBox = constants.PrimaryBoxActive
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
-		} else {
-			b.activeBox = constants.SplashBoxActive
-			b.inputRequested = true
-			b.textInput.Placeholder = "KSP Directory..."
-			b.textInput.Focus()
-			b.textInput.Reset()
-			if b.appConfig.Settings.KerbalDir != "" {
-				b.textInput.SetValue(b.appConfig.Settings.KerbalDir)
+		if !b.searchInput {
+			if b.activeBox == constants.SplashBoxActive && !b.inputRequested {
+				b.inputRequested = false
+				b.activeBox = constants.PrimaryBoxActive
+				b.primaryViewport.SetContent(b.modListView())
+				b.secondaryViewport.SetContent(b.modInfoView())
+			} else {
+				b.activeBox = constants.SplashBoxActive
+				b.inputRequested = true
+				b.textInput.Placeholder = "KSP Directory..."
+				b.textInput.Focus()
+				b.textInput.Reset()
+				if b.appConfig.Settings.KerbalDir != "" {
+					b.textInput.SetValue(b.appConfig.Settings.KerbalDir)
+				}
+				return textinput.Blink
 			}
-			return textinput.Blink
 		}
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
@@ -275,6 +290,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):
 		if b.searchInput && b.inputRequested {
+			val := trimLastChar(b.textInput.Value())
+			b.textInput.SetValue(val)
 			b.inputRequested = false
 			b.textInput.Blur()
 		} else if b.searchInput && !b.inputRequested {
@@ -285,7 +302,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.searchInput = true
 			b.inputRequested = true
 			b.textInput.Reset()
-			b.textInput.Focus()
 			b.textInput.Placeholder = "Search..."
 			return textinput.Blink
 		}
@@ -303,6 +319,14 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	}
 
 	return tea.Batch(cmds...)
+}
+
+func trimLastChar(s string) string {
+	r, size := utf8.DecodeLastRuneInString(s)
+	if r == utf8.RuneError && (size == 0 || size == 1) {
+		size = 0
+	}
+	return s[:len(s)-size]
 }
 
 // Handles wrapping and button

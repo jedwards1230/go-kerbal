@@ -10,21 +10,20 @@ import (
 // CKAN Spec: https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md
 
 type Ckan struct {
-	Identifier           string
-	Name                 string
-	Author               string
-	Abstract             string
-	License              string
-	SearchTags           map[string]interface{}
-	ModConflicts         []string
-	ModDepends           []string
-	IsCompatible         bool
-	Versions             versions
-	Install              install
-	Resources            resource
-	SearchableName       string
-	SearchableAbstract   string
-	SearchableIdentifier string
+	Identifier     string
+	Name           string
+	Author         string
+	Abstract       string
+	License        string
+	SearchTags     map[string]interface{}
+	ModConflicts   []string
+	ModDepends     []string
+	IsCompatible   bool
+	Versions       versions
+	Install        install
+	Resources      resource
+	SearchSpace    string
+	SearchableName string
 }
 
 type versions struct {
@@ -96,6 +95,10 @@ func CreateCkan(raw map[string]interface{}) (Ckan, error) {
 	}
 
 	if err := mod.cleanConflicts(raw); err != nil {
+		return mod, err
+	}
+
+	if err := mod.cleanSearchSpace(raw); err != nil {
 		return mod, err
 	}
 

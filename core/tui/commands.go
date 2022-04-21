@@ -40,12 +40,12 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 	return func() tea.Msg {
 		log.Printf("Input received: %s", s)
 		kerbalDir, err := dirfs.FindKspPath(s)
-		if err != nil {
+		if err != nil || kerbalDir == "" {
+			log.Printf("Error finding KSP directory: %v, %s", err, s)
 			return UpdateKspDirMsg(false)
 		}
 		kerbalVer := dirfs.FindKspVersion(kerbalDir)
 		viper.Set("settings.kerbal_dir", kerbalDir)
-		// todo: crashed here setting current ksp dir as new ksp dir in-app
 		viper.Set("settings.kerbal_ver", kerbalVer.String())
 		viper.WriteConfigAs(viper.ConfigFileUsed())
 		log.Printf("Kerbal dir: " + kerbalDir + "/")

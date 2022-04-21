@@ -12,6 +12,13 @@ import (
 	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
+func (c *Ckan) cleanSearchSpace(raw map[string]interface{}) error {
+	searchSpace := fmt.Sprintf("%v %v %v %v", c.Name, c.Identifier, c.Author, dirfs.Strip(c.Abstract))
+
+	c.SearchSpace = searchSpace
+	return nil
+}
+
 func (c *Ckan) cleanNames(raw map[string]interface{}) error {
 	c.Name = strings.TrimSpace(raw["name"].(string))
 	if c.Name == "" {
@@ -27,7 +34,6 @@ func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
 	if c.Identifier == "" {
 		return errors.New("invalid file identifier")
 	}
-	c.SearchableIdentifier = dirfs.Strip(c.Name)
 
 	return nil
 }
@@ -198,11 +204,8 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 func (c *Ckan) cleanAbstract(raw map[string]interface{}) error {
 	c.Abstract = strings.TrimSpace(raw["abstract"].(string))
 	if c.Abstract == "" {
-		c.SearchableAbstract = ""
 		return errors.New("invalid abstract")
 	}
-	// TODO: strip common words (a, the, and, etc.)
-	c.SearchableAbstract = dirfs.Strip(c.Abstract)
 
 	return nil
 }
