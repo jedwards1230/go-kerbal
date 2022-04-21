@@ -95,7 +95,7 @@ func (b Bubble) modListView() string {
 		mod := b.registry.SortedMap[id.Key]
 
 		checked := " "
-		if b.nav.installSelected[mod.Identifier] {
+		if b.nav.installSelected[mod.Identifier].Identifier != "" {
 			checked = "x"
 		}
 

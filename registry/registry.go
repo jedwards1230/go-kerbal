@@ -203,32 +203,23 @@ func (r *Registry) buildModMapIndex(modMap map[string]database.Ckan) {
 	}
 }
 
-func (r *Registry) DownloadMods(toDownload map[string]bool) ([]database.Ckan, error) {
+func (r *Registry) DownloadMods(toDownload map[string]database.Ckan) ([]database.Ckan, error) {
 	var mods []database.Ckan
-	dependencies := make(map[string]bool)
 	// collect all mods and dependencies
 	if len(toDownload) > 0 {
 		log.Printf("Checking %d mods", len(toDownload))
-		for _, id := range r.ModMapIndex {
-			mod := r.SortedMap[id.Key]
-
-			if toDownload[mod.Identifier] {
-				// todo: find links for dependencies.
-				if len(mod.ModDepends) > 0 {
-					for i := range mod.ModDepends {
-						dependencies[mod.ModDepends[i]] = true
+		for _, mod := range toDownload {
+			if len(mod.ModDepends) > 0 {
+				for i := range mod.ModDepends {
+					dependent := r.SortedMap[mod.ModDepends[i]]
+					if dependent.Identifier != "" {
+						mods = append(mods, dependent)
+					} else {
+						return mods, fmt.Errorf("could not find dependency: %v %v", mod.ModDepends[i], dependent.Identifier)
 					}
 				}
-
-				mods = append(mods, mod)
 			}
-		}
-		if len(dependencies) > 0 {
-			for _, id := range r.ModMapIndex {
-				if dependencies[r.SortedMap[id.Key].Identifier] {
-					mods = append(mods, r.SortedMap[id.Key])
-				}
-			}
+			mods = append(mods, mod)
 		}
 	} else {
 		return mods, errors.New("no mods provided")

@@ -152,10 +152,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			// add/remove mods from selected list
 			id := b.registry.ModMapIndex[b.nav.listCursor]
 			mod := b.registry.SortedMap[id.Key]
-			if b.nav.installSelected[mod.Identifier] {
-				b.nav.installSelected[mod.Identifier] = false
+			if b.nav.installSelected[mod.Identifier].Identifier != "" {
+				delete(b.nav.installSelected, mod.Identifier)
 			} else {
-				b.nav.installSelected[mod.Identifier] = true
+				b.nav.installSelected[mod.Identifier] = mod
 			}
 			b.nav.listSelected = b.nav.listCursor
 			b.checkActiveViewPortBounds()
