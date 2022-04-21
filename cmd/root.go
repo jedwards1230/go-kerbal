@@ -18,6 +18,7 @@ func Execute() {
 
 	// If logging is enabled, logs will be output to debug.log.
 	if cfg.Settings.EnableLogging {
+		logPath := "./logs/debug.log"
 		// Create log dir
 		err := os.MkdirAll("./logs", os.ModePerm)
 		if err != nil {
@@ -25,21 +26,22 @@ func Execute() {
 		}
 
 		// clear previous logs
-		if _, err := os.Stat("./logs/debug.log"); err == nil {
-			if err := os.Truncate("./logs/debug.log", 0); err != nil {
-				log.Printf("Failed to clear ./logs/debug.log: %v", err)
+		if _, err := os.Stat(logPath); err == nil {
+			if err := os.Truncate(logPath, 0); err != nil {
+				log.Printf("Failed to clear %s: %v", err, logPath)
 			}
 		}
 
-		f, err := tea.LogToFile("./logs/debug.log", "")
+		f, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer func() {
-			if err = f.Close(); err != nil {
-				log.Fatal(err)
-			}
-		}()
+		log.SetOutput(f)
+
+		var LstdFlags = log.Lmsgprefix | log.Ltime | log.Lmicroseconds | log.Lshortfile
+
+		//log.SetPrefix("pre ")
+		log.SetFlags(LstdFlags)
 	}
 	log.Println("Starting program")
 

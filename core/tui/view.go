@@ -1,15 +1,24 @@
 package tui
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
 	"github.com/muesli/reflow/truncate"
+)
+
+var (
+	titleStyle = lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Height(3).
+		Padding(1)
 )
 
 func (b Bubble) View() string {
@@ -85,12 +94,8 @@ func (b Bubble) View() string {
 func (b Bubble) modListView() string {
 	modMap := b.registry.GetActiveModMap()
 
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Width(b.primaryViewport.Width).
-		Height(3).
-		Padding(1)
+	titleStyle := titleStyle.Copy().
+		Width(b.primaryViewport.Width)
 
 	title := titleStyle.Render("Mod List")
 	if b.searchInput {
@@ -146,12 +151,8 @@ func (b Bubble) modInfoView() string {
 
 	var title, body string
 
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Width(b.secondaryViewport.Width).
-		Height(3).
-		Padding(1)
+	titleStyle := titleStyle.Copy().
+		Width(b.primaryViewport.Width)
 
 	if b.nav.listSelected >= 0 {
 		id := b.registry.ModMapIndex[b.nav.listSelected]
@@ -269,23 +270,42 @@ func (b Bubble) modInfoView() string {
 }
 
 func (b Bubble) logView() string {
-	title := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Width(b.splashViewport.Width).
-		Height(3).
-		Padding(1).
-		Render("Logs")
-
-	file, err := ioutil.ReadFile("./logs/debug.log")
+	file, err := os.Open("./logs/debug.log")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer file.Close()
 
-	body := lipgloss.NewStyle().
+	bodyList := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lineWords := strings.Fields(scanner.Text())
+		lineWords[0] = lipgloss.NewStyle().
+			Foreground(b.theme.LogDateColor).
+			Render(lineWords[0])
+		lineWords[1] = lipgloss.NewStyle().
+			Foreground(b.theme.LogPathColor).
+			Width(16).
+			Render(lineWords[1])
+
+		line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords, " "))
+
+		bodyList = append(bodyList, line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	title := titleStyle.Copy().
+		Width(b.splashViewport.Width).
+		Render("Logs")
+
+	body := lipgloss.JoinVertical(lipgloss.Top, bodyList...)
+	body = lipgloss.NewStyle().
 		Width(b.splashViewport.Width).
 		Height(b.splashViewport.Height - 3).
-		Render(string(file))
+		Render(string(body))
 
 	return lipgloss.JoinVertical(lipgloss.Top,
 		title,
@@ -295,12 +315,8 @@ func (b Bubble) logView() string {
 
 func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
-	title := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
+	title := titleStyle.Copy().
 		Width(b.splashViewport.Width).
-		Height(3).
-		Padding(1).
 		Render("Settings")
 
 	lineStyle := lipgloss.NewStyle().
@@ -329,12 +345,8 @@ func (b Bubble) settingsView() string {
 }
 
 func (b Bubble) inputKspView() string {
-	title := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
+	title := titleStyle.Copy().
 		Width(b.splashViewport.Width).
-		Height(3).
-		Padding(1).
 		Render("Kerbal Space Program Directory")
 
 	question := lipgloss.NewStyle().
@@ -403,7 +415,27 @@ func (b Bubble) statusBarView() string {
 			Width(statusWidth).
 			Render(b.textInput.View())
 	} else {
-		status = "Status: " + b.logs[len(b.logs)-1]
+		file, err := os.Open("./logs/debug.log")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		bodyList := make([]string, 0)
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			lineWords := strings.Fields(scanner.Text())
+
+			line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords[2:], " "))
+
+			bodyList = append(bodyList, line)
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		status = "Status: " + bodyList[len(bodyList)-1]
 		status = statusBarStyle.
 			Align(lipgloss.Left).
 			Padding(0, 1).
