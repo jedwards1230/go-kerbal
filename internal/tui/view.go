@@ -35,7 +35,7 @@ func (b Bubble) View() string {
 
 		// format active box
 		switch b.activeBox {
-		case internal.ModListView:
+		case internal.ModListView, internal.SearchView:
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 		case internal.ModInfoView:
 			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
@@ -98,7 +98,7 @@ func (b Bubble) modListView() string {
 		Width(b.primaryViewport.Width)
 
 	title := titleStyle.Render("Mod List")
-	if b.searchInput {
+	if b.activeBox == internal.SearchView {
 		title = titleStyle.Render("Search Mods")
 	}
 

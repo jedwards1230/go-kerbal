@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -124,10 +125,11 @@ func (r *Registry) GetActiveModMap() map[string]Ckan {
 func (r *Registry) BuildSearchMapIndex(s string) (ModIndex, error) {
 	modMap := r.GetActiveModMap()
 	s = strings.ToLower(s)
+	re := regexp.MustCompile("(?i)" + s)
 
 	searchMapIndex := make(ModIndex, 0)
 	for id, mod := range modMap {
-		if strings.Contains(mod.SearchSpace, s) {
+		if re.MatchString(mod.SearchSpace) {
 			searchMapIndex = append(searchMapIndex, Entry{id, mod.Name})
 		}
 	}

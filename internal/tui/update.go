@@ -160,7 +160,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // scrolling in the viewport.
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
-	case internal.ModListView:
+	case internal.ModListView, internal.SearchView:
 		top := b.primaryViewport.YOffset - 3
 		bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 4
 
@@ -197,7 +197,7 @@ func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
 		switch b.activeBox {
-		case internal.ModListView:
+		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor--
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
@@ -211,7 +211,7 @@ func (b *Bubble) scrollView(dir string) {
 		}
 	case "down":
 		switch b.activeBox {
-		case internal.ModListView:
+		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor++
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())

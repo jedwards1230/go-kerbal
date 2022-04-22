@@ -165,16 +165,19 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		cmds = append(cmds, b.downloadModCmd(), b.spinner.Tick)
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):
-		if b.searchInput && b.inputRequested {
-			val := trimLastChar(b.textInput.Value())
-			b.textInput.SetValue(val)
-			b.inputRequested = false
-			b.textInput.Blur()
-		} else if b.searchInput && !b.inputRequested {
-			b.inputRequested = true
-			b.textInput.Focus()
-			return textinput.Blink
+		if b.activeBox == internal.SearchView {
+			if b.inputRequested {
+				val := trimLastChar(b.textInput.Value())
+				b.textInput.SetValue(val)
+				b.inputRequested = false
+				b.textInput.Blur()
+			} else {
+				b.inputRequested = true
+				b.textInput.Focus()
+				return textinput.Blink
+			}
 		} else {
+			b.activeBox = internal.SearchView
 			b.searchInput = true
 			b.inputRequested = true
 			b.textInput.Reset()
