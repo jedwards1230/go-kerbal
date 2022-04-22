@@ -7,12 +7,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/jedwards1230/go-kerbal/registry"
-	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/spf13/viper"
 )
 
 type (
-	UpdatedModMapMsg    map[string][]database.Ckan
+	UpdatedModMapMsg    map[string][]registry.Ckan
 	InstalledModListMsg map[string]bool
 	UpdateKspDirMsg     bool
 	ErrorMsg            error

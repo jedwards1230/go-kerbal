@@ -7,30 +7,32 @@ import (
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
-	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/tidwall/buntdb"
 )
 
 var reg Registry
+var db *CkanDB
+var err error
+var logPath = "../logs/registry_test.log"
 
 func TestMain(m *testing.M) {
 	// Create log dir
 	err := os.MkdirAll("../logs", os.ModePerm)
 	if err != nil {
-		log.Fatalf("error creating tmp dir: %v", err)
+		log.Fatalf("Failed creating tmp dir: %v", err)
 	}
 
 	// clear previous logs
-	if _, err := os.Stat("../logs/registry_test.log"); err == nil {
-		if err := os.Truncate("../logs/registry_test.log", 0); err != nil {
-			log.Printf("Failed to clear ../logs/registry_test.log: %v", err)
+	if _, err := os.Stat(logPath); err == nil {
+		if err := os.Truncate(logPath, 0); err != nil {
+			log.Printf("Failed to clear %s: %v", logPath, err)
 		}
 	}
 
 	// write new logs to file
-	f, err := os.OpenFile("../logs/registry_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
-		log.Print(err)
+		log.Fatalf("Failed to open %s", logPath)
 	}
 	defer f.Close()
 	log.SetOutput(f)
@@ -41,14 +43,9 @@ func TestMain(m *testing.M) {
 
 	config.LoadConfig("../")
 	log.Printf("Initializing test-db")
-	db, err := GetTestDB()
+	db, err = GetTestDB()
 	if err != nil {
-		log.Print(err)
-	}
-
-	err = db.UpdateDB(true)
-	if err != nil {
-		log.Print(err)
+		log.Fatal(err)
 	}
 
 	installedList, err := dirfs.CheckInstalledMods()
@@ -68,23 +65,60 @@ func TestMain(m *testing.M) {
 	}
 
 	code := m.Run()
-	err = os.Remove("../test-data.db")
-	if err != nil {
-		log.Print(err)
-	}
+
+	DeleteTestDB()
 
 	os.Exit(code)
 }
 
 // Open database file
-func GetTestDB() (*database.CkanDB, error) {
-	var db *database.CkanDB
+func GetTestDB() (*CkanDB, error) {
+	var db *CkanDB
 	data, err := buntdb.Open("../test-data.db")
 	if err != nil {
 		return db, err
 	}
-	db = &database.CkanDB{DB: data}
+	db = &CkanDB{DB: data}
+
+	err = db.UpdateDB(true)
+	if err != nil {
+		return db, err
+	}
+
 	return db, err
+}
+
+func DeleteTestDB() {
+	err := os.Remove("../test-data.db")
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func TestUpdateDB(t *testing.T) {
+	err := db.UpdateDB(true)
+	if err != nil {
+		t.Errorf("Error updating database %v", err)
+	}
+}
+
+func BenchmarkUpdateDB(b *testing.B) {
+	for n := 0; n < 1; n++ {
+		err := db.UpdateDB(true)
+		if err != nil {
+			b.Errorf("Error updating database %v", err)
+		}
+	}
+}
+
+func TestCheckRepoChanges(t *testing.T) {
+	_ = CheckRepoChanges()
+}
+
+func BenchmarkCheckRepoChanges(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_ = CheckRepoChanges()
+	}
 }
 
 func TestGetTotalModMap(t *testing.T) {

@@ -11,7 +11,6 @@ import (
 	"github.com/jedwards1230/go-kerbal/internal/help"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/jedwards1230/go-kerbal/registry"
-	"github.com/jedwards1230/go-kerbal/registry/database"
 )
 
 type Bubble struct {
@@ -38,7 +37,7 @@ type Bubble struct {
 type Nav struct {
 	listCursor        int
 	listSelected      int
-	installSelected   map[string]database.Ckan
+	installSelected   map[string]registry.Ckan
 	mainButtonsCursor int
 }
 
@@ -114,7 +113,7 @@ func InitialModel() Bubble {
 	nav := Nav{
 		listSelected:      -1,
 		mainButtonsCursor: 0,
-		installSelected:   make(map[string]database.Ckan),
+		installSelected:   make(map[string]registry.Ckan),
 	}
 
 	return Bubble{

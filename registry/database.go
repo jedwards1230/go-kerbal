@@ -1,4 +1,4 @@
-package database
+package registry
 
 import (
 	// Using standard json encoder here because benchmarks showed segmentio to be slightly slower

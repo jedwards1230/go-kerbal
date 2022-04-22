@@ -11,7 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/cmd/constants"
-	"github.com/jedwards1230/go-kerbal/registry/database"
+	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/spf13/viper"
 )
 
@@ -219,7 +219,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Esc):
 		if !b.inputRequested || b.searchInput {
 			b.nav.listCursor = -1
-			b.nav.installSelected = make(map[string]database.Ckan, 0)
+			b.nav.installSelected = make(map[string]registry.Ckan, 0)
 			b.textInput.Blur()
 			b.textInput.Reset()
 			b.registry.SortModMap()

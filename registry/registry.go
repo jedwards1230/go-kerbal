@@ -18,18 +18,17 @@ import (
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
-	"github.com/jedwards1230/go-kerbal/registry/database"
 	"github.com/tidwall/buntdb"
 )
 
 type Registry struct {
-	TotalModMap            map[string][]database.Ckan
-	CompatibleModMap       map[string][]database.Ckan
-	SortedCompatibleMap    map[string]database.Ckan
-	SortedNonCompatibleMap map[string]database.Ckan
+	TotalModMap            map[string][]Ckan
+	CompatibleModMap       map[string][]Ckan
+	SortedCompatibleMap    map[string]Ckan
+	SortedNonCompatibleMap map[string]Ckan
 	ModMapIndex            ModIndex
 	InstalledModList       map[string]bool
-	DB                     *database.CkanDB
+	DB                     *CkanDB
 	SortOptions            SortOptions
 }
 
@@ -51,7 +50,7 @@ func (entry ModIndex) Swap(i, j int)      { entry[i], entry[j] = entry[j], entry
 
 // Initializes database and registry
 func GetRegistry() Registry {
-	db := database.GetDB()
+	db := GetDB()
 	installedList, err := dirfs.CheckInstalledMods()
 	if err != nil {
 		log.Printf("Error checking installed mods: %v", err)
@@ -89,11 +88,11 @@ func (r *Registry) SortModMap() error {
 }
 
 // Get list of Ckan objects from database
-func (r *Registry) GetTotalModMap() map[string][]database.Ckan {
+func (r *Registry) GetTotalModMap() map[string][]Ckan {
 	log.Println("Gathering mod list from database")
 
-	var mod database.Ckan
-	newMap := make(map[string][]database.Ckan)
+	var mod Ckan
+	newMap := make(map[string][]Ckan)
 	total := 0
 	r.DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
@@ -123,10 +122,10 @@ func (r *Registry) GetTotalModMap() map[string][]database.Ckan {
 }
 
 // Filter out incompatible mods if config is set
-func getCompatibleModMap(incompatibleModMap map[string][]database.Ckan) map[string][]database.Ckan {
+func getCompatibleModMap(incompatibleModMap map[string][]Ckan) map[string][]Ckan {
 	countGood := 0
 	countBad := 0
-	compatibleModMap := make(map[string][]database.Ckan, len(incompatibleModMap))
+	compatibleModMap := make(map[string][]Ckan, len(incompatibleModMap))
 	for id, modList := range incompatibleModMap {
 		for i := range modList {
 			if modList[i].IsCompatible {
@@ -143,8 +142,8 @@ func getCompatibleModMap(incompatibleModMap map[string][]database.Ckan) map[stri
 }
 
 // Filters list by unique identifiers to ensure duplicate mods are not displayed
-func getLatestVersionMap(modMapBuckets map[string][]database.Ckan) map[string]database.Ckan {
-	modMap := make(map[string]database.Ckan)
+func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
+	modMap := make(map[string]Ckan)
 	countGood := 0
 	countBad := 0
 	for id, modList := range modMapBuckets {
@@ -184,7 +183,7 @@ func getLatestVersionMap(modMapBuckets map[string][]database.Ckan) map[string]da
 // Create r.ModMapIndex from given modMap
 //
 // Sorts by order and tags saved to registry
-func (r *Registry) buildModMapIndex(modMap map[string]database.Ckan) {
+func (r *Registry) buildModMapIndex(modMap map[string]Ckan) {
 	r.ModMapIndex = make(ModIndex, 0)
 	for k, v := range modMap {
 		r.ModMapIndex = append(r.ModMapIndex, Entry{k, v.SearchableName})
@@ -198,9 +197,9 @@ func (r *Registry) buildModMapIndex(modMap map[string]database.Ckan) {
 	}
 }
 
-func (r *Registry) GetActiveModMap() map[string]database.Ckan {
+func (r *Registry) GetActiveModMap() map[string]Ckan {
 	cfg := config.GetConfig()
-	var modMap map[string]database.Ckan
+	var modMap map[string]Ckan
 	if cfg.Settings.HideIncompatibleMods {
 		modMap = r.SortedCompatibleMap
 	} else {
@@ -230,8 +229,8 @@ func (r *Registry) BuildSearchMapIndex(s string) (ModIndex, error) {
 	return searchMapIndex, nil
 }
 
-func (r *Registry) DownloadMods(toDownload map[string]database.Ckan) ([]database.Ckan, error) {
-	var mods []database.Ckan
+func (r *Registry) DownloadMods(toDownload map[string]Ckan) ([]Ckan, error) {
+	var mods []Ckan
 	// collect all mods and dependencies
 	if len(toDownload) > 0 {
 		log.Printf("Checking %d mods", len(toDownload))
@@ -303,7 +302,7 @@ func (r *Registry) DownloadMods(toDownload map[string]database.Ckan) ([]database
 	return mods, nil
 }
 
-func downloadMod(mod database.Ckan) error {
+func downloadMod(mod Ckan) error {
 	resp, err := http.Get(mod.Install.Download)
 	if err != nil {
 		return err
@@ -332,7 +331,7 @@ func downloadMod(mod database.Ckan) error {
 	return nil
 }
 
-func InstallMods(mods []database.Ckan) error {
+func InstallMods(mods []Ckan) error {
 	var wg sync.WaitGroup
 	wg.Add(len(mods))
 	for i := range mods {
@@ -350,7 +349,7 @@ func InstallMods(mods []database.Ckan) error {
 }
 
 // todo: more reliable installing to directory. really gotta validate the paths and compare whats in the zip.
-func installMod(mod database.Ckan) error {
+func installMod(mod Ckan) error {
 	cfg := config.GetConfig()
 	// open zip
 	zipReader, err := zip.OpenReader("./tmp/" + mod.Identifier + ".zip")
