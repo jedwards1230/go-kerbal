@@ -17,10 +17,10 @@ go build && ./go-kerbal
  * Finds installed mods
 
 ## Images
-![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true)
-![Mod Selected](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/modInfo.png?raw=true)
-![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true)
-![Search View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/search.png?raw=true)
+![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true "Main view")
+![Mod Selected](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/modInfo.png?raw=true "Mod Info")
+![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true "Logs")
+![Search View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/search.png?raw=true "Search")
 
 ## TODO:
 Check out the [Projects](https://github.com/jedwards1230/go-kerbal/projects/2) tab.
