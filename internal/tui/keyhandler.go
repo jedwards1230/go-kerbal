@@ -42,8 +42,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.nav.listSelected = b.nav.listCursor
 		}
 		b.checkActiveViewPortBounds()
-		b.bubbles.primaryViewport.SetContent(b.modListView())
-		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
@@ -68,8 +66,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			}
 
 			b.checkActiveViewPortBounds()
-			b.bubbles.primaryViewport.SetContent(b.modListView())
-			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		}
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
@@ -82,8 +78,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.inputRequested = false
 			b.searchInput = false
 			b.activeBox = internal.ModListView
-			b.bubbles.primaryViewport.SetContent(b.modListView())
-			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		}
 		b.bubbles.textInput.Reset()
 	// Swap view
@@ -100,11 +94,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.ShowLogs):
 		if b.activeBox == internal.LogView {
 			b.activeBox = internal.ModListView
-			b.bubbles.primaryViewport.SetContent(b.modListView())
-			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else {
 			b.activeBox = internal.LogView
-			b.bubbles.splashViewport.SetContent(b.logView())
 			b.bubbles.splashViewport.GotoBottom()
 		}
 	// Refresh list
@@ -145,8 +136,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		if b.activeBox == internal.EnterKspDirView && !b.inputRequested {
 			b.inputRequested = false
 			b.activeBox = internal.ModListView
-			b.bubbles.primaryViewport.SetContent(b.modListView())
-			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else if b.activeBox != internal.EnterKspDirView {
 			b.activeBox = internal.EnterKspDirView
 			b.inputRequested = true
@@ -188,11 +177,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Settings):
 		if b.activeBox == internal.SettingsView {
 			b.activeBox = internal.ModListView
-			b.bubbles.primaryViewport.SetContent(b.modListView())
-			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else if !b.inputRequested {
 			b.activeBox = internal.SettingsView
-			b.bubbles.splashViewport.SetContent(b.settingsView())
 			b.bubbles.splashViewport.GotoTop()
 		}
 	}

@@ -39,8 +39,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.ready = true
 		b.checkActiveViewPortBounds()
 		b.bubbles.primaryViewport.GotoTop()
-		b.bubbles.primaryViewport.SetContent(b.modListView())
-		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case InstalledModListMsg:
 		b.ready = true
 		if len(b.registry.InstalledModList) != len(msg) {
@@ -51,8 +49,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.logs = append(b.logs, "No changes made")
 		}
 		cmds = append(cmds, b.getAvailableModsCmd())
-		b.bubbles.primaryViewport.SetContent(b.modListView())
-		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	// Update KSP dir
 	case UpdateKspDirMsg:
 		b.ready = true
@@ -68,13 +64,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.Placeholder = "Try again..."
 		}
-		b.bubbles.splashViewport.SetContent(b.inputKspView())
 	case SearchMsg:
 		if len(msg) >= 0 {
 			b.nav.listSelected = -1
 			b.registry.ModMapIndex = registry.ModIndex(msg)
-			b.bubbles.primaryViewport.SetContent(b.modListView())
-			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else {
 			log.Print("Error searching")
 		}
@@ -83,9 +76,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Printf("ErrorMsg: %v", msg)
 	case spinner.TickMsg:
 		if !b.ready {
-			if b.activeBox == internal.LogView {
-				b.bubbles.splashViewport.SetContent(b.logView())
-			}
 			b.bubbles.spinner, cmd = b.bubbles.spinner.Update(msg)
 			cmds = append(cmds, cmd)
 		} else {
@@ -99,19 +89,11 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
-		if b.inputRequested && !b.searchInput {
-			b.bubbles.splashViewport.SetContent(b.inputKspView())
-		} else {
-			b.bubbles.splashViewport.SetContent(b.logView())
-		}
 
 		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.primaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.secondaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize()
-
-		b.bubbles.primaryViewport.SetContent(b.modListView())
-		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 
 		if !b.ready {
 			b.ready = true
@@ -149,11 +131,26 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			b.activeBox = internal.EnterKspDirView
 			b.bubbles.textInput.Focus()
-			b.bubbles.splashViewport.SetContent(b.inputKspView())
 		}
 	}
 
+	b.updateActiveView()
+
 	return b, tea.Batch(cmds...)
+}
+
+func (b *Bubble) updateActiveView() {
+	switch b.activeBox {
+	case internal.ModListView, internal.SearchView, internal.ModInfoView:
+		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
+	case internal.LogView:
+		b.bubbles.splashViewport.SetContent(b.logView())
+	case internal.EnterKspDirView:
+		b.bubbles.splashViewport.SetContent(b.inputKspView())
+	case internal.SettingsView:
+		b.bubbles.splashViewport.SetContent(b.settingsView())
+	}
 }
 
 // Handles wrapping and button
@@ -200,29 +197,23 @@ func (b *Bubble) scrollView(dir string) {
 		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor--
 			b.checkActiveViewPortBounds()
-			b.bubbles.primaryViewport.SetContent(b.modListView())
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 			b.checkActiveViewPortBounds()
-			b.bubbles.primaryViewport.SetContent(b.modListView())
 		case internal.LogView:
 			b.bubbles.splashViewport.LineUp(1)
-			b.bubbles.splashViewport.SetContent(b.logView())
 		}
 	case "down":
 		switch b.activeBox {
 		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor++
 			b.checkActiveViewPortBounds()
-			b.bubbles.primaryViewport.SetContent(b.modListView())
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 			b.checkActiveViewPortBounds()
-			b.bubbles.primaryViewport.SetContent(b.modListView())
 		case internal.LogView:
 			b.bubbles.splashViewport.LineDown(1)
 			b.checkActiveViewPortBounds()
-			b.bubbles.splashViewport.SetContent(b.logView())
 		}
 	default:
 		log.Panic("Invalid scroll direction: " + dir)
