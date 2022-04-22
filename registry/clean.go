@@ -193,7 +193,7 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 		c.Versions.KspMin = vMin.String()
 		c.Versions.KspMax = vMax.String()
 
-		c.IsCompatible = c.CheckCompatible()
+		c.IsCompatible = c.checkCompatible()
 
 		return nil
 	} else {

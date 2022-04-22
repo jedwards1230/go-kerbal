@@ -22,31 +22,20 @@ import (
 )
 
 type Registry struct {
-	TotalModMap            map[string][]Ckan
-	CompatibleModMap       map[string][]Ckan
-	SortedCompatibleMap    map[string]Ckan
+	// Contains every mod in database
+	TotalModMap map[string][]Ckan
+	// Contains every compatible mod in database
+	CompatibleModMap map[string][]Ckan
+	// Contains every unique mod, sorted
+	SortedCompatibleMap map[string]Ckan
+	// Contains every unique compatible mod, sorted
 	SortedNonCompatibleMap map[string]Ckan
-	ModMapIndex            ModIndex
-	InstalledModList       map[string]bool
-	DB                     *CkanDB
-	SortOptions            SortOptions
+	// Index for traversing mod map.
+	ModMapIndex      ModIndex
+	InstalledModList map[string]bool
+	DB               *CkanDB
+	SortOptions      SortOptions
 }
-
-type SortOptions struct {
-	SortTag   string
-	SortOrder string
-}
-
-type Entry struct {
-	Key   string
-	Value string
-}
-
-type ModIndex []Entry
-
-func (entry ModIndex) Len() int           { return len(entry) }
-func (entry ModIndex) Less(i, j int) bool { return entry[i].Value < entry[j].Value }
-func (entry ModIndex) Swap(i, j int)      { entry[i], entry[j] = entry[j], entry[i] }
 
 // Initializes database and registry
 func GetRegistry() Registry {
@@ -119,82 +108,6 @@ func (r *Registry) GetTotalModMap() map[string][]Ckan {
 
 	log.Printf("Loaded %v mod files from database", total)
 	return newMap
-}
-
-// Filter out incompatible mods if config is set
-func getCompatibleModMap(incompatibleModMap map[string][]Ckan) map[string][]Ckan {
-	countGood := 0
-	countBad := 0
-	compatibleModMap := make(map[string][]Ckan, len(incompatibleModMap))
-	for id, modList := range incompatibleModMap {
-		for i := range modList {
-			if modList[i].IsCompatible {
-				countGood += 1
-				compatibleModMap[id] = append(compatibleModMap[id], modList[i])
-			} else {
-				countBad += 1
-			}
-		}
-	}
-
-	log.Printf("Total Compatible: %d | Incompatible: %d", countGood, countBad)
-	return compatibleModMap
-}
-
-// Filters list by unique identifiers to ensure duplicate mods are not displayed
-func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
-	modMap := make(map[string]Ckan)
-	countGood := 0
-	countBad := 0
-	for id, modList := range modMapBuckets {
-		for _, mod := range modList {
-			// convert to proper version type for comparison
-			foundVersion, err := version.NewVersion(mod.Versions.Mod)
-			if err != nil {
-				log.Printf("Error creating version: %v", err)
-			}
-
-			// check if mod is stored already
-			if modMap[id].Identifier != "" {
-				// convert to proper version type for comparison
-				storedVersion, err := version.NewVersion(modMap[id].Versions.Mod)
-				if err != nil {
-					log.Printf("Error creating version: %v", err)
-				}
-
-				// compare versions and store most recent
-				if foundVersion.GreaterThan(storedVersion) {
-					// replace old mod
-					modMap[id] = mod
-				}
-				countBad += 1
-			} else {
-				// store mod if slot is empty
-				modMap[id] = mod
-				countGood += 1
-			}
-		}
-	}
-
-	log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
-	return modMap
-}
-
-// Create r.ModMapIndex from given modMap
-//
-// Sorts by order and tags saved to registry
-func (r *Registry) buildModMapIndex(modMap map[string]Ckan) {
-	r.ModMapIndex = make(ModIndex, 0)
-	for k, v := range modMap {
-		r.ModMapIndex = append(r.ModMapIndex, Entry{k, v.SearchableName})
-	}
-
-	switch r.SortOptions.SortOrder {
-	case "ascend":
-		sort.Sort(r.ModMapIndex)
-	case "descend":
-		sort.Sort(sort.Reverse(r.ModMapIndex))
-	}
 }
 
 func (r *Registry) GetActiveModMap() map[string]Ckan {
@@ -302,6 +215,23 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) ([]Ckan, error) {
 	return mods, nil
 }
 
+// Create r.ModMapIndex from given modMap
+//
+// Sorts by order and tags saved to registry
+func (r *Registry) buildModMapIndex(modMap map[string]Ckan) {
+	r.ModMapIndex = make(ModIndex, 0)
+	for k, v := range modMap {
+		r.ModMapIndex = append(r.ModMapIndex, Entry{k, v.SearchableName})
+	}
+
+	switch r.SortOptions.SortOrder {
+	case "ascend":
+		sort.Sort(r.ModMapIndex)
+	case "descend":
+		sort.Sort(sort.Reverse(r.ModMapIndex))
+	}
+}
+
 func downloadMod(mod Ckan) error {
 	resp, err := http.Get(mod.Install.Download)
 	if err != nil {
@@ -379,4 +309,63 @@ func installMod(mod Ckan) error {
 
 	log.Printf("Installed: %v", mod.Name)
 	return nil
+}
+
+// Filter out incompatible mods
+func getCompatibleModMap(incompatibleModMap map[string][]Ckan) map[string][]Ckan {
+	countGood := 0
+	countBad := 0
+	compatibleModMap := make(map[string][]Ckan, len(incompatibleModMap))
+	for id, modList := range incompatibleModMap {
+		for i := range modList {
+			if modList[i].IsCompatible {
+				countGood += 1
+				compatibleModMap[id] = append(compatibleModMap[id], modList[i])
+			} else {
+				countBad += 1
+			}
+		}
+	}
+
+	log.Printf("Total Compatible: %d | Incompatible: %d", countGood, countBad)
+	return compatibleModMap
+}
+
+// Filters list by unique identifiers to ensure duplicate mods are not displayed
+func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
+	modMap := make(map[string]Ckan)
+	countGood := 0
+	countBad := 0
+	for id, modList := range modMapBuckets {
+		for _, mod := range modList {
+			// convert to proper version type for comparison
+			foundVersion, err := version.NewVersion(mod.Versions.Mod)
+			if err != nil {
+				log.Printf("Error creating version: %v", err)
+			}
+
+			// check if mod is stored already
+			if modMap[id].Identifier != "" {
+				// convert to proper version type for comparison
+				storedVersion, err := version.NewVersion(modMap[id].Versions.Mod)
+				if err != nil {
+					log.Printf("Error creating version: %v", err)
+				}
+
+				// compare versions and store most recent
+				if foundVersion.GreaterThan(storedVersion) {
+					// replace old mod
+					modMap[id] = mod
+				}
+				countBad += 1
+			} else {
+				// store mod if slot is empty
+				modMap[id] = mod
+				countGood += 1
+			}
+		}
+	}
+
+	log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
+	return modMap
 }

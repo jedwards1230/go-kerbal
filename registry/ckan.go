@@ -27,31 +27,7 @@ type Ckan struct {
 	SearchableName string
 }
 
-type versions struct {
-	Epoch  string
-	Mod    string
-	KspMin string
-	KspMax string
-	Spec   string
-}
-
-type install struct {
-	Installed bool
-	Download  string
-	FindRegex string
-	Find      string
-	File      string
-	InstallTo string
-}
-
-type resource struct {
-	Homepage    string
-	Spacedock   string
-	Repository  string
-	XScreenshot string
-}
-
-// Initialize struct values in-place
+// Initialize struct values
 func CreateCkan(raw map[string]interface{}) (Ckan, error) {
 	var mod Ckan
 	/* for k, v := range raw {
@@ -113,7 +89,7 @@ func CreateCkan(raw map[string]interface{}) (Ckan, error) {
 // Compares installed KSP version to min/max compatible for the mod.
 //
 // Returns true if compatible
-func (c Ckan) CheckCompatible() bool {
+func (c Ckan) checkCompatible() bool {
 	cfg := config.GetConfig()
 	configVer := cfg.Settings.KerbalVer
 	kerbalVer, err := version.NewVersion(configVer)

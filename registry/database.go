@@ -35,7 +35,7 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	log.Printf("Updating DB. Force Update: %v", force_update)
 	// Check if update is required
 	if !force_update {
-		changes := CheckRepoChanges()
+		changes := checkRepoChanges()
 		if !changes {
 			log.Printf("No repo changes detected")
 			return nil
@@ -54,9 +54,15 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
+	err = db.updateDB(fs, filesToScan)
+
+	return err
+}
+
+func (db *CkanDB) updateDB(fs billy.Filesystem, filesToScan []string) error {
 	log.Printf("Cleaning .ckan files and adding to database")
 	errCount := 0
-	err = db.Update(func(tx *buntdb.Tx) error {
+	err := db.Update(func(tx *buntdb.Tx) error {
 		var byteValue []byte
 		for i := range filesToScan {
 			// Parse .ckan from repo into JSON
@@ -77,13 +83,13 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 			// Store in DB
 			tx.Set("mod:"+strconv.Itoa(i), string(byteValue), nil)
 		}
+		log.Printf("Database updated with %d mod files | %d errors", len(filesToScan), errCount)
 		return nil
 	})
-	log.Printf("Database updated with %d mod files | %d errors", len(filesToScan), errCount)
 	return err
 }
 
-// Parse .ckan file into JSON string
+// Parse .ckan file into Ckan struct
 func parseCKAN(repo billy.Filesystem, filePath string) (*Ckan, error) {
 	mod := Ckan{}
 
@@ -120,7 +126,7 @@ func parseCKAN(repo billy.Filesystem, filePath string) (*Ckan, error) {
 // Checks for changes to the repo by comparing commit hashes
 //
 // Returns true if changes were detected
-func CheckRepoChanges() bool {
+func checkRepoChanges() bool {
 	log.Println("Checking repo for changes")
 
 	// Load metadata repo
@@ -156,7 +162,7 @@ func cloneRepo() (billy.Filesystem, error) {
 	log.Println("Cloning database repo")
 	fs := memfs.New()
 	storer := memory.NewStorage()
-	r, err := git.Clone(storer, fs, &git.CloneOptions{
+	repo, err := git.Clone(storer, fs, &git.CloneOptions{
 		URL:   cfg.Settings.MetaRepo,
 		Depth: 1,
 	})
@@ -164,7 +170,7 @@ func cloneRepo() (billy.Filesystem, error) {
 		return nil, err
 	}
 
-	ref, err := r.Head()
+	ref, err := repo.Head()
 	if err != nil {
 		return nil, err
 	}
