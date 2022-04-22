@@ -33,10 +33,14 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Update mod list
 	case UpdatedModMapMsg:
-		b.ready = true
 		b.registry.TotalModMap = msg
-		b.registry.SortModMap()
 		b.logs = append(b.logs, "Mod list updated")
+		cmds = append(cmds, b.sortModMapCmd())
+	case SortedMsg:
+		b.registry.SortModMap()
+		b.logs = append(b.logs, "Mod list sorted")
+		log.Print("Sorted mod map")
+		b.ready = true
 		b.checkActiveViewPortBounds()
 		b.primaryViewport.GotoTop()
 		b.primaryViewport.SetContent(b.modListView())
@@ -70,9 +74,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		b.splashViewport.SetContent(b.inputKspView())
 	case SearchMsg:
-		if len(msg.ModIndex) >= 0 {
+		if len(msg) >= 0 {
 			b.nav.listSelected = -1
-			b.registry.ModMapIndex = msg.ModIndex
+			b.registry.ModMapIndex = registry.ModIndex(msg)
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		} else {
@@ -222,7 +226,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.nav.installSelected = make(map[string]registry.Ckan, 0)
 			b.textInput.Blur()
 			b.textInput.Reset()
-			b.registry.SortModMap()
+			cmds = append(cmds, b.sortModMapCmd())
 			b.inputRequested = false
 			b.searchInput = false
 			b.activeBox = constants.PrimaryBoxActive
@@ -280,11 +284,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
 
 			b.registry.SortModMap()
+			cmds = append(cmds, b.sortModMapCmd())
 			b.activeBox = constants.PrimaryBoxActive
-			b.checkActiveViewPortBounds()
-			b.primaryViewport.GotoTop()
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
 		}
 	// Input KSP dir
 	// TODO: This has been hanging/acting slow. Something is wrong.

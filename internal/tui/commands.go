@@ -16,11 +16,9 @@ type (
 	UpdateKspDirMsg     bool
 	ErrorMsg            error
 	MyTickMsg           bool
+	SearchMsg           registry.ModIndex
+	SortedMsg           bool
 )
-
-type SearchMsg struct {
-	registry.ModIndex
-}
 
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
@@ -33,6 +31,12 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 			updatedModMap = b.registry.GetTotalModMap()
 		}
 		return UpdatedModMapMsg(updatedModMap)
+	}
+}
+
+func (b *Bubble) sortModMapCmd() tea.Cmd {
+	return func() tea.Msg {
+		return SortedMsg(true)
 	}
 }
 
@@ -84,9 +88,9 @@ func (b Bubble) searchCmd(s string) tea.Cmd {
 		searchMapIndex, err := b.registry.BuildSearchMapIndex(s)
 		if err != nil {
 			log.Printf("Error building search index: %v", err)
-			return SearchMsg{searchMapIndex}
+			return SearchMsg(searchMapIndex)
 		}
-		return SearchMsg{searchMapIndex}
+		return SearchMsg(searchMapIndex)
 	}
 }
 
