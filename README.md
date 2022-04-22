@@ -25,4 +25,4 @@ go build && ./go-kerbal
 ![Search View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/search.png?raw=true)
 
 ## TODO:
-Check out the [Projects](https://github.com/jedwards1230/go-kerbal/projects?type=beta) tab.
+Check out the [Projects](https://github.com/jedwards1230/go-kerbal/projects/2) tab.
