@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-git/go-billy/v5"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/tidwall/buntdb"
@@ -12,7 +13,7 @@ import (
 
 var reg Registry
 var db *CkanDB
-var err error
+var fs billy.Filesystem
 var logPath = "../logs/registry_test.log"
 
 func TestMain(m *testing.M) {
@@ -67,7 +68,6 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	DeleteTestDB()
-
 	os.Exit(code)
 }
 
@@ -102,22 +102,60 @@ func TestUpdateDB(t *testing.T) {
 	}
 }
 
-func BenchmarkUpdateDB(b *testing.B) {
-	for n := 0; n < 1; n++ {
+/* func BenchmarkUpdateDB(b *testing.B) {
+	for n := 0; n < b.N; n++ {
 		err := db.UpdateDB(true)
 		if err != nil {
-			b.Errorf("Error updating database %v", err)
+			b.Error(err)
 		}
 	}
-}
+} */
 
 func TestCheckRepoChanges(t *testing.T) {
-	_ = CheckRepoChanges()
+	_ = checkRepoChanges()
 }
 
 func BenchmarkCheckRepoChanges(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		_ = CheckRepoChanges()
+		_ = checkRepoChanges()
+	}
+}
+
+func TestCloneRepo(t *testing.T) {
+	var err error
+	fs, err = cloneRepo()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func BenchmarkCloneRepo(b *testing.B) {
+	var err error
+	for n := 0; n < b.N; n++ {
+		fs, err = cloneRepo()
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func TestUpdateDBDirect(t *testing.T) {
+	var filesToScan []string
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
+	err := db.updateDB(fs, filesToScan)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func BenchmarkUpdateDBDirect(b *testing.B) {
+	var filesToScan []string
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
+	for n := 0; n < b.N; n++ {
+		err := db.updateDB(fs, filesToScan)
+		if err != nil {
+			b.Error(err)
+		}
 	}
 }
 
