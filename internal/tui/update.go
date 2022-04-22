@@ -21,11 +21,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	if b.activeBox == internal.ModInfoView {
-		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
-		cmds = append(cmds, cmd)
-	}
-
 	switch msg := msg.(type) {
 	// Update mod list
 	case UpdatedModMapMsg:
@@ -57,7 +52,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Print("Kerbal directory updated")
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.SetValue(fmt.Sprintf("Success!: %v", cfg.Settings.KerbalDir))
-			b.bubbles.textInput.Blur()
 			b.inputRequested = false
 		} else {
 			log.Printf("Error updating ksp dir: %v", msg)
@@ -100,48 +94,44 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	// Key pressed
 	case tea.KeyMsg:
-		//log.Printf("Msg: %v %T", msg, msg)
 		cmds = append(cmds, b.handleKeys(msg))
 	// Mouse input
 	case tea.MouseMsg:
-		// TODO: fix scrolling beyond page. breaks things.
+		// TODO: fix scrolling beyond page and in big lists. breaks app.
 		switch msg.Type {
 		case tea.MouseWheelUp:
 			b.scrollView("up")
 		case tea.MouseWheelDown:
 			b.scrollView("down")
 		}
-		/* default:
-		log.Printf("Msg: %v %T", msg, msg) */
 	case MyTickMsg:
-		//log.Printf("my tick: %v", msg)
 		cmds = append(cmds, b.MyTickCmd())
-
+	default:
+		log.Printf("%T", msg)
 	}
 
-	if b.inputRequested {
-		if b.searchInput {
-			b.activeBox = internal.SearchView
+	if b.activeBox == internal.EnterKspDirView || b.activeBox == internal.SearchView {
+		if b.inputRequested {
 			b.bubbles.textInput.Focus()
-			// only search when input is updated
-			_, ok := msg.(tea.KeyMsg)
-			if ok {
-				cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
-			}
 		} else {
-			b.activeBox = internal.EnterKspDirView
-			b.bubbles.textInput.Focus()
+			b.bubbles.textInput.Blur()
 		}
 	}
 
-	b.updateActiveView()
+	b.updateActiveView(msg)
 
 	return b, tea.Batch(cmds...)
 }
 
-func (b *Bubble) updateActiveView() {
+// Update content for active view
+func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
+	var cmd tea.Cmd
 	switch b.activeBox {
-	case internal.ModListView, internal.SearchView, internal.ModInfoView:
+	case internal.ModListView, internal.SearchView:
+		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
+	case internal.ModInfoView:
+		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.LogView:
@@ -151,10 +141,11 @@ func (b *Bubble) updateActiveView() {
 	case internal.SettingsView:
 		b.bubbles.splashViewport.SetContent(b.settingsView())
 	}
+
+	return cmd
 }
 
-// Handles wrapping and button
-// scrolling in the viewport.
+// Handles wrapping and button scrolling in the viewport
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:

@@ -28,12 +28,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Down):
 		b.scrollView("down")
 		b.inputRequested = false
-		b.bubbles.textInput.Blur()
 	// Up
 	case key.Matches(msg, b.keyMap.Up):
 		b.scrollView("up")
 		b.inputRequested = false
-		b.bubbles.textInput.Blur()
 	// Space
 	case key.Matches(msg, b.keyMap.Space):
 		if b.nav.listSelected == b.nav.listCursor {
@@ -46,7 +44,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			if b.searchInput {
-				b.bubbles.textInput.Blur()
 				b.inputRequested = false
 				log.Printf("UPDATE: Start searching: %v", b.bubbles.textInput.Value())
 			} else {
@@ -72,7 +69,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		if !b.inputRequested || b.searchInput {
 			b.nav.listCursor = -1
 			b.nav.installSelected = make(map[string]registry.Ckan, 0)
-			b.bubbles.textInput.Blur()
 			b.bubbles.textInput.Reset()
 			cmds = append(cmds, b.sortModMapCmd())
 			b.inputRequested = false
@@ -140,7 +136,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.activeBox = internal.EnterKspDirView
 			b.inputRequested = true
 			b.bubbles.textInput.Placeholder = "KSP Directory..."
-			b.bubbles.textInput.Focus()
 			b.bubbles.textInput.Reset()
 			if b.appConfig.Settings.KerbalDir != "" {
 				b.bubbles.textInput.SetValue(b.appConfig.Settings.KerbalDir)
@@ -159,10 +154,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				val := trimLastChar(b.bubbles.textInput.Value())
 				b.bubbles.textInput.SetValue(val)
 				b.inputRequested = false
-				b.bubbles.textInput.Blur()
 			} else {
 				b.inputRequested = true
-				b.bubbles.textInput.Focus()
 				return textinput.Blink
 			}
 		} else {
@@ -182,6 +175,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.bubbles.splashViewport.GotoTop()
 		}
 	}
+
+	// only perform search when input is updated
+	if b.inputRequested && b.activeBox == internal.SearchView {
+		cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
+	}
+
 	return tea.Batch(cmds...)
 }
 
