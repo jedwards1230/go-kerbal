@@ -2,10 +2,7 @@ package tui
 
 import "github.com/charmbracelet/bubbles/key"
 
-// KeyMap defines the keybindings for the viewport. Note that you don't
-// necessary need to use keybindings at all; the viewport can be controlled
-// programmatically with methods like Model.LineDown(1). See the GoDocs for
-// details.
+// KeyMap defines the keybindings for the viewport.
 type KeyMap struct {
 	Quit     key.Binding
 	Down     key.Binding
@@ -25,9 +22,8 @@ type KeyMap struct {
 	Settings         key.Binding
 }
 
-// DefaultKeyMap returns a set of pager-like default keybindings.
-// DefaultKeyMap returns a set of default keybindings.
-func DefaultKeyMap() KeyMap {
+// getKeyMap returns a set of default keybindings.
+func getKeyMap() KeyMap {
 	return KeyMap{
 		Quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),

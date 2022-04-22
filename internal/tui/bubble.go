@@ -92,14 +92,13 @@ func InitialModel() Bubble {
 	h := help.New(
 		theme.DefaultTextColor,
 		[]help.HelpEntry{
-			{Key: "ctrl+c", Description: "Exit"},
 			{Key: "up", Description: "Move up"},
 			{Key: "down", Description: "Move down"},
 			{Key: "spacebar", Description: "Toggle mod info"},
 			{Key: "enter", Description: "Select mod for install"},
 			{Key: "tab", Description: "Swap active views"},
 			{},
-			{Key: "shift + o", Description: "Show logs if debugging enabled"},
+			{Key: "shift + o", Description: "Show logs"},
 			{},
 			{Key: "1", Description: "Refresh mod list"},
 			{Key: "2", Description: "Toggle hiding incompatible mods"},
@@ -109,6 +108,7 @@ func InitialModel() Bubble {
 			{Key: "6", Description: "Search mods"},
 			{},
 			{Key: "0", Description: "View settings"},
+			{Key: "ctrl+c", Description: "Exit"},
 		})
 
 	nav := Nav{
@@ -133,7 +133,7 @@ func InitialModel() Bubble {
 		nav:               nav,
 		activeBox:         constants.PrimaryBoxActive,
 		logs:              []string{"Initializing"},
-		keyMap:            DefaultKeyMap(),
+		keyMap:            getKeyMap(),
 	}
 }
 
