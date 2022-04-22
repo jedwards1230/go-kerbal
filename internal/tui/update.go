@@ -199,16 +199,18 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
 			}
 		} else {
-			modMap := b.registry.GetActiveModMap()
-			// add/remove mods from selected list
 			id := b.registry.ModMapIndex[b.nav.listCursor]
+			modMap := b.registry.GetActiveModMap()
 			mod := modMap[id.Key]
+
+			// toggle mod selection
+			b.nav.listSelected = b.nav.listCursor
 			if b.nav.installSelected[mod.Identifier].Identifier != "" {
 				delete(b.nav.installSelected, mod.Identifier)
 			} else {
 				b.nav.installSelected[mod.Identifier] = mod
 			}
-			b.nav.listSelected = b.nav.listCursor
+
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
