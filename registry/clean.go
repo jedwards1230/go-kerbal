@@ -13,7 +13,7 @@ import (
 )
 
 func (c *Ckan) cleanSearchSpace(raw map[string]interface{}) error {
-	searchSpace := fmt.Sprintf("%v %v %v %v", c.Name, c.Identifier, c.Author, dirfs.Strip(c.Abstract))
+	searchSpace := fmt.Sprintf("%v %v %v %v %v", c.Name, c.SearchableName, c.Identifier, c.Author, dirfs.Strip(c.Abstract))
 
 	c.SearchSpace = strings.ToLower(searchSpace)
 	return nil

@@ -3,10 +3,12 @@ package internal
 import "github.com/charmbracelet/lipgloss"
 
 const (
-	PrimaryBoxActive = 1
-	ModInfoBox       = 2
-	SplashBoxActive  = 3
-	LogView          = 4
+	ModListView     = 1
+	ModInfoView     = 2
+	LogView         = 3
+	EnterKspDirView = 4
+	SearchView      = 5
+	SettingsView    = 6
 )
 
 const (

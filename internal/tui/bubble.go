@@ -130,7 +130,7 @@ func InitialModel() Bubble {
 		registry:          reg,
 		help:              h,
 		nav:               nav,
-		activeBox:         internal.PrimaryBoxActive,
+		activeBox:         internal.ModListView,
 		logs:              []string{"Initializing"},
 		keyMap:            getKeyMap(),
 	}

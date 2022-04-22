@@ -25,7 +25,7 @@ func (b Bubble) View() string {
 	var view string
 
 	switch b.activeBox {
-	case internal.PrimaryBoxActive, internal.ModInfoBox:
+	case internal.ModListView, internal.ModInfoView, internal.SearchView:
 		var primaryBox string
 		var secondaryBox string
 
@@ -35,9 +35,9 @@ func (b Bubble) View() string {
 
 		// format active box
 		switch b.activeBox {
-		case internal.PrimaryBoxActive:
+		case internal.ModListView:
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-		case internal.ModInfoBox:
+		case internal.ModInfoView:
 			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 
 		}
@@ -68,7 +68,7 @@ func (b Bubble) View() string {
 			),
 			b.statusBarView(),
 		)
-	case internal.SplashBoxActive:
+	case internal.LogView, internal.SettingsView, internal.EnterKspDirView:
 		var splashBox string
 
 		b.splashViewport.Style = lipgloss.NewStyle().

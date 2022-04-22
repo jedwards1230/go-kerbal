@@ -21,7 +21,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
-	if b.activeBox == internal.ModInfoBox {
+	if b.activeBox == internal.ModInfoView {
 		b.secondaryViewport, cmd = b.secondaryViewport.Update(msg)
 		cmds = append(cmds, cmd)
 	}
@@ -139,7 +139,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if b.inputRequested {
 		if b.searchInput {
-			b.activeBox = internal.PrimaryBoxActive
+			b.activeBox = internal.SearchView
 			b.textInput.Focus()
 			// only search when input is updated
 			_, ok := msg.(tea.KeyMsg)
@@ -147,7 +147,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, b.searchCmd(b.textInput.Value()))
 			}
 		} else {
-			b.activeBox = internal.SplashBoxActive
+			b.activeBox = internal.EnterKspDirView
 			b.textInput.Focus()
 			b.splashViewport.SetContent(b.inputKspView())
 		}
@@ -160,7 +160,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // scrolling in the viewport.
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
-	case internal.PrimaryBoxActive:
+	case internal.ModListView:
 		top := b.primaryViewport.YOffset - 3
 		bottom := b.primaryViewport.Height + b.primaryViewport.YOffset - 4
 
@@ -177,13 +177,13 @@ func (b *Bubble) checkActiveViewPortBounds() {
 			b.nav.listCursor = len(b.registry.ModMapIndex) - 1
 			b.primaryViewport.GotoBottom()
 		}
-	case internal.ModInfoBox:
+	case internal.ModInfoView:
 		if b.secondaryViewport.AtBottom() {
 			b.secondaryViewport.GotoBottom()
 		} else if b.secondaryViewport.AtTop() {
 			b.secondaryViewport.GotoTop()
 		}
-	case internal.SplashBoxActive:
+	case internal.LogView:
 		if b.splashViewport.AtBottom() {
 			b.splashViewport.GotoBottom()
 		} else if b.splashViewport.AtTop() {
@@ -197,29 +197,29 @@ func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
 		switch b.activeBox {
-		case internal.PrimaryBoxActive:
+		case internal.ModListView:
 			b.nav.listCursor--
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		case internal.ModInfoBox:
+		case internal.ModInfoView:
 			b.secondaryViewport.LineUp(1)
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		case internal.SplashBoxActive:
+		case internal.LogView:
 			b.splashViewport.LineUp(1)
 			b.splashViewport.SetContent(b.logView())
 		}
 	case "down":
 		switch b.activeBox {
-		case internal.PrimaryBoxActive:
+		case internal.ModListView:
 			b.nav.listCursor++
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		case internal.ModInfoBox:
+		case internal.ModInfoView:
 			b.secondaryViewport.LineDown(1)
 			b.checkActiveViewPortBounds()
 			b.primaryViewport.SetContent(b.modListView())
-		case internal.SplashBoxActive:
+		case internal.LogView:
 			b.splashViewport.LineDown(1)
 			b.checkActiveViewPortBounds()
 			b.splashViewport.SetContent(b.logView())

@@ -81,7 +81,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			cmds = append(cmds, b.sortModMapCmd())
 			b.inputRequested = false
 			b.searchInput = false
-			b.activeBox = internal.PrimaryBoxActive
+			b.activeBox = internal.ModListView
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		}
@@ -89,21 +89,21 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
-		case internal.PrimaryBoxActive:
-			b.activeBox = internal.ModInfoBox
-		case internal.ModInfoBox:
-			b.activeBox = internal.PrimaryBoxActive
-		case internal.SplashBoxActive:
-			b.activeBox = internal.PrimaryBoxActive
+		case internal.ModListView:
+			b.activeBox = internal.ModInfoView
+		case internal.ModInfoView:
+			b.activeBox = internal.ModListView
+		case internal.LogView:
+			b.activeBox = internal.ModListView
 		}
 	// Show logs
 	case key.Matches(msg, b.keyMap.ShowLogs):
-		if b.activeBox == internal.SplashBoxActive && !b.inputRequested {
-			b.activeBox = internal.PrimaryBoxActive
+		if b.activeBox == internal.LogView {
+			b.activeBox = internal.ModListView
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
 		} else {
-			b.activeBox = internal.SplashBoxActive
+			b.activeBox = internal.LogView
 			b.splashViewport.SetContent(b.logView())
 			b.splashViewport.GotoBottom()
 		}
@@ -137,28 +137,26 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 			b.registry.SortModMap()
 			cmds = append(cmds, b.sortModMapCmd())
-			b.activeBox = internal.PrimaryBoxActive
+			b.activeBox = internal.ModListView
 		}
 	// Input KSP dir
 	// TODO: This has been hanging/acting slow. Something is wrong.
 	case key.Matches(msg, b.keyMap.EnterKspDir):
-		if !b.searchInput {
-			if b.activeBox == internal.SplashBoxActive && !b.inputRequested {
-				b.inputRequested = false
-				b.activeBox = internal.PrimaryBoxActive
-				b.primaryViewport.SetContent(b.modListView())
-				b.secondaryViewport.SetContent(b.modInfoView())
-			} else {
-				b.activeBox = internal.SplashBoxActive
-				b.inputRequested = true
-				b.textInput.Placeholder = "KSP Directory..."
-				b.textInput.Focus()
-				b.textInput.Reset()
-				if b.appConfig.Settings.KerbalDir != "" {
-					b.textInput.SetValue(b.appConfig.Settings.KerbalDir)
-				}
-				return textinput.Blink
+		if b.activeBox == internal.EnterKspDirView && !b.inputRequested {
+			b.inputRequested = false
+			b.activeBox = internal.ModListView
+			b.primaryViewport.SetContent(b.modListView())
+			b.secondaryViewport.SetContent(b.modInfoView())
+		} else if b.activeBox != internal.EnterKspDirView {
+			b.activeBox = internal.EnterKspDirView
+			b.inputRequested = true
+			b.textInput.Placeholder = "KSP Directory..."
+			b.textInput.Focus()
+			b.textInput.Reset()
+			if b.appConfig.Settings.KerbalDir != "" {
+				b.textInput.SetValue(b.appConfig.Settings.KerbalDir)
 			}
+			return textinput.Blink
 		}
 	// Download selected mod
 	case key.Matches(msg, b.keyMap.Download):
@@ -185,12 +183,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
-		if b.activeBox == internal.SplashBoxActive && !b.inputRequested {
-			b.activeBox = internal.PrimaryBoxActive
+		if b.activeBox == internal.SettingsView {
+			b.activeBox = internal.ModListView
 			b.primaryViewport.SetContent(b.modListView())
 			b.secondaryViewport.SetContent(b.modInfoView())
-		} else {
-			b.activeBox = internal.SplashBoxActive
+		} else if !b.inputRequested {
+			b.activeBox = internal.SettingsView
 			b.splashViewport.SetContent(b.settingsView())
 			b.splashViewport.GotoTop()
 		}
