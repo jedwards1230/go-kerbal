@@ -39,7 +39,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.ready = true
 		b.checkActiveViewPortBounds()
 		b.bubbles.primaryViewport.GotoTop()
-		//b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case InstalledModListMsg:
 		b.ready = true
