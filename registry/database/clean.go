@@ -210,6 +210,18 @@ func (c *Ckan) cleanAbstract(raw map[string]interface{}) error {
 	return nil
 }
 
+func (c *Ckan) cleanDescription(raw map[string]interface{}) error {
+	if raw["description"] != nil {
+		c.Description = strings.TrimSpace(raw["description"].(string))
+		if c.Description == "" {
+			return errors.New("invalid description")
+		}
+		log.Printf("Found desc: %v", c.Description)
+		return nil
+	}
+	return nil
+}
+
 func (c *Ckan) cleanLicense(raw map[string]interface{}) error {
 	switch license := raw["license"].(type) {
 	case []interface{}:

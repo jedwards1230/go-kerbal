@@ -14,6 +14,7 @@ type Ckan struct {
 	Name           string
 	Author         string
 	Abstract       string
+	Description    string
 	License        string
 	SearchTags     map[string]interface{}
 	ModConflicts   []string
@@ -75,6 +76,10 @@ func CreateCkan(raw map[string]interface{}) (Ckan, error) {
 	}
 
 	if err := mod.cleanAbstract(raw); err != nil {
+		return mod, err
+	}
+
+	if err := mod.cleanDescription(raw); err != nil {
 		return mod, err
 	}
 

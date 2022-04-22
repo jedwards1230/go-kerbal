@@ -169,11 +169,17 @@ func (b Bubble) modInfoView() string {
 			Width(b.secondaryViewport.Width*3/4).
 			Padding(0, 5)
 
-		title = titleStyle.Render("Mod")
+		title = titleStyle.Render(mod.Name)
 
-		nameKey := keyStyle.Render("Name")
-		namealue := valueStyle.Render(mod.Name)
-		name := lipgloss.JoinHorizontal(lipgloss.Top, nameKey, namealue)
+		abstract := titleStyle.
+			Bold(false).
+			Render(mod.Abstract)
+
+		if mod.Description != "" {
+			abstract = titleStyle.
+				Bold(false).
+				Render(mod.Description)
+		}
 
 		identifierKey := keyStyle.Render("Identifier")
 		identifierValue := valueStyle.Render(mod.Identifier)
@@ -214,10 +220,6 @@ func (b Bubble) modInfoView() string {
 		downloadValue := valueStyle.Render(mod.Install.Download)
 		download := lipgloss.JoinHorizontal(lipgloss.Top, downloadKey, downloadValue)
 
-		abstractKey := keyStyle.Render("Abstract")
-		abstractValue := valueStyle.Render(mod.Abstract)
-		abstract := lipgloss.JoinHorizontal(lipgloss.Top, abstractKey, abstractValue)
-
 		dependenciesKey := keyStyle.Render("Dependencies")
 		dependenciesValue := valueStyle.Render("None")
 		if len(mod.ModDepends) > 0 {
@@ -238,9 +240,11 @@ func (b Bubble) modInfoView() string {
 
 		body = lipgloss.JoinVertical(
 			lipgloss.Top,
-			name,
-			identifier,
+			abstract,
+			"\n",
 			author,
+			identifier,
+			license,
 			"\n",
 			version,
 			versionKsp,
@@ -249,12 +253,8 @@ func (b Bubble) modInfoView() string {
 			installDir,
 			download,
 			"\n",
-			abstract,
-			"\n",
 			dependencies,
 			conflicts,
-			"\n",
-			license,
 		)
 	} else {
 		title = titleStyle.Render("Help Menu")
@@ -278,19 +278,26 @@ func (b Bubble) logView() string {
 
 	bodyList := make([]string, 0)
 	scanner := bufio.NewScanner(file)
+	i := 1
 	for scanner.Scan() {
 		lineWords := strings.Fields(scanner.Text())
-		lineWords[0] = lipgloss.NewStyle().
-			Foreground(b.theme.LogDateColor).
-			Render(lineWords[0])
-		lineWords[1] = lipgloss.NewStyle().
-			Foreground(b.theme.LogPathColor).
-			Width(16).
-			Render(lineWords[1])
+		if len(lineWords) > 1 {
+			idx := lipgloss.NewStyle().
+				Width(4).
+				Padding(0, 0, 0, 1).
+				Render(fmt.Sprint(i) + " ")
+			lineWords[0] = lipgloss.NewStyle().
+				Foreground(b.theme.LogDateColor).
+				Render(lineWords[0])
+			lineWords[1] = lipgloss.NewStyle().
+				Foreground(b.theme.LogPathColor).
+				Width(16).
+				Render(lineWords[1])
+			line := lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))
+			bodyList = append(bodyList, line)
+			i++
+		}
 
-		line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords, " "))
-
-		bodyList = append(bodyList, line)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -427,8 +434,10 @@ func (b Bubble) statusBarView() string {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			lineWords := strings.Fields(scanner.Text())
-			line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords[2:], " "))
-			bodyList = append(bodyList, line)
+			if len(lineWords) > 1 {
+				line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords[2:], " "))
+				bodyList = append(bodyList, line)
+			}
 		}
 		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
