@@ -26,3 +26,4 @@ logs
 *data.db
 __debug_bin
 tmp
+*.txt
