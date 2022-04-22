@@ -216,7 +216,6 @@ func (c *Ckan) cleanDescription(raw map[string]interface{}) error {
 		if c.Description == "" {
 			return errors.New("invalid description")
 		}
-		log.Printf("Found desc: %v", c.Description)
 		return nil
 	}
 	return nil
