@@ -7,7 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/cmd/constants"
+	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/jedwards1230/go-kerbal/internal/help"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/jedwards1230/go-kerbal/registry"
@@ -69,22 +69,22 @@ func InitialModel() Bubble {
 
 	primaryVP := viewport.New(0, 0)
 	primaryVP.Style = lipgloss.NewStyle().
-		PaddingLeft(constants.BoxPadding).
-		PaddingRight(constants.BoxPadding).
+		PaddingLeft(internal.BoxPadding).
+		PaddingRight(internal.BoxPadding).
 		Border(primaryBoxBorder).
 		BorderForeground(primaryBoxBorderColor)
 
 	secondaryVP := viewport.New(0, 0)
 	secondaryVP.Style = lipgloss.NewStyle().
-		PaddingLeft(constants.BoxPadding).
-		PaddingRight(constants.BoxPadding).
+		PaddingLeft(internal.BoxPadding).
+		PaddingRight(internal.BoxPadding).
 		Border(secondaryBoxBorder).
 		BorderForeground(secondaryBoxBorderColor)
 
 	splashVP := viewport.New(0, 0)
 	splashVP.Style = lipgloss.NewStyle().
-		PaddingLeft(constants.BoxPadding).
-		PaddingRight(constants.BoxPadding).
+		PaddingLeft(internal.BoxPadding).
+		PaddingRight(internal.BoxPadding).
 		Border(splashBoxBorder).
 		BorderForeground(splashBoxBorderColor)
 
@@ -130,7 +130,7 @@ func InitialModel() Bubble {
 		registry:          reg,
 		help:              h,
 		nav:               nav,
-		activeBox:         constants.PrimaryBoxActive,
+		activeBox:         internal.PrimaryBoxActive,
 		logs:              []string{"Initializing"},
 		keyMap:            getKeyMap(),
 	}

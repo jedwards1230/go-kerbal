@@ -1,16 +1,14 @@
-package constants
+package internal
 
 import "github.com/charmbracelet/lipgloss"
 
 const (
-	// PrimaryBoxActive represents when the left box is active.
 	PrimaryBoxActive = 1
-
-	// SecondaryBoxActive represents when the right box is active.
-	SecondaryBoxActive = 2
-
-	SplashBoxActive = 3
+	ModInfoBox       = 2
+	SplashBoxActive  = 3
+	LogView          = 4
 )
+
 const (
 	// StatusBarHeight represents the height of the status bar.
 	StatusBarHeight = 1

@@ -9,7 +9,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/cmd/constants"
+	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/muesli/reflow/truncate"
 )
 
@@ -25,7 +25,7 @@ func (b Bubble) View() string {
 	var view string
 
 	switch b.activeBox {
-	case constants.PrimaryBoxActive, constants.SecondaryBoxActive:
+	case internal.PrimaryBoxActive, internal.ModInfoBox:
 		var primaryBox string
 		var secondaryBox string
 
@@ -35,24 +35,24 @@ func (b Bubble) View() string {
 
 		// format active box
 		switch b.activeBox {
-		case constants.PrimaryBoxActive:
+		case internal.PrimaryBoxActive:
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-		case constants.SecondaryBoxActive:
+		case internal.ModInfoBox:
 			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 
 		}
 
 		// format views
 		b.primaryViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(constants.BoxPadding).
-			PaddingRight(constants.BoxPadding).
+			PaddingLeft(internal.BoxPadding).
+			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(primaryBoxBorderColor)
 		primaryBox = b.primaryViewport.View()
 
 		b.secondaryViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(constants.BoxPadding).
-			PaddingRight(constants.BoxPadding).
+			PaddingLeft(internal.BoxPadding).
+			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(secondaryBoxBorderColor)
 		secondaryBox = b.secondaryViewport.View()
@@ -68,12 +68,12 @@ func (b Bubble) View() string {
 			),
 			b.statusBarView(),
 		)
-	case constants.SplashBoxActive:
+	case internal.SplashBoxActive:
 		var splashBox string
 
 		b.splashViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(constants.BoxPadding).
-			PaddingRight(constants.BoxPadding).
+			PaddingLeft(internal.BoxPadding).
+			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(b.theme.ActiveBoxBorderColor)
 		splashBox = b.splashViewport.View()
@@ -388,7 +388,7 @@ func (b Bubble) statusBarView() string {
 	width := lipgloss.Width
 
 	statusBarStyle := lipgloss.NewStyle().
-		Height(constants.StatusBarHeight)
+		Height(internal.StatusBarHeight)
 
 	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.ModMapIndex))
 	fileCount = statusBarStyle.
@@ -488,7 +488,7 @@ func (b Bubble) getMainButtonsView() string {
 	buttonStyle := lipgloss.NewStyle().
 		Underline(true).
 		Padding(0, 2).
-		Height(constants.StatusBarHeight)
+		Height(internal.StatusBarHeight)
 
 	showCompatible := buttonStyle.Render("2. Hide incompatible mods")
 	if cfg.Settings.HideIncompatibleMods {

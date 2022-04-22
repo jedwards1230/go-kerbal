@@ -144,46 +144,22 @@ func (r *Registry) BuildSearchMapIndex(s string) (ModIndex, error) {
 
 func (r *Registry) DownloadMods(toDownload map[string]Ckan) ([]Ckan, error) {
 	var mods []Ckan
+	var err error
+
 	// collect all mods and dependencies
 	if len(toDownload) > 0 {
-		log.Printf("Checking %d mods", len(toDownload))
-		for _, mod := range toDownload {
-			if len(mod.ModDepends) > 0 {
-				for i := range mod.ModDepends {
-					dependent := r.SortedCompatibleMap[mod.ModDepends[i]]
-					if dependent.Identifier != "" {
-						mods = append(mods, dependent)
-					} else {
-						return mods, fmt.Errorf("could not find dependency: %v %v", mod.ModDepends[i], dependent.Identifier)
-					}
-				}
-			}
-			mods = append(mods, mod)
+		mods, err = r.checkDependencies(toDownload)
+		if err != nil {
+			return mods, err
 		}
 	} else {
 		return mods, errors.New("no mods provided")
 	}
 
-	// check for conflicts
-	//
-	// todo: could probably be a lot faster
-	for i := range mods {
-		if len(mods[i].ModConflicts) > 0 {
-			for j, conflict := range mods[i].ModConflicts {
-				// todo: link conflicts to install folder so filesystem can be checked for conflicts
-				if r.InstalledModList[conflict] {
-					return mods, fmt.Errorf("%v conflicts with installed mod %v", mods[i].Name, mods[j].Name)
-				}
-
-				for j := range mods {
-					if mods[j].Identifier == conflict {
-						return mods, fmt.Errorf("%v conflicts with queued mod %v", mods[i].Name, mods[j].Name)
-					}
-				}
-			}
-		}
+	err = r.checkConflicts(mods)
+	if err != nil {
+		return mods, err
 	}
-	log.Printf("No conflicts found")
 
 	// download mods
 	if len(mods) > 0 {
@@ -213,6 +189,56 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) ([]Ckan, error) {
 		return mods, errors.New("no URLS provided")
 	}
 	return mods, nil
+}
+
+// Gather list of mods and dependencies for download
+func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error) {
+	var mods []Ckan
+
+	log.Printf("Checking %d mods", len(toDownload))
+	for _, mod := range toDownload {
+		if len(mod.ModDepends) > 0 {
+			for i := range mod.ModDepends {
+				dependent := r.SortedNonCompatibleMap[mod.ModDepends[i]]
+				if dependent.Identifier != "" {
+					if dependent.IsCompatible {
+						mods = append(mods, dependent)
+					} else {
+						log.Printf("Warning: Dependent mod %s is not compatible with your current mods", dependent.Name)
+						mods = append(mods, dependent)
+					}
+				} else {
+					return mods, fmt.Errorf("could not find dependency: %v %v", mod.ModDepends[i], dependent.Identifier)
+				}
+			}
+		}
+		mods = append(mods, mod)
+	}
+	return mods, nil
+}
+
+// check for conflicts
+//
+// todo: could probably be a lot faster
+func (r *Registry) checkConflicts(mods []Ckan) error {
+	for i := range mods {
+		if len(mods[i].ModConflicts) > 0 {
+			for j, conflict := range mods[i].ModConflicts {
+				// todo: link conflicts to install folder so filesystem can be checked for conflicts
+				if r.InstalledModList[conflict] {
+					return fmt.Errorf("%v conflicts with installed mod %v", mods[i].Name, mods[j].Name)
+				}
+
+				for j := range mods {
+					if mods[j].Identifier == conflict {
+						return fmt.Errorf("%v conflicts with queued mod %v", mods[i].Name, mods[j].Name)
+					}
+				}
+			}
+		}
+	}
+	log.Printf("No conflicts found")
+	return nil
 }
 
 // Create r.ModMapIndex from given modMap
