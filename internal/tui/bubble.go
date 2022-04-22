@@ -8,30 +8,34 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/internal"
-	"github.com/jedwards1230/go-kerbal/internal/help"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
+	"github.com/jedwards1230/go-kerbal/internal/tui/bubbles"
 	"github.com/jedwards1230/go-kerbal/registry"
 )
 
 type Bubble struct {
-	appConfig         config.Config
-	theme             theme.Theme
+	appConfig      config.Config
+	theme          theme.Theme
+	bubbles        Bubbles
+	inputRequested bool
+	searchInput    bool
+	registry       registry.Registry
+	keyMap         KeyMap
+	nav            Nav
+	ready          bool
+	activeBox      int
+	width          int
+	height         int
+	logs           []string
+}
+
+type Bubbles struct {
 	primaryViewport   viewport.Model
 	secondaryViewport viewport.Model
 	splashViewport    viewport.Model
 	spinner           spinner.Model
 	textInput         textinput.Model
-	inputRequested    bool
-	searchInput       bool
-	registry          registry.Registry
-	help              help.Bubble
-	keyMap            KeyMap
-	nav               Nav
-	ready             bool
-	activeBox         int
-	width             int
-	height            int
-	logs              []string
+	help              bubbles.HelpBubble
 }
 
 type Nav struct {
@@ -88,9 +92,9 @@ func InitialModel() Bubble {
 		Border(splashBoxBorder).
 		BorderForeground(splashBoxBorderColor)
 
-	h := help.New(
+	h := bubbles.NewHelpBubble(
 		theme.DefaultTextColor,
-		[]help.HelpEntry{
+		[]bubbles.HelpEntry{
 			{Key: "up", Description: "Move up"},
 			{Key: "down", Description: "Move down"},
 			{Key: "spacebar", Description: "Toggle mod info"},
@@ -116,29 +120,33 @@ func InitialModel() Bubble {
 		installSelected:   make(map[string]registry.Ckan),
 	}
 
-	return Bubble{
-		appConfig:         cfg,
-		theme:             theme,
+	bubbles := Bubbles{
 		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
 		splashViewport:    splashVP,
 		spinner:           spin,
 		textInput:         t,
-		inputRequested:    iRequested,
-		searchInput:       false,
-		ready:             false,
-		registry:          reg,
 		help:              h,
-		nav:               nav,
-		activeBox:         internal.ModListView,
-		logs:              []string{"Initializing"},
-		keyMap:            getKeyMap(),
+	}
+
+	return Bubble{
+		appConfig:      cfg,
+		theme:          theme,
+		bubbles:        bubbles,
+		inputRequested: iRequested,
+		searchInput:    false,
+		ready:          false,
+		registry:       reg,
+		nav:            nav,
+		activeBox:      internal.ModListView,
+		logs:           []string{"Initializing"},
+		keyMap:         getKeyMap(),
 	}
 }
 
 func (b Bubble) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	cmds = append(cmds, b.getAvailableModsCmd(), b.spinner.Tick, b.MyTickCmd())
+	cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick, b.MyTickCmd())
 
 	return tea.Batch(cmds...)
 }

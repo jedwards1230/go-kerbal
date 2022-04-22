@@ -1,4 +1,4 @@
-package help
+package bubbles
 
 import (
 	"fmt"
@@ -13,30 +13,30 @@ type HelpEntry struct {
 	Description string
 }
 
-// Bubble represents a help bubble.
-type Bubble struct {
+// HelpBubble represents a help bubble.
+type HelpBubble struct {
 	Width     int
 	Height    int
 	Entries   []HelpEntry
 	TextColor lipgloss.AdaptiveColor
 }
 
-// New creates a new help bubble.
-func New(textColor lipgloss.AdaptiveColor, entries []HelpEntry) Bubble {
-	return Bubble{
+// NewHelpBubble creates a new help bubble.
+func NewHelpBubble(textColor lipgloss.AdaptiveColor, entries []HelpEntry) HelpBubble {
+	return HelpBubble{
 		TextColor: textColor,
 		Entries:   entries,
 	}
 }
 
 // SetSize sets the size of the bubble.
-func (b *Bubble) SetSize(w, h int) {
+func (b *HelpBubble) SetSize(w, h int) {
 	b.Width = w
 	b.Height = h
 }
 
 // Update handles updating the help bubble.
-func (b Bubble) Update(msg tea.Msg) (Bubble, tea.Cmd) {
+func (b HelpBubble) Update(msg tea.Msg) (HelpBubble, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		b.SetSize(msg.Width, msg.Height)
@@ -46,7 +46,7 @@ func (b Bubble) Update(msg tea.Msg) (Bubble, tea.Cmd) {
 }
 
 // View returns a string representation of the help bubble.
-func (b Bubble) View() string {
+func (b HelpBubble) View() string {
 	helpScreen := ""
 
 	for _, content := range b.Entries {

@@ -28,12 +28,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Down):
 		b.scrollView("down")
 		b.inputRequested = false
-		b.textInput.Blur()
+		b.bubbles.textInput.Blur()
 	// Up
 	case key.Matches(msg, b.keyMap.Up):
 		b.scrollView("up")
 		b.inputRequested = false
-		b.textInput.Blur()
+		b.bubbles.textInput.Blur()
 	// Space
 	case key.Matches(msg, b.keyMap.Space):
 		if b.nav.listSelected == b.nav.listCursor {
@@ -42,17 +42,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.nav.listSelected = b.nav.listCursor
 		}
 		b.checkActiveViewPortBounds()
-		b.primaryViewport.SetContent(b.modListView())
-		b.secondaryViewport.SetContent(b.modInfoView())
+		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
 		if b.inputRequested {
 			if b.searchInput {
-				b.textInput.Blur()
+				b.bubbles.textInput.Blur()
 				b.inputRequested = false
-				log.Printf("UPDATE: Start searching: %v", b.textInput.Value())
+				log.Printf("UPDATE: Start searching: %v", b.bubbles.textInput.Value())
 			} else {
-				cmds = append(cmds, b.updateKspDirCmd(b.textInput.Value()))
+				cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
 			}
 		} else {
 			id := b.registry.ModMapIndex[b.nav.listCursor]
@@ -68,24 +68,24 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			}
 
 			b.checkActiveViewPortBounds()
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
+			b.bubbles.primaryViewport.SetContent(b.modListView())
+			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		}
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
 		if !b.inputRequested || b.searchInput {
 			b.nav.listCursor = -1
 			b.nav.installSelected = make(map[string]registry.Ckan, 0)
-			b.textInput.Blur()
-			b.textInput.Reset()
+			b.bubbles.textInput.Blur()
+			b.bubbles.textInput.Reset()
 			cmds = append(cmds, b.sortModMapCmd())
 			b.inputRequested = false
 			b.searchInput = false
 			b.activeBox = internal.ModListView
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
+			b.bubbles.primaryViewport.SetContent(b.modListView())
+			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		}
-		b.textInput.Reset()
+		b.bubbles.textInput.Reset()
 	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
@@ -100,19 +100,19 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.ShowLogs):
 		if b.activeBox == internal.LogView {
 			b.activeBox = internal.ModListView
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
+			b.bubbles.primaryViewport.SetContent(b.modListView())
+			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else {
 			b.activeBox = internal.LogView
-			b.splashViewport.SetContent(b.logView())
-			b.splashViewport.GotoBottom()
+			b.bubbles.splashViewport.SetContent(b.logView())
+			b.bubbles.splashViewport.GotoBottom()
 		}
 	// Refresh list
 	case key.Matches(msg, b.keyMap.RefreshList):
 		if !b.searchInput && !b.inputRequested {
 			b.ready = false
 			b.logs = append(b.logs, "Getting mod list")
-			cmds = append(cmds, b.getAvailableModsCmd(), b.spinner.Tick)
+			cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
 		}
 	// Hide incompatible
 	case key.Matches(msg, b.keyMap.HideIncompatible):
@@ -121,7 +121,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
 			viper.WriteConfigAs(viper.ConfigFileUsed())
 			b.ready = false
-			cmds = append(cmds, b.getAvailableModsCmd(), b.spinner.Tick)
+			cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
 		}
 	// Swap sort order
 	case key.Matches(msg, b.keyMap.SwapSortOrder):
@@ -145,16 +145,16 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		if b.activeBox == internal.EnterKspDirView && !b.inputRequested {
 			b.inputRequested = false
 			b.activeBox = internal.ModListView
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
+			b.bubbles.primaryViewport.SetContent(b.modListView())
+			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else if b.activeBox != internal.EnterKspDirView {
 			b.activeBox = internal.EnterKspDirView
 			b.inputRequested = true
-			b.textInput.Placeholder = "KSP Directory..."
-			b.textInput.Focus()
-			b.textInput.Reset()
+			b.bubbles.textInput.Placeholder = "KSP Directory..."
+			b.bubbles.textInput.Focus()
+			b.bubbles.textInput.Reset()
 			if b.appConfig.Settings.KerbalDir != "" {
-				b.textInput.SetValue(b.appConfig.Settings.KerbalDir)
+				b.bubbles.textInput.SetValue(b.appConfig.Settings.KerbalDir)
 			}
 			return textinput.Blink
 		}
@@ -162,38 +162,38 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Download):
 		b.logs = append(b.logs, "Downloading mod")
 		b.ready = false
-		cmds = append(cmds, b.downloadModCmd(), b.spinner.Tick)
+		cmds = append(cmds, b.downloadModCmd(), b.bubbles.spinner.Tick)
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):
 		if b.activeBox == internal.SearchView {
 			if b.inputRequested {
-				val := trimLastChar(b.textInput.Value())
-				b.textInput.SetValue(val)
+				val := trimLastChar(b.bubbles.textInput.Value())
+				b.bubbles.textInput.SetValue(val)
 				b.inputRequested = false
-				b.textInput.Blur()
+				b.bubbles.textInput.Blur()
 			} else {
 				b.inputRequested = true
-				b.textInput.Focus()
+				b.bubbles.textInput.Focus()
 				return textinput.Blink
 			}
 		} else {
 			b.activeBox = internal.SearchView
 			b.searchInput = true
 			b.inputRequested = true
-			b.textInput.Reset()
-			b.textInput.Placeholder = "Search..."
+			b.bubbles.textInput.Reset()
+			b.bubbles.textInput.Placeholder = "Search..."
 			return textinput.Blink
 		}
 	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
 		if b.activeBox == internal.SettingsView {
 			b.activeBox = internal.ModListView
-			b.primaryViewport.SetContent(b.modListView())
-			b.secondaryViewport.SetContent(b.modInfoView())
+			b.bubbles.primaryViewport.SetContent(b.modListView())
+			b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		} else if !b.inputRequested {
 			b.activeBox = internal.SettingsView
-			b.splashViewport.SetContent(b.settingsView())
-			b.splashViewport.GotoTop()
+			b.bubbles.splashViewport.SetContent(b.settingsView())
+			b.bubbles.splashViewport.GotoTop()
 		}
 	}
 	return tea.Batch(cmds...)
