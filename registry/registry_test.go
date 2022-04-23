@@ -80,10 +80,10 @@ func GetTestDB() (*CkanDB, error) {
 	}
 	db = &CkanDB{DB: data}
 
-	err = db.UpdateDB(true)
+	/* err = db.UpdateDB(true)
 	if err != nil {
 		return db, err
-	}
+	} */
 
 	return db, err
 }
@@ -95,14 +95,14 @@ func DeleteTestDB() {
 	}
 }
 
-func TestUpdateDB(t *testing.T) {
+/* func TestUpdateDB(t *testing.T) {
 	err := db.UpdateDB(true)
 	if err != nil {
 		t.Errorf("Error updating database %v", err)
 	}
 }
 
-/* func BenchmarkUpdateDB(b *testing.B) {
+func BenchmarkUpdateDB(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		err := db.UpdateDB(true)
 		if err != nil {
