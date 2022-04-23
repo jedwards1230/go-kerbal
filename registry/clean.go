@@ -3,7 +3,6 @@ package registry
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -66,7 +65,7 @@ func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
 			}
 		}
 	}
-	return fmt.Errorf("install interface empty: %v", raw["install"])
+	return fmt.Errorf("no install path found: %v", raw["install"])
 }
 
 func (c *Ckan) cleanDependencies(raw map[string]interface{}) error {
@@ -165,7 +164,7 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 
 			newVKsp, _, err := c.cleanModVersion(v.(string))
 			if err != nil {
-				return fmt.Errorf("could not read mod version: %v", err)
+				return fmt.Errorf("invalid mod version: %v", v.(string))
 			}
 
 			if vMax == nil {
@@ -242,12 +241,12 @@ func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 	if raw["download"] != nil {
 		c.Install.Download = strings.TrimSpace(raw["download"].(string))
 	} else {
-		log.Printf("cannot read download field: %v", raw["download"])
+		//log.Printf("cannot read download field: %v", raw["download"])
 		return fmt.Errorf("cannot read download field: %v", raw["download"])
 	}
 
 	if c.Install.Download == "" {
-		log.Printf("invalid download path: %v", raw["download"])
+		//log.Printf("invalid download path: %v", raw["download"])
 		return fmt.Errorf("invalid download path: %v", raw["download"])
 	}
 

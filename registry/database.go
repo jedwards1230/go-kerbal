@@ -3,6 +3,7 @@ package registry
 import (
 	// Using standard json encoder here because benchmarks showed segmentio to be slightly slower
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"strconv"
@@ -55,43 +56,60 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
-	err = db.updateDB(fs, filesToScan)
+	err = db.updateDB(&fs, filesToScan)
 
 	return err
 }
 
-func (db *CkanDB) updateDB(fs billy.Filesystem, filesToScan []string) error {
-	log.Printf("Cleaning .ckan files and adding to database")
+func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	var mods []Ckan
 
+	errCount := 0
+	log.Print("Cleaning mod files")
 	var wg sync.WaitGroup
-	n := len(filesToScan)
-	wg.Add(n)
+	wg.Add(len(filesToScan))
 	for i := range filesToScan {
 		go func(i int) { // Parse .ckan from repo into JSON
-			mod, err := parseCKAN(fs, filesToScan[i])
-			if err == nil {
+			defer wg.Done()
+
+			mod, err := parseCKAN(*fs, filesToScan[i])
+			if err != nil {
+				/* if len(mod.Errors) > 0 {
+					if mod.Errors["raw"] != nil {
+						raw := mod.Errors["raw"].(map[string]interface{})
+						log.Print("***** RAW *****")
+						for k, v := range raw {
+							log.Printf("%v: %v", k, v)
+						}
+						log.Print("\n")
+						for k, v := range mod.Errors {
+							if k != "raw" {
+								log.Printf("%v: %v", k, v)
+							}
+						}
+					}
+				} */
+				errCount++
+			} else if mod.Valid {
 				mods = append(mods, *mod)
+			} else {
+				errCount++
 			}
-			wg.Done()
 		}(i)
 	}
 	wg.Wait()
 
-	errCount := 0
+	log.Print("Adding mods to database")
 	err := db.Update(func(tx *buntdb.Tx) error {
-		for i, mod := range mods {
-			// Ckan to []byte]
-			byteValue, err := json.Marshal(mod)
+		for i := range mods {
+			byteValue, err := json.Marshal(mods[i])
 			if err != nil {
 				log.Printf("Error: %s", err)
 				return err
 			}
-
-			// Store in DB
 			tx.Set("mod:"+strconv.Itoa(i), string(byteValue), nil)
 		}
-		log.Printf("Database updated with %d mod files | %d errors", len(filesToScan), errCount)
+		log.Printf("Database updated with %d mod files | %d errors", len(mods), errCount)
 		return nil
 	})
 	return err
@@ -122,10 +140,10 @@ func parseCKAN(repo billy.Filesystem, filePath string) (*Ckan, error) {
 	}
 
 	// clean extra data into struct
-	mod, err = CreateCkan(raw)
-	if err != nil {
+	mod = CreateCkan(raw)
+	if !mod.Valid {
 		//log.Printf("Initialization error: %v", err)
-		return nil, err
+		return &mod, errors.New("invalid mod file")
 	}
 
 	return &mod, err

@@ -16,6 +16,7 @@ type Ckan struct {
 	Abstract       string
 	Description    string
 	License        string
+	Valid          bool
 	SearchTags     map[string]interface{}
 	ModConflicts   []string
 	ModDepends     []string
@@ -25,65 +26,106 @@ type Ckan struct {
 	Resources      resource
 	SearchSpace    string
 	SearchableName string
+	Errors         map[string]interface{}
 }
 
 // Initialize struct values
-func CreateCkan(raw map[string]interface{}) (Ckan, error) {
+func CreateCkan(raw map[string]interface{}) Ckan {
 	var mod Ckan
+	var validMod = true
 	/* for k, v := range raw {
 		log.Printf("%v: %v", k, v)
 	}
 	log.Panic() */
 
-	if err := mod.cleanNames(raw); err != nil {
-		return mod, err
+	mod.Errors = make(map[string]interface{})
+	valid, err := mod.checkValid(mod.cleanNames(raw))
+	if !valid {
+		mod.Errors["cleanNames"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanIdentifiers(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanIdentifiers(raw))
+	if !valid {
+		mod.Errors["cleanIdentifiers"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanAuthors(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanAuthors(raw))
+	if !valid {
+		mod.Errors["cleanAuthors"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanVersions(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanVersions(raw))
+	if !valid {
+		mod.Errors["cleanVersions"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanAbstract(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanAbstract(raw))
+	if !valid {
+		mod.Errors["cleanAbstract"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanDescription(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanDescription(raw))
+	if !valid {
+		mod.Errors["cleanDescription"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanLicense(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanLicense(raw))
+	if !valid {
+		mod.Errors["cleanLicense"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanInstall(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanInstall(raw))
+	if !valid {
+		mod.Errors["cleanInstall"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanDownload(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanDownload(raw))
+	if !valid {
+		mod.Errors["cleanDownload"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanDependencies(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanDependencies(raw))
+	if !valid {
+		mod.Errors["cleanDependencies"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanConflicts(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanConflicts(raw))
+	if !valid {
+		mod.Errors["cleanConflicts"] = err
+		validMod = false
 	}
 
-	if err := mod.cleanSearchSpace(raw); err != nil {
-		return mod, err
+	valid, err = mod.checkValid(mod.cleanSearchSpace(raw))
+	if !valid {
+		mod.Errors["cleanSearchSpace"] = err
+		validMod = false
 	}
 
-	return mod, nil
+	mod.Valid = validMod
+
+	if !validMod || err != nil {
+		mod.Errors["raw"] = raw
+		return mod
+	}
+
+	return mod
+}
+
+func (c *Ckan) checkValid(err error) (bool, error) {
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Compares installed KSP version to min/max compatible for the mod.

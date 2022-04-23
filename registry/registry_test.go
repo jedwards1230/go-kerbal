@@ -38,6 +38,10 @@ func TestMain(m *testing.M) {
 	defer f.Close()
 	log.SetOutput(f)
 
+	// Set log flags
+	var LstdFlags = log.Lmsgprefix | log.Ltime | log.Lmicroseconds | log.Lshortfile
+	log.SetFlags(LstdFlags)
+
 	log.Println("*****************")
 	log.Println("Testing Registry")
 	log.Println("*****************")
@@ -142,7 +146,7 @@ func BenchmarkCloneRepo(b *testing.B) {
 func TestUpdateDBDirect(t *testing.T) {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
-	err := db.updateDB(fs, filesToScan)
+	err := db.updateDB(&fs, filesToScan)
 	if err != nil {
 		t.Error(err)
 	}
@@ -152,7 +156,7 @@ func BenchmarkUpdateDBDirect(b *testing.B) {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 	for n := 0; n < b.N; n++ {
-		err := db.updateDB(fs, filesToScan)
+		err := db.updateDB(&fs, filesToScan)
 		if err != nil {
 			b.Error(err)
 		}
