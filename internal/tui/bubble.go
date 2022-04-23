@@ -24,6 +24,7 @@ type Bubble struct {
 	nav            Nav
 	ready          bool
 	activeBox      int
+	lastActiveBox  int
 	width          int
 	height         int
 	logs           []string

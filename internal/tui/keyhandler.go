@@ -16,7 +16,6 @@ import (
 // Handles all key press events
 func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmds []tea.Cmd
-	cfg := config.GetConfig()
 
 	switch {
 	// Quit
@@ -42,14 +41,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		b.checkActiveViewPortBounds()
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
-		if b.inputRequested {
-			if b.searchInput {
-				b.inputRequested = false
-				log.Printf("UPDATE: Start searching: %v", b.bubbles.textInput.Value())
-			} else {
-				cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
-			}
-		} else {
+		switch b.activeBox {
+		case internal.SearchView:
+			b.inputRequested = false
+		case internal.EnterKspDirView:
+			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
+		case internal.ModListView:
 			id := b.registry.ModMapIndex[b.nav.listCursor]
 			modMap := b.registry.GetActiveModMap()
 			mod := modMap[id.Key]
@@ -66,32 +63,30 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		}
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
-		if !b.inputRequested || b.searchInput {
-			b.nav.listCursor = -1
-			b.nav.installSelected = make(map[string]registry.Ckan, 0)
-			b.bubbles.textInput.Reset()
-			cmds = append(cmds, b.sortModMapCmd())
-			b.inputRequested = false
-			b.searchInput = false
-			b.activeBox = internal.ModListView
-		}
+		b.nav.listCursor = -1
+		b.nav.listSelected = -1
+		b.nav.installSelected = make(map[string]registry.Ckan, 0)
 		b.bubbles.textInput.Reset()
+		cmds = append(cmds, b.sortModMapCmd())
+		b.inputRequested = false
+		b.searchInput = false
+		b.switchActiveView(internal.ModListView)
 	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
 		case internal.ModListView:
-			b.activeBox = internal.ModInfoView
+			b.switchActiveView(internal.ModInfoView)
 		case internal.ModInfoView:
-			b.activeBox = internal.ModListView
+			b.switchActiveView(internal.ModListView)
 		case internal.LogView:
-			b.activeBox = internal.ModListView
+			b.switchActiveView(internal.ModListView)
 		}
 	// Show logs
 	case key.Matches(msg, b.keyMap.ShowLogs):
 		if b.activeBox == internal.LogView {
-			b.activeBox = internal.ModListView
+			b.switchActiveView(internal.ModListView)
 		} else {
-			b.activeBox = internal.LogView
+			b.switchActiveView(internal.LogView)
 			b.bubbles.splashViewport.GotoBottom()
 		}
 	// Refresh list
@@ -104,6 +99,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Hide incompatible
 	case key.Matches(msg, b.keyMap.HideIncompatible):
 		if !b.inputRequested {
+			cfg := config.GetConfig()
 			b.logs = append(b.logs, "Toggling compatible mod view")
 			viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
 			viper.WriteConfigAs(viper.ConfigFileUsed())
@@ -122,18 +118,17 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.logs = append(b.logs, "Swapping sort order to "+b.registry.SortOptions.SortOrder)
 			log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
 
-			b.registry.SortModMap()
 			cmds = append(cmds, b.sortModMapCmd())
-			b.activeBox = internal.ModListView
+			b.switchActiveView(internal.ModListView)
 		}
 	// Input KSP dir
 	// TODO: This has been hanging/acting slow. Something is wrong.
 	case key.Matches(msg, b.keyMap.EnterKspDir):
 		if b.activeBox == internal.EnterKspDirView && !b.inputRequested {
 			b.inputRequested = false
-			b.activeBox = internal.ModListView
+			b.switchActiveView(internal.ModListView)
 		} else if b.activeBox != internal.EnterKspDirView {
-			b.activeBox = internal.EnterKspDirView
+			b.switchActiveView(internal.EnterKspDirView)
 			b.inputRequested = true
 			b.bubbles.textInput.Placeholder = "KSP Directory..."
 			b.bubbles.textInput.Reset()
@@ -159,7 +154,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				return textinput.Blink
 			}
 		} else {
-			b.activeBox = internal.SearchView
+			b.switchActiveView(internal.SearchView)
 			b.searchInput = true
 			b.inputRequested = true
 			b.bubbles.textInput.Reset()
@@ -169,9 +164,9 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
 		if b.activeBox == internal.SettingsView {
-			b.activeBox = internal.ModListView
+			b.switchActiveView(internal.ModListView)
 		} else if !b.inputRequested {
-			b.activeBox = internal.SettingsView
+			b.switchActiveView(internal.SettingsView)
 			b.bubbles.splashViewport.GotoTop()
 		}
 	}

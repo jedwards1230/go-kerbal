@@ -63,15 +63,23 @@ func (r *Registry) SortModMap() error {
 	cfg := config.GetConfig()
 
 	// Get map with most compatible mod
-	r.SortedCompatibleMap = getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
-	log.Printf("Total Incompatible: %d", len(r.TotalModMap))
-	r.SortedNonCompatibleMap = getLatestVersionMap(r.TotalModMap)
+	compatMap, err := getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
+	if err != nil {
+		return err
+	}
+	incompatMap, err := getLatestVersionMap(r.TotalModMap)
+	if err != nil {
+		return err
+	}
 
 	if cfg.Settings.HideIncompatibleMods {
-		r.buildModMapIndex(r.SortedCompatibleMap)
+		r.buildModMapIndex(compatMap)
 	} else {
-		r.buildModMapIndex(r.SortedNonCompatibleMap)
+		r.buildModMapIndex(incompatMap)
 	}
+
+	r.SortedCompatibleMap = compatMap
+	r.SortedNonCompatibleMap = incompatMap
 
 	log.Printf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
 	return nil
@@ -361,7 +369,7 @@ func getCompatibleModMap(incompatibleModMap map[string][]Ckan) map[string][]Ckan
 }
 
 // Filters list by unique identifiers to ensure duplicate mods are not displayed
-func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
+func getLatestVersionMap(modMapBuckets map[string][]Ckan) (map[string]Ckan, error) {
 	modMap := make(map[string]Ckan)
 	countGood := 0
 	countBad := 0
@@ -370,7 +378,7 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
 			// convert to proper version type for comparison
 			foundVersion, err := version.NewVersion(mod.Versions.Mod)
 			if err != nil {
-				log.Printf("Error creating version: %v", err)
+				return modMap, fmt.Errorf("error creating version: %v", err)
 			}
 
 			// check if mod is stored already
@@ -378,7 +386,7 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
 				// convert to proper version type for comparison
 				storedVersion, err := version.NewVersion(modMap[id].Versions.Mod)
 				if err != nil {
-					log.Printf("Error creating version: %v", err)
+					return modMap, fmt.Errorf("error creating version: %v", err)
 				}
 
 				// compare versions and store most recent
@@ -395,6 +403,6 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) map[string]Ckan {
 		}
 	}
 
-	log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
-	return modMap
+	//log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
+	return modMap, nil
 }

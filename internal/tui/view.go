@@ -287,10 +287,10 @@ func (b Bubble) logView() string {
 				Padding(0, 0, 0, 1).
 				Render(fmt.Sprint(i) + " ")
 			lineWords[0] = lipgloss.NewStyle().
-				Foreground(b.theme.LogDateColor).
+				Foreground(b.theme.Green).
 				Render(lineWords[0])
 			lineWords[1] = lipgloss.NewStyle().
-				Foreground(b.theme.LogPathColor).
+				Foreground(b.theme.Orange).
 				Width(16).
 				Render(lineWords[1])
 			line := lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))

@@ -26,7 +26,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case UpdatedModMapMsg:
 		b.registry.TotalModMap = msg
 		b.logs = append(b.logs, "Mod list updated")
-		cmds = append(cmds, b.sortModMapCmd())
+		return b, b.sortModMapCmd()
 	case SortedMsg:
 		b.registry.SortModMap()
 		b.logs = append(b.logs, "Mod list sorted")
@@ -67,7 +67,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case ErrorMsg:
 		b.ready = true
-		log.Printf("ErrorMsg: %v", msg)
+		b.LogErrorf("ErrorMsg: %v", msg)
 	case spinner.TickMsg:
 		if !b.ready {
 			b.bubbles.spinner, cmd = b.bubbles.spinner.Update(msg)
@@ -143,6 +143,11 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	}
 
 	return cmd
+}
+
+func (b *Bubble) switchActiveView(newView int) {
+	b.lastActiveBox = b.activeBox
+	b.activeBox = newView
 }
 
 // Handles wrapping and button scrolling in the viewport

@@ -9,8 +9,9 @@ type Theme struct {
 	InstalledListItemColor  lipgloss.AdaptiveColor
 	ActiveBoxBorderColor    lipgloss.AdaptiveColor
 	InactiveBoxBorderColor  lipgloss.AdaptiveColor
-	LogDateColor            lipgloss.Color
-	LogPathColor            lipgloss.Color
+	Green                   lipgloss.Color
+	Orange                  lipgloss.Color
+	Red                     lipgloss.Color
 
 	SelectedTreeItemColor                lipgloss.AdaptiveColor
 	UnselectedTreeItemColor              lipgloss.AdaptiveColor
@@ -33,9 +34,9 @@ type appColors struct {
 	black  string
 	green  string
 	orange string
+	red    string
 
 	darkGray           string
-	red                string
 	defaultPink        string
 	defaultLightPurple string
 	defaultDarkPurple  string
@@ -65,9 +66,9 @@ var Colors = appColors{
 	black:  "#000000",
 	green:  "#00aa00",
 	orange: "#cf8611",
+	red:    "#cc241d",
 
 	darkGray:           "#3c3836",
-	red:                "#cc241d",
 	defaultPink:        "#F25D94",
 	defaultLightPurple: "#A550DF",
 	defaultDarkPurple:  "#6124DF",
@@ -97,10 +98,11 @@ var themeMap = map[string]Theme{
 		SelectedListItemColor:   lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
 		UnselectedListItemColor: lipgloss.AdaptiveColor{Dark: Colors.black, Light: Colors.white},
 		InstalledListItemColor:  lipgloss.AdaptiveColor{Dark: Colors.green, Light: Colors.green},
-		ActiveBoxBorderColor:    lipgloss.AdaptiveColor{Dark: Colors.holidayGreen, Light: Colors.holidayGreen},
+		ActiveBoxBorderColor:    lipgloss.AdaptiveColor{Dark: Colors.green, Light: Colors.green},
 		InactiveBoxBorderColor:  lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
-		LogDateColor:            lipgloss.Color(Colors.green),
-		LogPathColor:            lipgloss.Color(Colors.orange),
+		Green:                   lipgloss.Color(Colors.green),
+		Orange:                  lipgloss.Color(Colors.orange),
+		Red:                     lipgloss.Color(Colors.red),
 
 		SelectedTreeItemColor:                lipgloss.AdaptiveColor{Dark: Colors.defaultPink, Light: Colors.defaultPink},
 		UnselectedTreeItemColor:              lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
