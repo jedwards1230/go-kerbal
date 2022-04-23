@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"strconv"
+	"sync"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
@@ -61,20 +62,27 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 
 func (db *CkanDB) updateDB(fs billy.Filesystem, filesToScan []string) error {
 	log.Printf("Cleaning .ckan files and adding to database")
+	var mods []Ckan
+
+	var wg sync.WaitGroup
+	n := len(filesToScan)
+	wg.Add(n)
+	for i := range filesToScan {
+		go func(i int) { // Parse .ckan from repo into JSON
+			mod, err := parseCKAN(fs, filesToScan[i])
+			if err == nil {
+				mods = append(mods, *mod)
+			}
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
 	errCount := 0
 	err := db.Update(func(tx *buntdb.Tx) error {
-		var byteValue []byte
-		for i := range filesToScan {
-			// Parse .ckan from repo into JSON
-			ckan, err := parseCKAN(fs, filesToScan[i])
-			if err != nil {
-				errCount += 1
-				//log.Printf("Error parsing CKAN: %v", err)
-				continue
-			}
-
+		for i, mod := range mods {
 			// Ckan to []byte]
-			byteValue, err = json.Marshal(ckan)
+			byteValue, err := json.Marshal(mod)
 			if err != nil {
 				log.Printf("Error: %s", err)
 				return err
