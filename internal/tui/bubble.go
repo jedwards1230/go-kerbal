@@ -10,6 +10,7 @@ import (
 	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/jedwards1230/go-kerbal/internal/tui/bubbles"
+	bubs "github.com/jedwards1230/go-kerbal/internal/tui/bubbles"
 	"github.com/jedwards1230/go-kerbal/registry"
 )
 
@@ -20,7 +21,7 @@ type Bubble struct {
 	inputRequested bool
 	searchInput    bool
 	registry       registry.Registry
-	keyMap         KeyMap
+	keyMap         bubs.KeyMap
 	nav            Nav
 	ready          bool
 	activeBox      int
@@ -141,7 +142,7 @@ func InitialModel() Bubble {
 		nav:            nav,
 		activeBox:      internal.ModListView,
 		logs:           []string{"Initializing"},
-		keyMap:         getKeyMap(),
+		keyMap:         bubs.GetKeyMap(),
 	}
 }
 

@@ -1,8 +1,13 @@
-package tui
+package bubbles
 
 import "github.com/charmbracelet/bubbles/key"
 
-// KeyMap defines the keybindings for the viewport.
+const spacebar = " "
+
+// KeyMap defines the keybindings for the viewport. Note that you don't
+// necessary need to use keybindings at all; the viewport can be controlled
+// programmatically with methods like Model.LineDown(1). See the GoDocs for
+// details.
 type KeyMap struct {
 	Quit     key.Binding
 	Down     key.Binding
@@ -20,10 +25,15 @@ type KeyMap struct {
 	Download         key.Binding
 	Search           key.Binding
 	Settings         key.Binding
+
+	PageDown     key.Binding
+	PageUp       key.Binding
+	HalfPageUp   key.Binding
+	HalfPageDown key.Binding
 }
 
-// getKeyMap returns a set of default keybindings.
-func getKeyMap() KeyMap {
+// GetKeyMap returns a set of default keybindings.
+func GetKeyMap() KeyMap {
 	return KeyMap{
 		Quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -56,6 +66,7 @@ func getKeyMap() KeyMap {
 		ShowLogs: key.NewBinding(
 			key.WithKeys("O"),
 		),
+
 		RefreshList: key.NewBinding(
 			key.WithKeys("1"),
 			key.WithHelp("1", "refresh mod list"),
@@ -83,6 +94,19 @@ func getKeyMap() KeyMap {
 		Settings: key.NewBinding(
 			key.WithKeys("0"),
 			key.WithHelp("0", "open settings"),
+		),
+
+		PageDown: key.NewBinding(
+			key.WithKeys("pgdown", spacebar, "f"),
+		),
+		PageUp: key.NewBinding(
+			key.WithKeys("pgup", "b"),
+		),
+		HalfPageUp: key.NewBinding(
+			key.WithKeys("u", "ctrl+u"),
+		),
+		HalfPageDown: key.NewBinding(
+			key.WithKeys("d", "ctrl+d"),
 		),
 	}
 }
