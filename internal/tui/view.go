@@ -22,7 +22,7 @@ var (
 )
 
 func (b Bubble) View() string {
-	var view string
+	var body string
 
 	switch b.activeBox {
 	case internal.ModListView, internal.ModInfoView, internal.SearchView:
@@ -39,7 +39,8 @@ func (b Bubble) View() string {
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 		case internal.ModInfoView:
 			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-
+		case internal.EnterKspDirView, internal.LogView, internal.SettingsView:
+			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 		}
 
 		// format views
@@ -58,37 +59,26 @@ func (b Bubble) View() string {
 		secondaryBox = b.bubbles.secondaryViewport.View()
 
 		// organize views
-		view = lipgloss.JoinVertical(
+		body = lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			b.getMainButtonsView(),
-			lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				primaryBox,
-				secondaryBox,
-			),
-			b.statusBarView(),
+			primaryBox,
+			secondaryBox,
 		)
 	case internal.LogView, internal.SettingsView, internal.EnterKspDirView:
-		var splashBox string
-
 		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(b.theme.ActiveBoxBorderColor)
-		splashBox = b.bubbles.splashViewport.View()
-
-		view = lipgloss.JoinVertical(
-			lipgloss.Top,
-			lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				splashBox,
-			),
-			b.statusBarView(),
-		)
+		body = b.bubbles.splashViewport.View()
 	}
 
-	return view
+	return lipgloss.JoinVertical(
+		lipgloss.Top,
+		b.getMainButtonsView(),
+		body,
+		b.statusBarView(),
+	)
 }
 
 func (b Bubble) modListView() string {
@@ -283,8 +273,9 @@ func (b Bubble) logView() string {
 		lineWords := strings.Fields(scanner.Text())
 		if len(lineWords) > 1 {
 			idx := lipgloss.NewStyle().
-				Width(4).
-				Padding(0, 0, 0, 1).
+				Align(lipgloss.Left).
+				Width(6).
+				Padding(0, 1).
 				Render(fmt.Sprint(i) + " ")
 			lineWords[0] = lipgloss.NewStyle().
 				Foreground(b.theme.Green).
@@ -483,6 +474,7 @@ func (b Bubble) statusBarView() string {
 }
 
 func (b Bubble) getMainButtonsView() string {
+	var buttonRow string
 	cfg := config.GetConfig()
 
 	buttonStyle := lipgloss.NewStyle().
@@ -490,18 +482,45 @@ func (b Bubble) getMainButtonsView() string {
 		Padding(0, 2).
 		Height(internal.StatusBarHeight)
 
+	escape := buttonStyle.
+		Align(lipgloss.Left).
+		Render("Esc. Home")
+
+	refresh := buttonStyle.Render("1. Refresh")
 	showCompatible := buttonStyle.Render("2. Hide incompatible mods")
+	sortOrder := buttonStyle.Render("3. Sort Order")
+	enterDir := buttonStyle.Render("4. Enter KSP Dir")
+	download := buttonStyle.Render("5. Download mod")
+	search := buttonStyle.Render("6. Search")
+
 	if cfg.Settings.HideIncompatibleMods {
 		showCompatible = buttonStyle.Render("2. Show incompatible mods")
 	}
-	sortOrder := buttonStyle.Render("3. Sort Order")
-	download := buttonStyle.Render("5. Download mod")
 
-	if b.searchInput {
-		escape := buttonStyle.
-			Align(lipgloss.Left).
-			Render("Esc to close")
+	settings := buttonStyle.
+		Align(lipgloss.Right).
+		Render("0. Settings")
 
+	switch b.activeBox {
+	case internal.ModInfoView, internal.ModListView:
+		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
+			refresh,
+			showCompatible,
+			sortOrder,
+			enterDir,
+			download,
+			search,
+		)
+
+		leftColumn = lipgloss.NewStyle().
+			Width(b.width - lipgloss.Width(settings)).
+			Render(leftColumn)
+
+		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+			leftColumn,
+			settings,
+		)
+	case internal.SearchView:
 		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
 			escape,
 			showCompatible,
@@ -520,35 +539,36 @@ func (b Bubble) getMainButtonsView() string {
 
 		leftColumn = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(leftColumn)
 
-		return lipgloss.JoinHorizontal(lipgloss.Top,
+		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
 			leftColumn,
 			enableInput,
 		)
-	} else {
-		refresh := buttonStyle.Render("1. Refresh")
-		enterDir := buttonStyle.Render("4. Enter KSP Dir")
-		search := buttonStyle.Render("6. Search")
-
-		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
-			refresh,
-			showCompatible,
-			sortOrder,
-			enterDir,
-			download,
-			search,
-		)
-
-		settings := buttonStyle.
+	case internal.EnterKspDirView:
+		enableInput := buttonStyle.
 			Align(lipgloss.Right).
-			Render("0. Settings")
+			Render("6. Enable text input")
+		if b.inputRequested {
+			enableInput = buttonStyle.
+				Align(lipgloss.Right).
+				Render("6. Disable text input")
+		}
 
-		leftColumn = lipgloss.NewStyle().
-			Width(b.width - lipgloss.Width(settings)).
-			Render(leftColumn)
+		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(escape)
 
-		return lipgloss.JoinHorizontal(lipgloss.Top,
-			leftColumn,
+		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+			escape,
+			enableInput,
+		)
+	case internal.SettingsView:
+		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(settings)).Render(escape)
+
+		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+			escape,
 			settings,
 		)
+	case internal.LogView:
+		buttonRow = lipgloss.NewStyle().Width(b.width - lipgloss.Width(settings)).Render(escape)
 	}
+
+	return buttonRow
 }

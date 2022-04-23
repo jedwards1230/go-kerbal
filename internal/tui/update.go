@@ -25,23 +25,21 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Update mod list
 	case UpdatedModMapMsg:
 		b.registry.TotalModMap = msg
-		b.logs = append(b.logs, "Mod list updated")
 		return b, b.sortModMapCmd()
 	case SortedMsg:
 		b.registry.SortModMap()
-		b.logs = append(b.logs, "Mod list sorted")
-		log.Print("Sorted mod map")
+		b.LogCommand("Sorted mod map")
 		b.ready = true
 		b.checkActiveViewPortBounds()
 		b.bubbles.primaryViewport.GotoTop()
+		if b.activeBox == internal.SearchView {
+			cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
+		}
 	case InstalledModListMsg:
 		b.ready = true
 		if len(b.registry.InstalledModList) != len(msg) {
-			b.logs = append(b.logs, "Installed mod list updated")
-			log.Printf("Updated installed mod list")
+			b.LogCommand("Updated installed mod list")
 			b.registry.InstalledModList = msg
-		} else {
-			b.logs = append(b.logs, "No changes made")
 		}
 		cmds = append(cmds, b.getAvailableModsCmd())
 	// Update KSP dir
@@ -49,12 +47,12 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.ready = true
 		if msg {
 			cfg := config.GetConfig()
-			log.Print("Kerbal directory updated")
+			b.LogCommand("Kerbal directory updated")
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.SetValue(fmt.Sprintf("Success!: %v", cfg.Settings.KerbalDir))
 			b.inputRequested = false
 		} else {
-			log.Printf("Error updating ksp dir: %v", msg)
+			b.LogErrorf("Error updating ksp dir: %v", msg)
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.Placeholder = "Try again..."
 		}
@@ -63,7 +61,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.nav.listSelected = -1
 			b.registry.ModMapIndex = registry.ModIndex(msg)
 		} else {
-			log.Print("Error searching")
+			b.LogError("Error searching")
 		}
 	case ErrorMsg:
 		b.ready = true
@@ -82,16 +80,12 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.help.Width = msg.Width
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
+		b.bubbles.splashViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
 
 		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.primaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.secondaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize()
-
-		if !b.ready {
-			b.ready = true
-		}
 	// Key pressed
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
@@ -118,7 +112,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	b.updateActiveView(msg)
+	cmds = append(cmds, b.updateActiveView(msg))
 
 	return b, tea.Batch(cmds...)
 }

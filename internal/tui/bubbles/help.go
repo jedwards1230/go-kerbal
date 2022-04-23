@@ -22,10 +22,28 @@ type HelpBubble struct {
 }
 
 // NewHelpBubble creates a new help bubble.
-func NewHelpBubble(textColor lipgloss.AdaptiveColor, entries []HelpEntry) HelpBubble {
+func NewHelpBubble(textColor lipgloss.AdaptiveColor) HelpBubble {
 	return HelpBubble{
 		TextColor: textColor,
-		Entries:   entries,
+		Entries: []HelpEntry{
+			{Key: "up", Description: "Move up"},
+			{Key: "down", Description: "Move down"},
+			{Key: "spacebar", Description: "Toggle mod info"},
+			{Key: "enter", Description: "Select mod for install"},
+			{Key: "tab", Description: "Swap active views"},
+			{},
+			{Key: "shift + o", Description: "Show logs"},
+			{},
+			{Key: "1", Description: "Refresh mod list"},
+			{Key: "2", Description: "Toggle hiding incompatible mods"},
+			{Key: "3", Description: "Toggle sort order (ascend/descend)"},
+			{Key: "4", Description: "Update KSP directory"},
+			{Key: "5", Description: "Download selected mod"},
+			{Key: "6", Description: "Search mods"},
+			{},
+			{Key: "0", Description: "View settings"},
+			{Key: "ctrl+c", Description: "Exit"},
+		},
 	}
 }
 
