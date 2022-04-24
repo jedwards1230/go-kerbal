@@ -1,4 +1,6 @@
 # go-kerbal (WIP)
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/jedwards1230/go-kerbal.svg)](https://pkg.go.dev/github.com/jedwards1230/go-kerbal)
  
 This will eventually be a Go clone of the Kerbal [CKAN Mod Manager](https://github.com/KSP-CKAN/CKAN). This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta).
 
@@ -19,8 +21,8 @@ go build && ./go-kerbal
 ## Images
 ![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true "Main view")
 ![Mod Selected](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/modInfo.png?raw=true "Mod Info")
-![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true "Logs")
 ![Search View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/search.png?raw=true "Search")
+![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true "Logs")
 
 ## TODO:
 Check out the [Projects](https://github.com/jedwards1230/go-kerbal/projects/2) tab.
