@@ -281,12 +281,8 @@ func installMod(mod Ckan) error {
 	if err != nil {
 		return fmt.Errorf("getting KSP dir: %v", err)
 	}
-	installToDir, err := filepath.Abs(mod.Install.InstallTo)
-	if err != nil {
-		return err
-	}
 
-	re := regexp.MustCompile("(?i)" + installToDir)
+	re := regexp.MustCompile("(?i)" + mod.Install.InstallTo)
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
 		if f.Name != "" {
@@ -302,7 +298,7 @@ func installMod(mod Ckan) error {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
 				}
 			} else {
-				return fmt.Errorf("path mismatch: \"%v\" %v ", f.Name, installToDir)
+				return fmt.Errorf("path mismatch: \"%v\" \"%v\" ", f.Name, mod.Install.InstallTo)
 			}
 		}
 	}

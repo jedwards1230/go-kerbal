@@ -397,19 +397,29 @@ func (b Bubble) statusBarView() string {
 		Padding(0, 3).
 		Render(sortOptions)
 
-	var showCompatible string
-	if cfg.Settings.HideIncompatibleMods {
-		showCompatible = "Hiding incompatible mods"
-	} else {
-		showCompatible = "Showing incompatible mods"
+	installedLegend := lipgloss.NewStyle().
+		Foreground(b.theme.Green).
+		Padding(0, 1).
+		Render("Installed")
+	incompatibleLegend := lipgloss.NewStyle().
+		Foreground(b.theme.Orange).
+		Padding(0, 1).
+		Render("Incompatible")
+
+	colorLegend := installedLegend
+	if !cfg.Settings.HideIncompatibleMods {
+		colorLegend = lipgloss.JoinHorizontal(lipgloss.Top,
+			incompatibleLegend,
+			installedLegend)
 	}
-	showCompatible = statusBarStyle.
+
+	colorLegend = statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 3).
-		Render(showCompatible)
+		Render(colorLegend)
 
 	var status string
-	statusWidth := b.width - width(fileCount) - width(sortOptions) - width(showCompatible)
+	statusWidth := b.width - width(fileCount) - width(sortOptions) - width(colorLegend)
 	if b.searchInput {
 		status = statusBarStyle.
 			Align(lipgloss.Left).
@@ -471,7 +481,7 @@ func (b Bubble) statusBarView() string {
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		status,
-		showCompatible,
+		colorLegend,
 		sortOptions,
 		fileCount,
 	)
