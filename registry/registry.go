@@ -158,11 +158,13 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	return searchMapIndex, nil
 }
 
+// Download selected mods
 func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
 	var mods []Ckan
 	var err error
 
 	// collect all mods and dependencies
+	log.Print("Checking dependencies")
 	if len(toDownload) > 0 {
 		mods, err = r.checkDependencies(toDownload)
 		if err != nil {
@@ -173,13 +175,14 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
 	}
 
 	// check for any conflicts
+	log.Print("Checking conflicts")
 	err = r.checkConflicts(mods)
 	if err != nil {
 		return err
 	}
 
 	if len(mods) > 0 {
-		log.Printf("Downloading %d mods (after checking dependencies)", len(mods))
+		log.Printf("Downloading %d mods", len(mods))
 
 		// Create tmp dir
 		err := os.MkdirAll("./tmp", os.ModePerm)
@@ -192,7 +195,7 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
 		for i := range mods {
 			mod := mods[i]
 			g.Go(func() error {
-				err := r.downloadMod(mod)
+				err := downloadMod(mod)
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
@@ -202,14 +205,14 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
 		if err := g.Wait(); err != nil {
 			return err
 		}
-		log.Printf("Downloaded %v mods", len(mods))
 		r.InstallQueue = mods
 		return nil
 	}
 	return errors.New("no URLS provided")
 }
 
-func (r *Registry) downloadMod(mod Ckan) error {
+// Download a mod
+func downloadMod(mod Ckan) error {
 	resp, err := http.Get(mod.Download.URL)
 	if err != nil {
 		return err
@@ -223,7 +226,7 @@ func (r *Registry) downloadMod(mod Ckan) error {
 	// Create zip file
 	out, err := os.Create(mod.Download.Path)
 	if err != nil {
-		return fmt.Errorf("error creating file: %v", err)
+		return fmt.Errorf("creating file: %v", err)
 	}
 	defer out.Close()
 
@@ -242,12 +245,14 @@ func (r *Registry) downloadMod(mod Ckan) error {
 func (r *Registry) InstallMods() error {
 	if len(r.InstallQueue) > 0 {
 
+		log.Printf("Installing %d mods", len(r.InstallQueue))
 		g := new(errgroup.Group)
 		for i := range r.InstallQueue {
+			mod := r.InstallQueue[i]
 			g.Go(func() error {
-				err := installMod(r.InstallQueue[i])
+				err := installMod(mod)
 				if err != nil {
-					return fmt.Errorf("error installing mod: %v", err)
+					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
 				return nil
 			})
@@ -261,33 +266,43 @@ func (r *Registry) InstallMods() error {
 	return errors.New("install queue empty")
 }
 
+// Install a mod
 func installMod(mod Ckan) error {
 	// open zip
 	zipReader, err := zip.OpenReader(mod.Download.Path)
 	if err != nil {
-		return fmt.Errorf("error opening zip file: %v", mod.Download.Path)
+		return fmt.Errorf("opening zip file: %v", mod.Download.Path)
 	}
 	defer zipReader.Close()
 
 	// get Kerbal folder
 	cfg := config.GetConfig()
-	destination, err := filepath.Abs(cfg.Settings.KerbalDir)
+	gameDataDir, err := filepath.Abs(cfg.Settings.KerbalDir)
 	if err != nil {
-		return fmt.Errorf("error getting KSP dir: %v", err)
+		return fmt.Errorf("getting KSP dir: %v", err)
+	}
+	installToDir, err := filepath.Abs(mod.Install.InstallTo)
+	if err != nil {
+		return err
 	}
 
-	re := regexp.MustCompile("(?i)" + mod.Install.InstallTo)
+	re := regexp.MustCompile("(?i)" + installToDir)
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
 		if f.Name != "" {
 			// verify mod being installed to folder location in metadata
 			if re.MatchString(f.Name) {
-				err := dirfs.UnzipFile(f, destination)
+				err := dirfs.UnzipFile(f, gameDataDir)
 				if err != nil {
-					return fmt.Errorf("error unzipping file to filesystem: %v", err)
+					return fmt.Errorf("unzipping file to filesystem: %v", err)
+				}
+			} else if re.MatchString("GameData") {
+				err := dirfs.UnzipFile(f, gameDataDir+"/GameData/")
+				if err != nil {
+					return fmt.Errorf("unzipping file to filesystem: %v", err)
 				}
 			} else {
-				return fmt.Errorf("path mismatch: \"%v\" %v ", f.Name, mod.Install.InstallTo)
+				return fmt.Errorf("path mismatch: \"%v\" %v ", f.Name, installToDir)
 			}
 		}
 	}
@@ -300,8 +315,12 @@ func installMod(mod Ckan) error {
 func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error) {
 	var mods []Ckan
 
-	log.Printf("Checking %d mods", len(toDownload))
+	log.Printf("Checking %d mods for dependencies", len(toDownload))
+	count := 0
 	for _, mod := range toDownload {
+		if !mod.IsCompatible {
+			log.Printf("Warning: %v is not compatible with your current configuration", mod.Name)
+		}
 		if len(mod.ModDepends) > 0 {
 			for i := range mod.ModDepends {
 				dependent := r.SortedNonCompatibleMap[mod.ModDepends[i]]
@@ -309,15 +328,19 @@ func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error)
 					if dependent.IsCompatible {
 						mods = append(mods, dependent)
 					} else {
-						log.Printf("Warning: Dependent mod %s is not compatible with your current mods", dependent.Name)
+						log.Printf("Warning: %v depends on %s which is not compatible with your current configuration", mod.Name, dependent.Name)
 						mods = append(mods, dependent)
 					}
+					count++
 				} else {
-					return mods, fmt.Errorf("could not find dependency: %v %v", mod.ModDepends[i], dependent.Identifier)
+					return mods, fmt.Errorf("could not find dependency: %v for %v", mod.ModDepends[i], mod.Name)
 				}
 			}
 		}
 		mods = append(mods, mod)
+	}
+	if count > 0 {
+		log.Printf("Found %d dependencies", count)
 	}
 	return mods, nil
 }
