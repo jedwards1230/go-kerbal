@@ -1,6 +1,4 @@
 # go-kerbal (WIP)
-
-[![Go Reference](https://pkg.go.dev/badge/github.com/jedwards1230/go-kerbal.svg)](https://pkg.go.dev/github.com/jedwards1230/go-kerbal)
  
 This will eventually be a Go clone of the Kerbal [CKAN Mod Manager](https://github.com/KSP-CKAN/CKAN). This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta).
 
