@@ -34,9 +34,7 @@ type Entry struct {
 	Value string
 }
 
-type (
-	ModIndex []Entry
-)
+type ModIndex []Entry
 
 func (entry ModIndex) Len() int           { return len(entry) }
 func (entry ModIndex) Less(i, j int) bool { return entry[i].Value < entry[j].Value }

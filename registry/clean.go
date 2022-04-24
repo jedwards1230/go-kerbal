@@ -51,7 +51,11 @@ func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
 				installInfo.File = rawInstall["file"].(string)
 				pathFound = true
 			case rawInstall["find_regexp"] != nil:
-				installInfo.FindRegex = rawInstall["find_regexp"].(string)
+				find := rawInstall["find_regexp"].(string)
+				if find == "." {
+					find = ""
+				}
+				installInfo.FindRegex = find
 				pathFound = true
 			}
 

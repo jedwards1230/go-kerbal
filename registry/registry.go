@@ -73,9 +73,9 @@ func (r *Registry) SortModMap() error {
 	}
 
 	if cfg.Settings.HideIncompatibleMods {
-		r.buildModMapIndex(compatMap)
+		r.buildModIndex(compatMap)
 	} else {
-		r.buildModMapIndex(incompatMap)
+		r.buildModIndex(incompatMap)
 	}
 
 	r.SortedCompatibleMap = compatMap
@@ -99,12 +99,21 @@ func (r *Registry) GetTotalModMap() map[string][]Ckan {
 				log.Printf("Error loading into Ckan struct: %v", err)
 			}
 
-			// todo: better check for installed mods. this is not accurate at all.
 			// check if mod is installed
-			if r.InstalledModList[mod.Install.Find] {
-				mod.Install.Installed = true
-			} else {
-				mod.Install.Installed = false
+			if len(r.InstalledModList) > 0 {
+				if r.InstalledModList[mod.Install.Find] || r.InstalledModList[mod.Install.File] {
+					mod.Install.Installed = true
+				} else if mod.Install.FindRegex != "" {
+					re := regexp.MustCompile(mod.Install.FindRegex)
+					for k, v := range r.InstalledModList {
+						if re.MatchString(k) {
+							mod.Install.Installed = v
+							break
+						}
+					}
+				} else {
+					mod.Install.Installed = false
+				}
 			}
 
 			// add to list
@@ -130,7 +139,7 @@ func (r *Registry) GetActiveModMap() map[string]Ckan {
 	return modMap
 }
 
-func (r *Registry) BuildSearchMapIndex(s string) (ModIndex, error) {
+func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	modMap := r.GetActiveModMap()
 	s = strings.ToLower(s)
 	re := regexp.MustCompile("(?i)" + s)
@@ -255,7 +264,7 @@ func (r *Registry) checkConflicts(mods []Ckan) error {
 // Create r.ModMapIndex from given modMap
 //
 // Sorts by order and tags saved to registry
-func (r *Registry) buildModMapIndex(modMap map[string]Ckan) {
+func (r *Registry) buildModIndex(modMap map[string]Ckan) {
 	r.ModMapIndex = make(ModIndex, 0)
 	for k, v := range modMap {
 		r.ModMapIndex = append(r.ModMapIndex, Entry{k, v.SearchableName})

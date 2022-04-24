@@ -87,7 +87,7 @@ func (b Bubble) downloadModCmd() tea.Cmd {
 // Download selected mods
 func (b Bubble) searchCmd(s string) tea.Cmd {
 	return func() tea.Msg {
-		searchMapIndex, err := b.registry.BuildSearchMapIndex(s)
+		searchMapIndex, err := b.registry.BuildSearchIndex(s)
 		if err != nil {
 			b.LogErrorf("Error building search index: %v", err)
 			return SearchMsg(searchMapIndex)
