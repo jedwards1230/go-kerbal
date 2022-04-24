@@ -28,7 +28,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return b, b.sortModMapCmd()
 	case SortedMsg:
 		b.registry.SortModList()
-		b.LogCommand("Sorted mod map")
+		b.LogSuccess("Sorted mod map")
 		b.ready = true
 		b.checkActiveViewPortBounds()
 		b.bubbles.primaryViewport.GotoTop()
@@ -38,7 +38,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case InstalledModListMsg:
 		b.ready = true
 		if len(b.registry.InstalledModList) != len(msg) {
-			b.LogCommand("Updated installed mod list")
+			b.LogSuccess("Updated installed mod list")
 			b.registry.InstalledModList = msg
 		}
 		cmds = append(cmds, b.getAvailableModsCmd())
@@ -47,7 +47,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.ready = true
 		if msg {
 			cfg := config.GetConfig()
-			b.LogCommand("Kerbal directory updated")
+			b.LogSuccess("Kerbal directory updated")
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.SetValue(fmt.Sprintf("Success!: %v", cfg.Settings.KerbalDir))
 			b.inputRequested = false

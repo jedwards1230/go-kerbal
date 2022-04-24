@@ -12,6 +12,7 @@ type Theme struct {
 	Green                   lipgloss.Color
 	Orange                  lipgloss.Color
 	Red                     lipgloss.Color
+	Blue                    lipgloss.Color
 
 	SelectedTreeItemColor                lipgloss.AdaptiveColor
 	UnselectedTreeItemColor              lipgloss.AdaptiveColor
@@ -35,6 +36,7 @@ type appColors struct {
 	green  string
 	orange string
 	red    string
+	blue   string
 
 	darkGray           string
 	defaultPink        string
@@ -67,6 +69,7 @@ var Colors = appColors{
 	green:  "#00aa00",
 	orange: "#cf8611",
 	red:    "#cc241d",
+	blue:   "#0040ff",
 
 	darkGray:           "#3c3836",
 	defaultPink:        "#F25D94",
@@ -103,6 +106,7 @@ var themeMap = map[string]Theme{
 		Green:                   lipgloss.Color(Colors.green),
 		Orange:                  lipgloss.Color(Colors.orange),
 		Red:                     lipgloss.Color(Colors.red),
+		Blue:                    lipgloss.Color(Colors.blue),
 
 		SelectedTreeItemColor:                lipgloss.AdaptiveColor{Dark: Colors.defaultPink, Light: Colors.defaultPink},
 		UnselectedTreeItemColor:              lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},

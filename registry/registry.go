@@ -314,8 +314,6 @@ func installMod(mod Ckan) error {
 // Gather list of mods and dependencies for download
 func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error) {
 	var mods []Ckan
-
-	log.Printf("Checking %d mods for dependencies", len(toDownload))
 	count := 0
 	for _, mod := range toDownload {
 		if !mod.IsCompatible {

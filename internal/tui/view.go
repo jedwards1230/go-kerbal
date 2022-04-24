@@ -117,6 +117,10 @@ func (b Bubble) modListView() string {
 				s += lipgloss.NewStyle().
 					Foreground(b.theme.InstalledListItemColor).
 					Render(line)
+			} else if !mod.IsCompatible {
+				s += lipgloss.NewStyle().
+					Foreground(b.theme.Orange).
+					Render(line)
 			} else {
 				s += lipgloss.NewStyle().
 					Render(line)
@@ -467,8 +471,8 @@ func (b Bubble) statusBarView() string {
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		status,
-		sortOptions,
 		showCompatible,
+		sortOptions,
 		fileCount,
 	)
 }

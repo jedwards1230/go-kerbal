@@ -65,16 +65,15 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 // Download selected mods
 func (b Bubble) downloadModCmd() tea.Cmd {
 	return func() tea.Msg {
+		b.LogCommandf("Selected %d mods for install", len(b.nav.installSelected))
 		err := b.registry.DownloadMods(b.nav.installSelected)
 		if err != nil {
-			b.LogErrorf("Error downloading: %v", err)
-			return ErrorMsg(err)
+			return ErrorMsg(fmt.Errorf("error downloading: %v", err))
 		}
 		if len(b.registry.InstallQueue) > 0 {
 			err = b.registry.InstallMods()
 			if err != nil {
-				b.LogErrorf("Error installing: %v", err)
-				return ErrorMsg(err)
+				return ErrorMsg(fmt.Errorf("error installing: %v", err))
 			}
 
 			installedModList, err := dirfs.CheckInstalledMods()
@@ -107,10 +106,18 @@ func (b Bubble) MyTickCmd() tea.Cmd {
 }
 
 func (b *Bubble) LogCommand(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(b.theme.Green).Render(msg))
+	log.Print(lipgloss.NewStyle().Foreground(b.theme.Blue).Render(msg))
 }
 
 func (b *Bubble) LogCommandf(format string, a ...interface{}) {
+	b.LogCommand(fmt.Sprintf(format, a...))
+}
+
+func (b *Bubble) LogSuccess(msg string) {
+	log.Print(lipgloss.NewStyle().Foreground(b.theme.Green).Render(msg))
+}
+
+func (b *Bubble) LogSuccessf(format string, a ...interface{}) {
 	b.LogCommand(fmt.Sprintf(format, a...))
 }
 
