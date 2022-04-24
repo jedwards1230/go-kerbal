@@ -131,7 +131,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 }
 
 func (b *Bubble) resetView() tea.Cmd {
-	b.nav.listCursor = -1
+	b.nav.listCursor = 0
 	b.nav.listSelected = -1
 	b.nav.installSelected = make(map[string]registry.Ckan, 0)
 	b.bubbles.textInput.Reset()

@@ -106,7 +106,7 @@ func (b Bubble) modListView() string {
 			uint(b.bubbles.primaryViewport.Width-2),
 			"...")
 
-		if b.nav.listCursor == i {
+		if b.nav.listSelected == i {
 			s += lipgloss.NewStyle().
 				Background(b.theme.SelectedListItemColor).
 				Foreground(b.theme.UnselectedListItemColor).
@@ -144,7 +144,7 @@ func (b Bubble) modInfoView() string {
 	titleStyle := titleStyle.Copy().
 		Width(b.bubbles.primaryViewport.Width)
 
-	if b.nav.listSelected >= 0 {
+	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
 		id := b.registry.ModMapIndex[b.nav.listSelected]
 		mod := modMap[id.Key]
 
@@ -270,7 +270,6 @@ func (b Bubble) logView() string {
 	scanner := bufio.NewScanner(file)
 	i := 1
 	for scanner.Scan() {
-		line := scanner.Text()
 		lineWords := strings.Fields(scanner.Text())
 		if len(lineWords) > 1 {
 			idx := lipgloss.NewStyle().
@@ -286,7 +285,7 @@ func (b Bubble) logView() string {
 				Foreground(b.theme.Orange).
 				Width(16).
 				Render(lineWords[1])
-			line = lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))
+			line := lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))
 			bodyList = append(bodyList, line)
 			i++
 		}

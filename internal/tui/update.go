@@ -158,9 +158,11 @@ func (b *Bubble) checkActiveViewPortBounds() {
 
 		if b.nav.listCursor > len(b.registry.ModMapIndex)-1 {
 			b.nav.listCursor = 0
+			b.nav.listSelected = b.nav.listCursor
 			b.bubbles.primaryViewport.GotoTop()
 		} else if b.nav.listCursor < 0 {
 			b.nav.listCursor = len(b.registry.ModMapIndex) - 1
+			b.nav.listSelected = b.nav.listCursor
 			b.bubbles.primaryViewport.GotoBottom()
 		}
 	case internal.ModInfoView:
@@ -186,6 +188,7 @@ func (b *Bubble) scrollView(dir string) {
 		switch b.activeBox {
 		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor--
+			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.LogView:
@@ -195,7 +198,7 @@ func (b *Bubble) scrollView(dir string) {
 		switch b.activeBox {
 		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor++
-			b.checkActiveViewPortBounds()
+			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.LogView:
