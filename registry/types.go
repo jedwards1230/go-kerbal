@@ -13,9 +13,13 @@ type versions struct {
 	Spec   string
 }
 
+type download struct {
+	URL  string
+	Path string
+}
+
 type install struct {
 	Installed bool
-	Download  string
 	FindRegex string
 	Find      string
 	File      string

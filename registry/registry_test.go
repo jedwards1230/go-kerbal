@@ -164,7 +164,7 @@ func BenchmarkUpdateDBDirect(b *testing.B) {
 }
 
 func TestGetTotalModMap(t *testing.T) {
-	modMap := reg.GetTotalModMap()
+	modMap := reg.GetEntireModList()
 	if modMap == nil && len(modMap) > 0 {
 		t.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modMap), modMap)
 	}
@@ -172,7 +172,7 @@ func TestGetTotalModMap(t *testing.T) {
 }
 func BenchmarkGetTotalModMap(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		modMap := reg.GetTotalModMap()
+		modMap := reg.GetEntireModList()
 		if modMap == nil && len(modMap) > 0 {
 			b.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modMap), modMap)
 		}
@@ -197,14 +197,14 @@ func BenchmarkGetCompatibleModMap(b *testing.B) {
 }
 
 func TestSortModMap(t *testing.T) {
-	if err := reg.SortModMap(); err != nil {
+	if err := reg.SortModList(); err != nil {
 		t.Errorf("could not sort mod list: %v", err)
 	}
 }
 
 func BenchmarkSortModMap(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		if err := reg.SortModMap(); err != nil {
+		if err := reg.SortModList(); err != nil {
 			b.Errorf("could not sort mod list: %v", err)
 		}
 	}

@@ -243,16 +243,18 @@ func (c *Ckan) cleanLicense(raw map[string]interface{}) error {
 
 func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 	if raw["download"] != nil {
-		c.Install.Download = strings.TrimSpace(raw["download"].(string))
+		c.Download.URL = strings.TrimSpace(raw["download"].(string))
 	} else {
 		//log.Printf("cannot read download field: %v", raw["download"])
 		return fmt.Errorf("cannot read download field: %v", raw["download"])
 	}
 
-	if c.Install.Download == "" {
+	if c.Download.URL == "" {
 		//log.Printf("invalid download path: %v", raw["download"])
 		return fmt.Errorf("invalid download path: %v", raw["download"])
 	}
+
+	c.Download.Path = "./tmp/" + c.Identifier + ".zip"
 
 	return nil
 }

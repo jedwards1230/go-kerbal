@@ -82,7 +82,7 @@ func (b Bubble) View() string {
 }
 
 func (b Bubble) modListView() string {
-	modMap := b.registry.GetActiveModMap()
+	modMap := b.registry.GetActiveModList()
 
 	titleStyle := titleStyle.Copy().
 		Width(b.bubbles.primaryViewport.Width)
@@ -137,7 +137,7 @@ func (b Bubble) modListView() string {
 }
 
 func (b Bubble) modInfoView() string {
-	modMap := b.registry.GetActiveModMap()
+	modMap := b.registry.GetActiveModList()
 
 	var title, body string
 
@@ -207,7 +207,7 @@ func (b Bubble) modInfoView() string {
 		installDir := lipgloss.JoinHorizontal(lipgloss.Top, installDirKey, installDirValue)
 
 		downloadKey := keyStyle.Render("Download")
-		downloadValue := valueStyle.Render(mod.Install.Download)
+		downloadValue := valueStyle.Render(mod.Download.URL)
 		download := lipgloss.JoinHorizontal(lipgloss.Top, downloadKey, downloadValue)
 
 		dependenciesKey := keyStyle.Render("Dependencies")
@@ -270,6 +270,7 @@ func (b Bubble) logView() string {
 	scanner := bufio.NewScanner(file)
 	i := 1
 	for scanner.Scan() {
+		line := scanner.Text()
 		lineWords := strings.Fields(scanner.Text())
 		if len(lineWords) > 1 {
 			idx := lipgloss.NewStyle().
@@ -277,6 +278,7 @@ func (b Bubble) logView() string {
 				Width(6).
 				Padding(0, 1).
 				Render(fmt.Sprint(i) + " ")
+
 			lineWords[0] = lipgloss.NewStyle().
 				Foreground(b.theme.Green).
 				Render(lineWords[0])
@@ -284,11 +286,10 @@ func (b Bubble) logView() string {
 				Foreground(b.theme.Orange).
 				Width(16).
 				Render(lineWords[1])
-			line := lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))
+			line = lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))
 			bodyList = append(bodyList, line)
 			i++
 		}
-
 	}
 
 	if err := scanner.Err(); err != nil {

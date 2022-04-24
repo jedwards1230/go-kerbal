@@ -23,6 +23,7 @@ type Ckan struct {
 	IsCompatible   bool
 	Versions       versions
 	Install        install
+	Download       download
 	Resources      resource
 	SearchSpace    string
 	SearchableName string

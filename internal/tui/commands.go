@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -27,10 +28,10 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
 		b.LogCommand("Checking available mods")
 		b.registry.DB.UpdateDB(false)
-		updatedModMap := b.registry.GetTotalModMap()
+		updatedModMap := b.registry.GetEntireModList()
 		if len(updatedModMap) == 0 {
 			b.registry.DB.UpdateDB(true)
-			updatedModMap = b.registry.GetTotalModMap()
+			updatedModMap = b.registry.GetEntireModList()
 		}
 		return UpdatedModMapMsg(updatedModMap)
 	}
@@ -64,23 +65,25 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 // Download selected mods
 func (b Bubble) downloadModCmd() tea.Cmd {
 	return func() tea.Msg {
-		mods, err := b.registry.DownloadMods(b.nav.installSelected)
+		err := b.registry.DownloadMods(b.nav.installSelected)
 		if err != nil {
 			b.LogErrorf("Error downloading: %v", err)
 			return ErrorMsg(err)
 		}
+		if len(b.registry.InstallQueue) > 0 {
+			err = b.registry.InstallMods()
+			if err != nil {
+				b.LogErrorf("Error installing: %v", err)
+				return ErrorMsg(err)
+			}
 
-		err = registry.InstallMods(mods)
-		if err != nil {
-			b.LogErrorf("Error downloading: %v", err)
-			return ErrorMsg(err)
+			installedModList, err := dirfs.CheckInstalledMods()
+			if err != nil {
+				return ErrorMsg(err)
+			}
+			return InstalledModListMsg(installedModList)
 		}
-
-		installedModList, err := dirfs.CheckInstalledMods()
-		if err != nil {
-			return ErrorMsg(err)
-		}
-		return InstalledModListMsg(installedModList)
+		return ErrorMsg(errors.New("install queue empty"))
 	}
 }
 

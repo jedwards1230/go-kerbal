@@ -27,7 +27,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.registry.TotalModMap = msg
 		return b, b.sortModMapCmd()
 	case SortedMsg:
-		b.registry.SortModMap()
+		b.registry.SortModList()
 		b.LogCommand("Sorted mod map")
 		b.ready = true
 		b.checkActiveViewPortBounds()
@@ -91,7 +91,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, b.handleKeys(msg))
 	// Mouse input
 	case tea.MouseMsg:
-		// TODO: fix scrolling beyond page and in big lists. breaks app.
 		switch msg.Type {
 		case tea.MouseWheelUp:
 			b.scrollView("up")
@@ -180,16 +179,15 @@ func (b *Bubble) checkActiveViewPortBounds() {
 }
 
 // Handles mouse scrolling in the viewport
+// TODO: fix scrolling beyond page and in big lists. breaks app.
 func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
 		switch b.activeBox {
 		case internal.ModListView, internal.SearchView:
 			b.nav.listCursor--
-			b.checkActiveViewPortBounds()
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
-			b.checkActiveViewPortBounds()
 		case internal.LogView:
 			b.bubbles.splashViewport.LineUp(1)
 		}
@@ -200,10 +198,8 @@ func (b *Bubble) scrollView(dir string) {
 			b.checkActiveViewPortBounds()
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
-			b.checkActiveViewPortBounds()
 		case internal.LogView:
 			b.bubbles.splashViewport.LineDown(1)
-			b.checkActiveViewPortBounds()
 		}
 	default:
 		log.Panic("Invalid scroll direction: " + dir)

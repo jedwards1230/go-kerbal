@@ -69,7 +69,8 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	var wg sync.WaitGroup
 	wg.Add(len(filesToScan))
 	for i := range filesToScan {
-		go func(i int) { // Parse .ckan from repo into JSON
+		// Parse .ckan from repo into JSON
+		go func(i int) {
 			defer wg.Done()
 
 			mod, err := parseCKAN(*fs, filesToScan[i])

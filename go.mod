@@ -14,6 +14,7 @@ require (
 	github.com/segmentio/encoding v0.3.4
 	github.com/spf13/viper v1.10.1
 	github.com/tidwall/buntdb v1.2.9
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
 require (

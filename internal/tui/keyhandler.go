@@ -48,7 +48,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
 		case internal.ModListView:
 			id := b.registry.ModMapIndex[b.nav.listCursor]
-			modMap := b.registry.GetActiveModMap()
+			modMap := b.registry.GetActiveModList()
 			mod := modMap[id.Key]
 
 			// toggle mod selection
