@@ -48,8 +48,6 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 }
 
 // Find root directory of KSP
-//
-// TODO: add paths for linux
 func FindKspPath(home string) (string, error) {
 	if home == "" {
 		if runtime.GOOS == "darwin" {
@@ -61,6 +59,7 @@ func FindKspPath(home string) (string, error) {
 			log.Printf("Windows OS detected")
 			home = "C:\\Program Files (x86)\\steam\\SteamApps\\common"
 
+			// TODO: add paths for linux
 		} else if runtime.GOOS == "linux" {
 			log.Printf("Linux OS detected")
 			return "", nil
@@ -69,12 +68,13 @@ func FindKspPath(home string) (string, error) {
 
 	path := ""
 	log.Printf("Searching directory: %s", home)
+	re := regexp.MustCompile("Kerbal Space Program")
 	err := filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
+		if dir.IsDir() && re.MatchString(dir.Name()) {
 			path = s
 			return io.EOF
 		}
