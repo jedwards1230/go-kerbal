@@ -116,16 +116,15 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Update content for active view
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
+	b.bubbles.primaryViewport.SetContent(b.modListView())
+
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.ModInfoView:
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
-		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
-		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.inputKspView())
 	case internal.SettingsView:
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())

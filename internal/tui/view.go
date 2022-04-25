@@ -294,7 +294,50 @@ func (b Bubble) logView() string {
 
 func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
-	title := b.styleTitle("Settings")
+
+	title := b.styleTitle("Mod List")
+
+	keyStyle := lipgloss.NewStyle().
+		Align(lipgloss.Left).
+		Bold(true).
+		Width(b.bubbles.secondaryViewport.Width/4).
+		Padding(0, 2)
+
+	valueStyle := lipgloss.NewStyle().
+		Align(lipgloss.Left).
+		Width(b.bubbles.secondaryViewport.Width*3/4).
+		Padding(0, 5)
+
+	drawKV := func(k, v string) string {
+		return connectSides(keyStyle.Render(k), valueStyle.Render(v))
+	}
+
+	var lines []string
+	lines = append(lines, drawKV("Sort Order", b.registry.SortOptions.SortOrder))
+	lines = append(lines, drawKV("Sort By", b.registry.SortOptions.SortTag))
+	lines = append(lines, drawKV("Hide Compatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods)))
+
+	config := lipgloss.JoinVertical(lipgloss.Top, lines...)
+
+	body := lipgloss.JoinVertical(lipgloss.Top,
+		config,
+		b.configView(),
+	)
+
+	body = lipgloss.NewStyle().
+		Width(b.bubbles.secondaryViewport.Width).
+		Height(b.bubbles.secondaryViewport.Height - 3).
+		Render(body)
+
+	return lipgloss.JoinVertical(lipgloss.Top,
+		title,
+		body,
+	)
+}
+
+func (b Bubble) configView() string {
+	cfg := config.GetConfig()
+	title := b.styleTitle("Config")
 
 	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
