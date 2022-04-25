@@ -497,15 +497,16 @@ func (b Bubble) getMainButtonsView() string {
 	showCompatible := buttonStyle.Render("2. Hide incompatible mods")
 	sortOrder := buttonStyle.Render("3. Sort Order")
 	enterDir := buttonStyle.Render("4. Enter KSP Dir")
-	install := buttonStyle.Render("5. Install mod")
+	apply := buttonStyle.Render("5. Apply mods")
 	search := buttonStyle.Render("6. Search")
+	enter := buttonStyle.Render("Ent. Install mod")
 
 	if cfg.Settings.HideIncompatibleMods {
 		showCompatible = buttonStyle.Render("2. Show incompatible mods")
 	}
 
 	if b.nav.activeMod.Install.Installed {
-		install = buttonStyle.Render("5. Remove mod")
+		enter = buttonStyle.Render("Ent. Remove mod")
 	}
 
 	settings := buttonStyle.
@@ -519,8 +520,9 @@ func (b Bubble) getMainButtonsView() string {
 			showCompatible,
 			sortOrder,
 			enterDir,
-			install,
+			apply,
 			search,
+			enter,
 		)
 
 		leftColumn = lipgloss.NewStyle().
@@ -536,7 +538,7 @@ func (b Bubble) getMainButtonsView() string {
 			escape,
 			showCompatible,
 			sortOrder,
-			install,
+			apply,
 		)
 
 		enableInput := buttonStyle.

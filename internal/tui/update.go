@@ -37,10 +37,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case InstalledModListMsg:
 		b.ready = true
-		if len(b.registry.InstalledModList) != len(msg) {
-			b.LogSuccess("Updated installed mod list")
-			b.registry.InstalledModList = msg
-		}
+		b.LogSuccess("Updated installed mod list")
+		b.registry.InstalledModList = msg
 		cmds = append(cmds, b.getAvailableModsCmd())
 	// Update KSP dir
 	case UpdateKspDirMsg:

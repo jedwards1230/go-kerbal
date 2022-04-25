@@ -34,12 +34,12 @@ type resource struct {
 }
 
 type Entry struct {
-	Key   string
-	Value string
+	Key      string
+	SearchBy string
 }
 
 type ModIndex []Entry
 
 func (entry ModIndex) Len() int           { return len(entry) }
-func (entry ModIndex) Less(i, j int) bool { return entry[i].Value < entry[j].Value }
+func (entry ModIndex) Less(i, j int) bool { return entry[i].SearchBy < entry[j].SearchBy }
 func (entry ModIndex) Swap(i, j int)      { entry[i], entry[j] = entry[j], entry[i] }

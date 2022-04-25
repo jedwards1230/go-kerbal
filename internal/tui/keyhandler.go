@@ -110,10 +110,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.EnterKspDir):
 		cmd = b.prepareKspDirView()
 		cmds = append(cmds, cmd)
-	// Download selected mod
-	case key.Matches(msg, b.keyMap.Download):
+	// Apply Changes
+	case key.Matches(msg, b.keyMap.Apply):
 		b.ready = false
-		cmds = append(cmds, b.downloadModCmd(), b.bubbles.spinner.Tick)
+		cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):
 		cmd = b.prepareSearchView()

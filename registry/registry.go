@@ -162,8 +162,56 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	return searchMapIndex, nil
 }
 
+func (r *Registry) ApplyMods(modMap map[string]Ckan) (map[string]bool, error) {
+	if len(modMap) <= 0 {
+		return nil, errors.New("no mods to apply")
+	}
+	var toDownload, toRemove []Ckan
+	for i := range modMap {
+		if modMap[i].Install.Installed {
+			toRemove = append(toRemove, modMap[i])
+		} else {
+			toDownload = append(toDownload, modMap[i])
+		}
+	}
+
+	if len(toRemove) > 0 {
+		err := r.RemoveMods(toRemove)
+		if err != nil {
+			return nil, fmt.Errorf("error removing: %v", err)
+		}
+	}
+
+	if len(toDownload) > 0 {
+		err := r.DownloadMods(toDownload)
+		if err != nil {
+			return nil, fmt.Errorf("error downloading: %v", err)
+		}
+
+		if len(r.InstallQueue) > 0 {
+			err = r.InstallMods()
+			if err != nil {
+				return nil, fmt.Errorf("error installing: %v", err)
+			}
+		}
+	}
+
+	installedModList, err := dirfs.CheckInstalledMods()
+	if err != nil {
+		return nil, err
+	}
+	return installedModList, nil
+}
+
+func (r *Registry) RemoveMods(toRemove []Ckan) error {
+	for i := range toRemove {
+		log.Printf("Removing %v", toRemove[i].Name)
+	}
+	return nil
+}
+
 // Download selected mods
-func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
+func (r *Registry) DownloadMods(toDownload []Ckan) error {
 	var mods []Ckan
 	var err error
 
@@ -316,7 +364,7 @@ func installMod(mod Ckan) error {
 }
 
 // Gather list of mods and dependencies for download
-func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error) {
+func (r *Registry) checkDependencies(toDownload []Ckan) ([]Ckan, error) {
 	var mods []Ckan
 	dependencies := make(map[string]bool)
 	count := 0
@@ -332,7 +380,9 @@ func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error)
 						if !dependent.IsCompatible {
 							log.Printf("Warning: %v depends on %s which is not compatible with your current configuration", mod.Name, dependent.Name)
 						}
-						mods = append(mods, dependent)
+						if !dependent.Install.Installed {
+							mods = append(mods, dependent)
+						}
 						dependencies[dependent.Identifier] = true
 						count++
 					}
@@ -342,7 +392,9 @@ func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error)
 			}
 		}
 		if !dependencies[mod.Identifier] {
-			mods = append(mods, mod)
+			if !mod.Install.Installed {
+				mods = append(mods, mod)
+			}
 			dependencies[mod.Identifier] = true
 		}
 	}
@@ -353,20 +405,20 @@ func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error)
 }
 
 // check for conflicts
-//
-// todo: could probably be a lot faster
 func (r *Registry) checkConflicts(mods []Ckan) error {
+	// find conflicts for each queued mod
 	for i := range mods {
 		if len(mods[i].ModConflicts) > 0 {
 			for j, conflict := range mods[i].ModConflicts {
-				// todo: link conflicts to install folder so filesystem can be checked for conflicts
+				// check conflicts with installed mods
 				if r.InstalledModList[conflict] {
-					return fmt.Errorf("%v requires %v which conflicts with %v", mods[i].Name, mods[j].Name, conflict)
+					return fmt.Errorf("%v requires %v which conflicts with installed %v", mods[i].Name, mods[j].Name, conflict)
 				}
 
+				// check conflicts with queued mods
 				for j := range mods {
 					if mods[j].Identifier == conflict {
-						return fmt.Errorf("%v conflicts with queued mod %v", mods[i].Name, mods[j].Name)
+						return fmt.Errorf("%v requires %v which conflicts with queued %v", mods[i].Name, mods[j].Name, conflict)
 					}
 				}
 			}

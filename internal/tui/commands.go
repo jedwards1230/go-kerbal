@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -63,26 +62,14 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 }
 
 // Download selected mods
-func (b Bubble) downloadModCmd() tea.Cmd {
+func (b *Bubble) applyModsCmd() tea.Cmd {
 	return func() tea.Msg {
-		b.LogCommandf("Selected %d mods for install", len(b.nav.installSelected))
-		err := b.registry.DownloadMods(b.nav.installSelected)
+		b.LogCommandf("Selected %d mods to apply", len(b.nav.installSelected))
+		installedMods, err := b.registry.ApplyMods(b.nav.installSelected)
 		if err != nil {
-			return ErrorMsg(fmt.Errorf("error downloading: %v", err))
+			return ErrorMsg(err)
 		}
-		if len(b.registry.InstallQueue) > 0 {
-			err = b.registry.InstallMods()
-			if err != nil {
-				return ErrorMsg(fmt.Errorf("error installing: %v", err))
-			}
-
-			installedModList, err := dirfs.CheckInstalledMods()
-			if err != nil {
-				return ErrorMsg(err)
-			}
-			return InstalledModListMsg(installedModList)
-		}
-		return ErrorMsg(errors.New("install queue empty"))
+		return InstalledModListMsg(installedMods)
 	}
 }
 

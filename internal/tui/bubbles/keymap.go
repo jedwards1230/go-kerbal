@@ -22,7 +22,7 @@ type KeyMap struct {
 	HideIncompatible key.Binding
 	SwapSortOrder    key.Binding
 	EnterKspDir      key.Binding
-	Download         key.Binding
+	Apply            key.Binding
 	Search           key.Binding
 	Settings         key.Binding
 
@@ -83,7 +83,7 @@ func GetKeyMap() KeyMap {
 			key.WithKeys("4"),
 			key.WithHelp("4", "swap sort order (asc/desc)"),
 		),
-		Download: key.NewBinding(
+		Apply: key.NewBinding(
 			key.WithKeys("5"),
 			key.WithHelp("5", "download selected mod"),
 		),
