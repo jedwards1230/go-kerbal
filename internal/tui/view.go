@@ -55,8 +55,7 @@ func (b Bubble) View() string {
 		secondaryBox = b.bubbles.secondaryViewport.View()
 
 		// organize views
-		body = lipgloss.JoinHorizontal(
-			lipgloss.Top,
+		body = connectSides(
 			primaryBox,
 			secondaryBox,
 		)
@@ -166,20 +165,20 @@ func (b Bubble) modInfoView() string {
 
 		identifierKey := keyStyle.Render("Identifier")
 		identifierValue := valueStyle.Render(mod.Identifier)
-		identifier := lipgloss.JoinHorizontal(lipgloss.Top, identifierKey, identifierValue)
+		identifier := connectSides(identifierKey, identifierValue)
 
 		authorKey := keyStyle.Render("Author")
 		authorValue := valueStyle.Render(mod.Author)
-		author := lipgloss.JoinHorizontal(lipgloss.Top, authorKey, authorValue)
+		author := connectSides(authorKey, authorValue)
 
 		versionKey := keyStyle.Render("Mod Version")
 		versionValue := valueStyle.Render(mod.Versions.Mod)
-		version := lipgloss.JoinHorizontal(lipgloss.Top, versionKey, versionValue)
+		version := connectSides(versionKey, versionValue)
 
 		versionKspKey := keyStyle.Render("KSP Versions")
 		versionKspValue := fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax)
 		versionKspValue = valueStyle.Render(versionKspValue)
-		versionKsp := lipgloss.JoinHorizontal(lipgloss.Top, versionKspKey, versionKspValue)
+		versionKsp := connectSides(versionKspKey, versionKspValue)
 
 		installedKey := keyStyle.
 			Foreground(lipgloss.NoColor{}).
@@ -193,33 +192,33 @@ func (b Bubble) modInfoView() string {
 			installedValue = valueStyle.
 				Render("Not Installed")
 		}
-		installed := lipgloss.JoinHorizontal(lipgloss.Top, installedKey, installedValue)
+		installed := connectSides(installedKey, installedValue)
 
 		installDirKey := keyStyle.Render("Install dir")
 		installDirValue := valueStyle.Render(mod.Install.InstallTo)
-		installDir := lipgloss.JoinHorizontal(lipgloss.Top, installDirKey, installDirValue)
+		installDir := connectSides(installDirKey, installDirValue)
 
 		downloadKey := keyStyle.Render("Download")
 		downloadValue := valueStyle.Render(mod.Download.URL)
-		download := lipgloss.JoinHorizontal(lipgloss.Top, downloadKey, downloadValue)
+		download := connectSides(downloadKey, downloadValue)
 
 		dependenciesKey := keyStyle.Render("Dependencies")
 		dependenciesValue := valueStyle.Render("None")
 		if len(mod.ModDepends) > 0 {
 			dependenciesValue = valueStyle.Render(strings.Join(mod.ModDepends, ", "))
 		}
-		dependencies := lipgloss.JoinHorizontal(lipgloss.Top, dependenciesKey, dependenciesValue)
+		dependencies := connectSides(dependenciesKey, dependenciesValue)
 
 		conflictsKey := keyStyle.Render("Conflicts")
 		conflictsValue := valueStyle.Render("None")
 		if len(mod.ModConflicts) > 0 {
 			conflictsValue = valueStyle.Render(strings.Join(mod.ModConflicts, ", "))
 		}
-		conflicts := lipgloss.JoinHorizontal(lipgloss.Top, conflictsKey, conflictsValue)
+		conflicts := connectSides(conflictsKey, conflictsValue)
 
 		licenseKey := keyStyle.Render("License")
 		licenseValue := valueStyle.Render(mod.License)
-		license := lipgloss.JoinHorizontal(lipgloss.Top, licenseKey, licenseValue)
+		license := connectSides(licenseKey, licenseValue)
 
 		body = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -278,7 +277,7 @@ func (b Bubble) logView() string {
 				Foreground(b.theme.Orange).
 				Width(16).
 				Render(lineWords[1])
-			line := lipgloss.JoinHorizontal(lipgloss.Left, idx, strings.Join(lineWords, " "))
+			line := connectSides(idx, strings.Join(lineWords, " "))
 			bodyList = append(bodyList, line)
 			i++
 		}
@@ -305,6 +304,19 @@ func (b Bubble) logView() string {
 func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
 	title := b.styleTitle("Settings")
+
+	/* keyStyle := lipgloss.NewStyle().
+		Align(lipgloss.Left).
+		Bold(true).
+		Width(b.bubbles.secondaryViewport.Width/4).
+		Padding(0, 2)
+
+	valueStyle := lipgloss.NewStyle().
+		Align(lipgloss.Left).
+		Width(b.bubbles.secondaryViewport.Width*3/4).
+		Padding(0, 5) */
+
+	//kspDir := connectSides(keyStyle.Render("Kerbal Directory"), valueStyle.Render(cfg.Settings.KerbalDir))
 
 	lineStyle := lipgloss.NewStyle().
 		Padding(1).
@@ -391,7 +403,7 @@ func (b Bubble) statusBarView() string {
 
 	colorLegend := installedLegend
 	if !cfg.Settings.HideIncompatibleMods {
-		colorLegend = lipgloss.JoinHorizontal(lipgloss.Top,
+		colorLegend = connectSides(
 			incompatibleLegend,
 			installedLegend)
 	}
@@ -423,7 +435,7 @@ func (b Bubble) statusBarView() string {
 		for scanner.Scan() {
 			lineWords := strings.Fields(scanner.Text())
 			if len(lineWords) > 1 {
-				line := lipgloss.JoinHorizontal(lipgloss.Left, strings.Join(lineWords[2:], " "))
+				line := connectSides(strings.Join(lineWords[2:], " "))
 				bodyList = append(bodyList, line)
 			}
 		}
@@ -456,13 +468,13 @@ func (b Bubble) statusBarView() string {
 				Render(b.bubbles.spinner.View())
 		}
 
-		status = lipgloss.JoinHorizontal(lipgloss.Top,
+		status = connectSides(
 			spin,
 			status,
 		)
 	}
 
-	return lipgloss.JoinHorizontal(lipgloss.Top,
+	return connectSides(
 		status,
 		colorLegend,
 		sortOptions,
@@ -500,7 +512,7 @@ func (b Bubble) getMainButtonsView() string {
 
 	switch b.activeBox {
 	case internal.ModInfoView, internal.ModListView:
-		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
+		leftColumn := connectSides(
 			refresh,
 			showCompatible,
 			sortOrder,
@@ -513,12 +525,12 @@ func (b Bubble) getMainButtonsView() string {
 			Width(b.width - lipgloss.Width(settings)).
 			Render(leftColumn)
 
-		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+		buttonRow = connectSides(
 			leftColumn,
 			settings,
 		)
 	case internal.SearchView:
-		leftColumn := lipgloss.JoinHorizontal(lipgloss.Top,
+		leftColumn := connectSides(
 			escape,
 			showCompatible,
 			sortOrder,
@@ -536,7 +548,7 @@ func (b Bubble) getMainButtonsView() string {
 
 		leftColumn = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(leftColumn)
 
-		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+		buttonRow = connectSides(
 			leftColumn,
 			enableInput,
 		)
@@ -552,14 +564,14 @@ func (b Bubble) getMainButtonsView() string {
 
 		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(escape)
 
-		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+		buttonRow = connectSides(
 			escape,
 			enableInput,
 		)
 	case internal.SettingsView:
 		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(settings)).Render(escape)
 
-		buttonRow = lipgloss.JoinHorizontal(lipgloss.Top,
+		buttonRow = connectSides(
 			escape,
 			settings,
 		)
@@ -584,4 +596,8 @@ func (b *Bubble) styleTitle(s string) string {
 	return titleStyle.
 		Width(b.bubbles.primaryViewport.Width).
 		Render(s)
+}
+
+func connectSides(strs ...string) string {
+	return lipgloss.JoinHorizontal(lipgloss.Top, strs...)
 }
