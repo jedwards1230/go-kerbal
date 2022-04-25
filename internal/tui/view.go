@@ -244,26 +244,31 @@ func (b Bubble) logView() string {
 
 	bodyList := make([]string, 0)
 	scanner := bufio.NewScanner(file)
+	width := lipgloss.Width
 	i := 1
 	for scanner.Scan() {
 		lineWords := strings.Fields(scanner.Text())
 		if len(lineWords) > 2 {
 			idx := lipgloss.NewStyle().
 				Align(lipgloss.Left).
-				Width(6).
+				Width(5).
 				Padding(0, 1).
 				Render(fmt.Sprint(i) + " ")
 
+			// timestamp
 			lineWords[0] = lipgloss.NewStyle().
 				Foreground(b.theme.Green).
 				Render(lineWords[0])
+			// file info
 			lineWords[1] = lipgloss.NewStyle().
 				Foreground(b.theme.Orange).
-				Width(16).
+				Width(17).
 				Render(lineWords[1])
+			// log output
 			line := lipgloss.NewStyle().
-				Width(b.bubbles.splashViewport.Width - 5).
+				Width(b.bubbles.splashViewport.Width - width(lineWords[0]) - width(lineWords[1])).
 				Render(connectSides(idx, strings.Join(lineWords, " ")))
+
 			bodyList = append(bodyList, line)
 			i++
 		}
@@ -277,7 +282,7 @@ func (b Bubble) logView() string {
 
 	body := lipgloss.JoinVertical(lipgloss.Top, bodyList...)
 	body = lipgloss.NewStyle().
-		Width(b.bubbles.splashViewport.Width).
+		Width(b.bubbles.splashViewport.Width - 1).
 		Height(b.bubbles.splashViewport.Height - 3).
 		Render(string(body))
 
