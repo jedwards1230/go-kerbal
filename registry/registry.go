@@ -293,6 +293,7 @@ func installMod(mod Ckan) error {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
 				}
 			} else if re.MatchString("GameData") {
+				// todo: sometimes doubles down on the GameData dir
 				err := dirfs.UnzipFile(f, gameDataDir+"/GameData/")
 				if err != nil {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
@@ -313,6 +314,7 @@ func installMod(mod Ckan) error {
 // Gather list of mods and dependencies for download
 func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error) {
 	var mods []Ckan
+	dependencies := make(map[string]bool)
 	count := 0
 	for _, mod := range toDownload {
 		if !mod.IsCompatible {
@@ -321,20 +323,22 @@ func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error)
 		if len(mod.ModDepends) > 0 {
 			for i := range mod.ModDepends {
 				dependent := r.SortedNonCompatibleMap[mod.ModDepends[i]]
-				if dependent.Identifier != "" {
-					if dependent.IsCompatible {
-						mods = append(mods, dependent)
-					} else {
+				if dependent.Identifier != "" && !dependencies[dependent.Identifier] {
+					if !dependent.IsCompatible {
 						log.Printf("Warning: %v depends on %s which is not compatible with your current configuration", mod.Name, dependent.Name)
-						mods = append(mods, dependent)
 					}
+					mods = append(mods, dependent)
+					dependencies[dependent.Identifier] = true
 					count++
 				} else {
 					return mods, fmt.Errorf("could not find dependency: %v for %v", mod.ModDepends[i], mod.Name)
 				}
 			}
 		}
-		mods = append(mods, mod)
+		if !dependencies[mod.Identifier] {
+			mods = append(mods, mod)
+			dependencies[mod.Identifier] = true
+		}
 	}
 	if count > 0 {
 		log.Printf("Found %d dependencies", count)
@@ -351,7 +355,7 @@ func (r *Registry) checkConflicts(mods []Ckan) error {
 			for j, conflict := range mods[i].ModConflicts {
 				// todo: link conflicts to install folder so filesystem can be checked for conflicts
 				if r.InstalledModList[conflict] {
-					return fmt.Errorf("%v conflicts with installed mod %v", mods[i].Name, mods[j].Name)
+					return fmt.Errorf("%v requires %v which conflicts with %v", mods[i].Name, mods[j].Name, conflict)
 				}
 
 				for j := range mods {
