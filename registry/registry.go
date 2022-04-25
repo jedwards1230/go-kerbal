@@ -147,7 +147,7 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	searchMapIndex := make(ModIndex, 0)
 	for id, mod := range modMap {
 		if re.MatchString(mod.SearchSpace) {
-			searchMapIndex = append(searchMapIndex, Entry{id, mod.Name})
+			searchMapIndex = append(searchMapIndex, Entry{id, mod.SearchableName})
 		}
 	}
 

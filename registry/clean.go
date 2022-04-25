@@ -8,11 +8,10 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
 )
 
 func (c *Ckan) cleanSearchSpace(raw map[string]interface{}) error {
-	c.SearchSpace = fmt.Sprintf("%v %v %v %v %v", c.Name, c.SearchableName, c.Identifier, c.Author, dirfs.Strip(c.Abstract))
+	c.SearchSpace = fmt.Sprintf("%v %v %v %v %v", c.Name, c.SearchableName, clean(c.Identifier), clean(c.Author), clean(c.Abstract))
 	return nil
 }
 
@@ -21,7 +20,7 @@ func (c *Ckan) cleanNames(raw map[string]interface{}) error {
 	if c.Name == "" {
 		return errors.New("invalid file name")
 	}
-	c.SearchableName = dirfs.Strip(c.Name)
+	c.SearchableName = clean(c.Name)
 
 	return nil
 }
@@ -31,7 +30,6 @@ func (c *Ckan) cleanIdentifiers(raw map[string]interface{}) error {
 	if c.Identifier == "" {
 		return errors.New("invalid file identifier")
 	}
-
 	return nil
 }
 
@@ -294,4 +292,18 @@ func (c *Ckan) cleanModVersion(rawVersion string) (*version.Version, string, err
 	}
 
 	return newVersion, epoch, nil
+}
+
+func clean(dirty string) string {
+	s := []byte(dirty)
+	j := 0
+	for _, b := range s {
+		if ('a' <= b && b <= 'z') ||
+			('A' <= b && b <= 'Z') ||
+			b == ' ' {
+			s[j] = b
+			j++
+		}
+	}
+	return string(s[:j])
 }

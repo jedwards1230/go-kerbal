@@ -139,21 +139,6 @@ func FindKspVersion(filePath string) *version.Version {
 	return result
 }
 
-// Strip string of non-alphanumeric characters
-func Strip(s string) string {
-	var result strings.Builder
-	for i := 0; i < len(s); i++ {
-		b := s[i]
-		if ('a' <= b && b <= 'z') ||
-			('A' <= b && b <= 'Z') ||
-			('0' <= b && b <= '9') ||
-			b == ' ' {
-			result.WriteByte(b)
-		}
-	}
-	return result.String()
-}
-
 // Unzip file to specified directory
 func UnzipFile(f *zip.File, destination string) error {
 	// check file paths are not vulnerable to Zip Slip
