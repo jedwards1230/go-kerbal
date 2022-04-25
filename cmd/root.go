@@ -40,7 +40,6 @@ func Execute() {
 
 		var LstdFlags = log.Lmsgprefix | log.Ltime | log.Lmicroseconds | log.Lshortfile
 
-		//log.SetPrefix("pre ")
 		log.SetFlags(LstdFlags)
 	}
 	log.Println("Starting program")

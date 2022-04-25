@@ -104,7 +104,7 @@ func (b Bubble) modListView() string {
 		line := truncate.StringWithTail(
 			fmt.Sprintf("[%s] %s", checked, mod.Name),
 			uint(b.bubbles.primaryViewport.Width-2),
-			"...")
+			internal.EllipsisStyle)
 
 		if b.nav.listSelected == i {
 			s += lipgloss.NewStyle().
@@ -458,7 +458,7 @@ func (b Bubble) statusBarView() string {
 			Render(truncate.StringWithTail(
 				status,
 				uint(statusWidth-3),
-				"..."),
+				internal.EllipsisStyle),
 			)
 
 		spin := lipgloss.NewStyle().
