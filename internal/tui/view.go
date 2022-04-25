@@ -115,7 +115,7 @@ func (b Bubble) modListView() string {
 		} else {
 			if mod.Install.Installed {
 				s += lipgloss.NewStyle().
-					Foreground(b.theme.InstalledListItemColor).
+					Foreground(b.theme.InstalledColor).
 					Render(line)
 			} else if !mod.IsCompatible {
 				s += lipgloss.NewStyle().
@@ -198,7 +198,7 @@ func (b Bubble) modInfoView() string {
 		installedValue := ""
 		if mod.Install.Installed {
 			installedValue = valueStyle.Copy().
-				Foreground(b.theme.InstalledListItemColor).
+				Foreground(b.theme.InstalledColor).
 				Render("Installed")
 		} else {
 			installedValue = valueStyle.
@@ -388,21 +388,21 @@ func (b Bubble) statusBarView() string {
 	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.ModMapIndex))
 	fileCount = statusBarStyle.
 		Align(lipgloss.Right).
-		Padding(0, 3).
+		Padding(0, 6, 0, 2).
 		Render(fileCount)
 
 	sortOptions := fmt.Sprintf("Sort: %s by %s", b.registry.SortOptions.SortOrder, b.registry.SortOptions.SortTag)
 	sortOptions = statusBarStyle.
 		Align(lipgloss.Right).
-		Padding(0, 3).
+		Padding(0, 1).
 		Render(sortOptions)
 
 	installedLegend := lipgloss.NewStyle().
-		Foreground(b.theme.Green).
+		Foreground(b.theme.InstalledColor).
 		Padding(0, 1).
 		Render("Installed")
 	incompatibleLegend := lipgloss.NewStyle().
-		Foreground(b.theme.Orange).
+		Foreground(b.theme.IncompatibleColor).
 		Padding(0, 1).
 		Render("Incompatible")
 
@@ -415,7 +415,7 @@ func (b Bubble) statusBarView() string {
 
 	colorLegend = statusBarStyle.
 		Align(lipgloss.Right).
-		Padding(0, 3).
+		Padding(0, 1).
 		Render(colorLegend)
 
 	var status string
