@@ -298,11 +298,14 @@ func installMod(mod Ckan) error {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
 				}
 			} else {
-				return fmt.Errorf("path mismatch: \"%v\" \"%v\" ", f.Name, mod.Install.InstallTo)
+				log.Printf("installing in separate dir: \"%v\"", f.Name)
+				err := dirfs.UnzipFile(f, gameDataDir+"/GameData/")
+				if err != nil {
+					return fmt.Errorf("unzipping file to filesystem: %v", err)
+				}
 			}
 		}
 	}
-
 	log.Printf("Installed: %v", mod.Name)
 	return nil
 }
