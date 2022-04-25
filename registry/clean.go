@@ -11,7 +11,14 @@ import (
 )
 
 func (c *Ckan) cleanSearchSpace(raw map[string]interface{}) error {
-	c.SearchSpace = fmt.Sprintf("%v %v %v %v %v", c.Name, c.SearchableName, clean(c.Identifier), clean(c.Author), clean(c.Abstract))
+	space := []string{
+		c.Name,
+		c.SearchableName,
+		clean(c.Identifier),
+		clean(c.Author),
+		clean(c.Abstract),
+	}
+	c.SearchSpace = strings.Join(space, " ")
 	return nil
 }
 
@@ -298,9 +305,7 @@ func clean(dirty string) string {
 	s := []byte(dirty)
 	j := 0
 	for _, b := range s {
-		if ('a' <= b && b <= 'z') ||
-			('A' <= b && b <= 'Z') ||
-			b == ' ' {
+		if ('a' <= b && b <= 'z') || ('A' <= b && b <= 'Z') || b == ' ' {
 			s[j] = b
 			j++
 		}
