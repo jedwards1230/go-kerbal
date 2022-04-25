@@ -32,14 +32,17 @@ type Registry struct {
 func GetRegistry() Registry {
 	db := GetDB()
 
+	installedList := make(map[string]Ckan, 0)
+
 	sortOpts := SortOptions{
 		SortTag:   "name",
 		SortOrder: "ascend",
 	}
 
 	return Registry{
-		DB:          db,
-		SortOptions: sortOpts,
+		DB:               db,
+		InstalledModList: installedList,
+		SortOptions:      sortOpts,
 	}
 }
 
@@ -101,18 +104,28 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 	})
 
 	log.Printf("Loaded %v mod files from database", total)
+	if len(r.InstalledModList) > 0 {
+		for _, mod := range r.InstalledModList {
+			log.Printf("Found %v installed", mod.Name)
+		}
+	} else {
+		log.Printf("Found %d mods installed", len(r.InstalledModList))
+	}
+
 	return newMap
 }
 
-func (r Registry) checkModInstalled(mod *Ckan, installedMap map[string]bool) {
+func (r *Registry) checkModInstalled(mod *Ckan, installedMap map[string]bool) {
 	if len(installedMap) > 0 {
 		if installedMap[mod.Install.Find] || installedMap[mod.Install.File] {
 			mod.Install.Installed = true
+			r.InstalledModList[mod.Identifier] = *mod
 		} else if mod.Install.FindRegex != "" {
 			re := regexp.MustCompile(mod.Install.FindRegex)
 			for k, v := range installedMap {
-				if re.MatchString(k) {
-					mod.Install.Installed = v
+				if v && re.MatchString(k) {
+					mod.Install.Installed = true
+					r.InstalledModList[mod.Identifier] = *mod
 					break
 				}
 			}
