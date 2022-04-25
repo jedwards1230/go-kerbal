@@ -96,21 +96,7 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 			}
 
 			// check if mod is installed
-			if len(r.InstalledModList) > 0 {
-				if r.InstalledModList[mod.Install.Find] || r.InstalledModList[mod.Install.File] {
-					mod.Install.Installed = true
-				} else if mod.Install.FindRegex != "" {
-					re := regexp.MustCompile(mod.Install.FindRegex)
-					for k, v := range r.InstalledModList {
-						if re.MatchString(k) {
-							mod.Install.Installed = v
-							break
-						}
-					}
-				} else {
-					mod.Install.Installed = false
-				}
-			}
+			r.checkModInstalled(&mod)
 
 			// add to list
 			newMap[mod.Identifier] = append(newMap[mod.Identifier], mod)
@@ -122,6 +108,24 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 
 	log.Printf("Loaded %v mod files from database", total)
 	return newMap
+}
+
+func (r Registry) checkModInstalled(mod *Ckan) {
+	if len(r.InstalledModList) > 0 {
+		if r.InstalledModList[mod.Install.Find] || r.InstalledModList[mod.Install.File] {
+			mod.Install.Installed = true
+		} else if mod.Install.FindRegex != "" {
+			re := regexp.MustCompile(mod.Install.FindRegex)
+			for k, v := range r.InstalledModList {
+				if re.MatchString(k) {
+					mod.Install.Installed = v
+					break
+				}
+			}
+		} else {
+			mod.Install.Installed = false
+		}
+	}
 }
 
 func (r Registry) GetActiveModList() map[string]Ckan {
@@ -195,7 +199,7 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
 		for i := range mods {
 			mod := mods[i]
 			g.Go(func() error {
-				err := downloadMod(mod)
+				err := r.downloadMod(mod)
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
@@ -205,14 +209,13 @@ func (r *Registry) DownloadMods(toDownload map[string]Ckan) error {
 		if err := g.Wait(); err != nil {
 			return err
 		}
-		r.InstallQueue = mods
 		return nil
 	}
 	return errors.New("no URLS provided")
 }
 
 // Download a mod
-func downloadMod(mod Ckan) error {
+func (r *Registry) downloadMod(mod Ckan) error {
 	resp, err := http.Get(mod.Download.URL)
 	if err != nil {
 		return err
@@ -236,6 +239,8 @@ func downloadMod(mod Ckan) error {
 		return fmt.Errorf("could not copy contents to file: %v", err)
 	}
 
+	// Add mod to install queue if successfully downloaded
+	r.InstallQueue = append(r.InstallQueue, mod)
 	log.Printf("Downloaded: %v", mod.Name)
 
 	return nil
@@ -282,24 +287,23 @@ func installMod(mod Ckan) error {
 		return fmt.Errorf("getting KSP dir: %v", err)
 	}
 
-	re := regexp.MustCompile("(?i)" + mod.Install.InstallTo)
+	installTo := regexp.MustCompile("(?i)" + mod.Install.InstallTo)
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
 		if f.Name != "" {
 			// verify mod being installed to folder location in metadata
-			if re.MatchString(f.Name) {
+			if installTo.MatchString(f.Name) {
 				err := dirfs.UnzipFile(f, gameDataDir)
 				if err != nil {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
 				}
-			} else if re.MatchString("GameData") {
-				// todo: sometimes doubles down on the GameData dir
-				err := dirfs.UnzipFile(f, gameDataDir+"/GameData/")
+			} else if strings.HasPrefix(f.Name, "GameData") || strings.HasPrefix(f.Name, "/GameData") {
+				err := dirfs.UnzipFile(f, gameDataDir)
 				if err != nil {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
 				}
 			} else {
-				log.Printf("installing in separate dir: \"%v\"", f.Name)
+				//log.Printf("installing in separate dir: \"%v\"", f.Name)
 				err := dirfs.UnzipFile(f, gameDataDir+"/GameData/")
 				if err != nil {
 					return fmt.Errorf("unzipping file to filesystem: %v", err)
@@ -323,13 +327,15 @@ func (r *Registry) checkDependencies(toDownload map[string]Ckan) ([]Ckan, error)
 		if len(mod.ModDepends) > 0 {
 			for i := range mod.ModDepends {
 				dependent := r.SortedNonCompatibleMap[mod.ModDepends[i]]
-				if dependent.Identifier != "" && !dependencies[dependent.Identifier] {
-					if !dependent.IsCompatible {
-						log.Printf("Warning: %v depends on %s which is not compatible with your current configuration", mod.Name, dependent.Name)
+				if dependent.Identifier != "" {
+					if !dependencies[dependent.Identifier] {
+						if !dependent.IsCompatible {
+							log.Printf("Warning: %v depends on %s which is not compatible with your current configuration", mod.Name, dependent.Name)
+						}
+						mods = append(mods, dependent)
+						dependencies[dependent.Identifier] = true
+						count++
 					}
-					mods = append(mods, dependent)
-					dependencies[dependent.Identifier] = true
-					count++
 				} else {
 					return mods, fmt.Errorf("could not find dependency: %v for %v", mod.ModDepends[i], mod.Name)
 				}
