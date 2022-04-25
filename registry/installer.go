@@ -112,6 +112,8 @@ func (r *Registry) downloadMod(mod Ckan) error {
 }
 
 // Install mods in the registry install queue
+// todo: ensure mods are instsalled in order by dependency
+// todo: potentially ditch the goroutine. worried it might cause overlap errors.
 func (r *Registry) InstallMods() error {
 	if len(r.InstallQueue) > 0 {
 
@@ -159,6 +161,7 @@ func installMod(mod Ckan) error {
 		if err != nil {
 			return err
 		}
+
 		err = dirfs.UnzipFile(f, destination)
 		if err != nil {
 			return fmt.Errorf("unzipping file to filesystem: %v", err)
@@ -171,15 +174,42 @@ func installMod(mod Ckan) error {
 
 func getInstallDir(file, gameDataDir string, installTo *regexp.Regexp) (string, error) {
 	if file != "" {
-		// verify mod being installed to folder location in metadata
+		// verify file path matches GameData directory
 		if installTo.MatchString(file) {
-			return gameDataDir, nil
-		} else if strings.HasPrefix(file, "GameData") || strings.HasPrefix(file, "/GameData") {
-			return gameDataDir, nil
+			// trim filepath to ensure it aligns with GameData directory
+			if !strings.HasPrefix(file, "GameData") {
+				dest := file
+				for _, char := range file {
+					dest = strings.TrimPrefix(dest, string(char))
+					if strings.HasPrefix(dest, "GameData") {
+						file = dest
+						break
+					}
+				}
+				if !strings.HasPrefix(dest, "GameData") {
+					// double check the trim worked
+					return "", fmt.Errorf("bad trim: f.Name: \"%v\" -> \"%v\", prefix: %v", file, gameDataDir, strings.HasPrefix(file, "GameData"))
+				}
+			}
 		} else {
-			log.Printf("installing in separate dir: \"%v\"", file)
-			return gameDataDir + "/GameData/", nil
+			// dump extras into GameData
+			// this is done for depenendencies like .dlls and merging mods
+			// might be able to do this in a safer way
+			gameDataDir = gameDataDir + "/GameData/"
 		}
+
+		// merge file paths
+		filePath := filepath.Join(gameDataDir, file)
+		if !strings.HasPrefix(filePath, filepath.Clean(gameDataDir)+string(os.PathSeparator)) {
+			return "", fmt.Errorf("invalid file path: %s", filePath)
+		}
+
+		// warn if overwriting vanilla game data
+		if strings.Contains(filePath, "GameData/Squad/") || strings.Contains(filePath, "GameData/SquadExpansion/") {
+			log.Printf("Warning: attempting to overwrite KSP data: %s", filePath)
+		}
+
+		return filePath, nil
 	}
 	return "", errors.New("empty file string")
 }

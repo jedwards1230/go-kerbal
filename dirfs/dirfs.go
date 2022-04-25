@@ -138,13 +138,7 @@ func FindKspVersion(filePath string) *version.Version {
 }
 
 // Unzip file to specified directory
-func UnzipFile(f *zip.File, destination string) error {
-	// check file paths are not vulnerable to Zip Slip
-	filePath := filepath.Join(destination, f.Name)
-	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
-		return fmt.Errorf("invalid file path: %s", filePath)
-	}
-
+func UnzipFile(f *zip.File, filePath string) error {
 	// create directory tree
 	if f.FileInfo().IsDir() {
 		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
