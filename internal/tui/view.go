@@ -126,13 +126,10 @@ func (b Bubble) modListView() string {
 }
 
 func (b Bubble) modInfoView() string {
-	modMap := b.registry.GetActiveModList()
-
 	var title, body string
 
 	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
-		id := b.registry.ModMapIndex[b.nav.listSelected]
-		mod := modMap[id.Key]
+		mod := b.nav.activeMod
 
 		keyStyle := lipgloss.NewStyle().
 			Align(lipgloss.Left).
@@ -150,8 +147,9 @@ func (b Bubble) modInfoView() string {
 		abstractStyle := lipgloss.NewStyle().
 			Bold(true).
 			Align(lipgloss.Center).
+			Width(b.bubbles.secondaryViewport.Width).
 			Height(3).
-			Padding(1)
+			Padding(1, 2)
 
 		abstract := abstractStyle.
 			Bold(false).
@@ -499,11 +497,15 @@ func (b Bubble) getMainButtonsView() string {
 	showCompatible := buttonStyle.Render("2. Hide incompatible mods")
 	sortOrder := buttonStyle.Render("3. Sort Order")
 	enterDir := buttonStyle.Render("4. Enter KSP Dir")
-	download := buttonStyle.Render("5. Download mod")
+	install := buttonStyle.Render("5. Install mod")
 	search := buttonStyle.Render("6. Search")
 
 	if cfg.Settings.HideIncompatibleMods {
 		showCompatible = buttonStyle.Render("2. Show incompatible mods")
+	}
+
+	if b.nav.activeMod.Install.Installed {
+		install = buttonStyle.Render("5. Remove mod")
 	}
 
 	settings := buttonStyle.
@@ -517,7 +519,7 @@ func (b Bubble) getMainButtonsView() string {
 			showCompatible,
 			sortOrder,
 			enterDir,
-			download,
+			install,
 			search,
 		)
 
@@ -534,7 +536,7 @@ func (b Bubble) getMainButtonsView() string {
 			escape,
 			showCompatible,
 			sortOrder,
-			download,
+			install,
 		)
 
 		enableInput := buttonStyle.
@@ -582,7 +584,7 @@ func (b Bubble) getMainButtonsView() string {
 	return buttonRow
 }
 
-func (b *Bubble) styleTitle(s string) string {
+func (b Bubble) styleTitle(s string) string {
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Align(lipgloss.Center).

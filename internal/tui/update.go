@@ -109,6 +109,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.textInput.Blur()
 	}
 
+	b.updateActiveMod()
+
 	cmds = append(cmds, b.updateActiveView(msg))
 
 	return b, tea.Batch(cmds...)
@@ -207,4 +209,12 @@ func (b *Bubble) scrollView(dir string) {
 		log.Panic("Invalid scroll direction: " + dir)
 	}
 	b.checkActiveViewPortBounds()
+}
+
+func (b *Bubble) updateActiveMod() {
+	modMap := b.registry.GetActiveModList()
+	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+		id := b.registry.ModMapIndex[b.nav.listSelected]
+		b.nav.activeMod = modMap[id.Key]
+	}
 }

@@ -38,6 +38,7 @@ type Bubbles struct {
 }
 
 type Nav struct {
+	activeMod         registry.Ckan
 	listCursor        int
 	listSelected      int
 	installSelected   map[string]registry.Ckan
