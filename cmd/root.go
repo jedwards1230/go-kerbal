@@ -57,7 +57,6 @@ func Execute() {
 			if err != nil {
 				log.Printf("Error saving log: %v", err)
 			}
-			log.Printf("***** TODO: FIND KSP DIR FOR LINUX *****")
 		} else {
 			kerbalVer := dirfs.FindKspVersion(kerbalDir)
 			viper.Set("settings.kerbal_dir", kerbalDir)
