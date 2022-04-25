@@ -21,6 +21,8 @@ func (r *Registry) RemoveMods(toRemove []Ckan) error {
 
 	for i := range toRemove {
 		log.Printf("Removing %v", toRemove[i].Name)
+		removePath := ""
+		os.RemoveAll(removePath)
 	}
 	return nil
 }
@@ -153,29 +155,33 @@ func installMod(mod Ckan) error {
 	installTo := regexp.MustCompile("(?i)" + mod.Install.InstallTo)
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
-		if f.Name != "" {
-			// verify mod being installed to folder location in metadata
-			if installTo.MatchString(f.Name) {
-				err := dirfs.UnzipFile(f, gameDataDir)
-				if err != nil {
-					return fmt.Errorf("unzipping file to filesystem: %v", err)
-				}
-			} else if strings.HasPrefix(f.Name, "GameData") || strings.HasPrefix(f.Name, "/GameData") {
-				err := dirfs.UnzipFile(f, gameDataDir)
-				if err != nil {
-					return fmt.Errorf("unzipping file to filesystem: %v", err)
-				}
-			} else {
-				//log.Printf("installing in separate dir: \"%v\"", f.Name)
-				err := dirfs.UnzipFile(f, gameDataDir+"/GameData/")
-				if err != nil {
-					return fmt.Errorf("unzipping file to filesystem: %v", err)
-				}
-			}
+		destination, err := getInstallDir(f.Name, gameDataDir, installTo)
+		if err != nil {
+			return err
 		}
+		err = dirfs.UnzipFile(f, destination)
+		if err != nil {
+			return fmt.Errorf("unzipping file to filesystem: %v", err)
+		}
+
 	}
 	log.Printf("Installed: %v", mod.Name)
 	return nil
+}
+
+func getInstallDir(file, gameDataDir string, installTo *regexp.Regexp) (string, error) {
+	if file != "" {
+		// verify mod being installed to folder location in metadata
+		if installTo.MatchString(file) {
+			return gameDataDir, nil
+		} else if strings.HasPrefix(file, "GameData") || strings.HasPrefix(file, "/GameData") {
+			return gameDataDir, nil
+		} else {
+			log.Printf("installing in separate dir: \"%v\"", file)
+			return gameDataDir + "/GameData/", nil
+		}
+	}
+	return "", errors.New("empty file string")
 }
 
 // Gather list of mods and dependencies for download
@@ -193,7 +199,7 @@ func (r *Registry) checkDependencies(toDownload []Ckan) ([]Ckan, error) {
 				if dependent.Identifier != "" {
 					if !dependencies[dependent.Identifier] {
 						if !dependent.IsCompatible {
-							log.Printf("Warning: %v depends on %s which is not compatible with your current configuration", mod.Name, dependent.Name)
+							log.Printf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 						}
 						if !dependent.Install.Installed {
 							mods = append(mods, dependent)
