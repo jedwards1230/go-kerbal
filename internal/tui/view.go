@@ -626,6 +626,7 @@ func (b Bubble) styleTitle(s string) string {
 		Bold(true).
 		Align(lipgloss.Center).
 		Height(3).
+		Border(lipgloss.NormalBorder(), false, false, true).
 		Padding(1)
 	if b.activeBox == internal.LogView {
 		return titleStyle.
