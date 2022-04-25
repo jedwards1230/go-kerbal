@@ -54,9 +54,9 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	// Get currently downloaded .ckan files
 	log.Printf("Searching for .ckan files")
 	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(*fs, ".ckan")...)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
-	err = db.updateDB(fs, filesToScan)
+	err = db.updateDB(&fs, filesToScan)
 
 	return err
 }
@@ -75,21 +75,7 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 
 			mod, err := parseCKAN(*fs, filesToScan[i])
 			if err != nil {
-				/* if len(mod.Errors) > 0 {
-					if mod.Errors["raw"] != nil {
-						raw := mod.Errors["raw"].(map[string]interface{})
-						log.Print("***** RAW *****")
-						for k, v := range raw {
-							log.Printf("%v: %v", k, v)
-						}
-						log.Print("\n")
-						for k, v := range mod.Errors {
-							if k != "raw" {
-								log.Printf("%v: %v", k, v)
-							}
-						}
-					}
-				} */
+				//viewParseErrors(mod)
 				errCount++
 			} else if mod.Valid {
 				mods = append(mods, *mod)
@@ -100,7 +86,7 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	}
 	wg.Wait()
 
-	log.Print("Adding mods to database")
+	log.Printf("Adding %d mods to database", len(mods))
 	err := db.Update(func(tx *buntdb.Tx) error {
 		for i := range mods {
 			byteValue, err := json.Marshal(mods[i])
@@ -114,6 +100,24 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 		return nil
 	})
 	return err
+}
+
+func viewParseErrors(mod *Ckan) {
+	if len(mod.Errors) > 0 {
+		if mod.Errors["raw"] != nil {
+			raw := mod.Errors["raw"].(map[string]interface{})
+			log.Print("***** RAW *****")
+			for k, v := range raw {
+				log.Printf("%v: %v", k, v)
+			}
+			log.Print("\n")
+			for k, v := range mod.Errors {
+				if k != "raw" {
+					log.Printf("%v: %v", k, v)
+				}
+			}
+		}
+	}
 }
 
 // Parse .ckan file into Ckan struct
@@ -184,7 +188,7 @@ func checkRepoChanges() bool {
 	return true
 }
 
-func cloneRepo() (*billy.Filesystem, error) {
+func cloneRepo() (billy.Filesystem, error) {
 	cfg := config.GetConfig()
 	log.Println("Cloning database repo")
 	fs := memfs.New()
@@ -205,5 +209,5 @@ func cloneRepo() (*billy.Filesystem, error) {
 	viper.Set("settings.last_repo_hash", ref.Hash().String())
 	viper.WriteConfigAs(viper.ConfigFileUsed())
 
-	return &fs, nil
+	return fs, nil
 }

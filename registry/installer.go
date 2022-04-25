@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -18,11 +19,58 @@ import (
 )
 
 func (r *Registry) RemoveMods(toRemove []Ckan) error {
-
 	for i := range toRemove {
-		log.Printf("Removing %v", toRemove[i].Name)
-		removePath := ""
-		os.RemoveAll(removePath)
+		err := removeMod(toRemove[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func removeMod(mod Ckan) error {
+	log.Printf("Removing %v", mod.Name)
+
+	// find path
+	cfg := config.GetConfig()
+
+	// get Kerbal folder
+	destination, err := filepath.Abs(cfg.Settings.KerbalDir + "/GameData")
+	if err != nil {
+		return fmt.Errorf("cannot get KSP dir: %v", err)
+	}
+
+	log.Printf("Checking dir: %v", destination)
+	files, err := ioutil.ReadDir(destination)
+	if err != nil {
+		return err
+	}
+
+	var removePath string
+	for _, f := range files {
+		modName := f.Name()
+		if mod.Install.Find != "" {
+			if strings.Contains(modName, mod.Install.Find) {
+				removePath = modName
+			}
+		} else if mod.Install.File != "" {
+			if strings.Contains(modName, mod.Install.File) {
+				removePath = modName
+			}
+		} else if mod.Install.FindRegex != "" {
+			re := regexp.MustCompile(mod.Install.FindRegex)
+			if re.MatchString(mod.Install.FindRegex) {
+				removePath = modName
+			}
+		} else {
+			log.Printf("Cannot find for %v", mod.Name)
+		}
+	}
+	removePath = destination + "/" + removePath
+	log.Printf("%v", removePath)
+	err = os.RemoveAll(removePath)
+	if err != nil {
+		return fmt.Errorf("cannot remove mod %s: %v", mod.Name, err)
 	}
 	return nil
 }

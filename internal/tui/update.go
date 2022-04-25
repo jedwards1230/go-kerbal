@@ -30,7 +30,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.registry.SortModList()
 		b.LogSuccess("Sorted mod map")
 		b.ready = true
-		b.checkActiveViewPortBounds()
 		b.bubbles.primaryViewport.GotoTop()
 		if b.activeBox == internal.SearchView {
 			cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
@@ -132,6 +131,8 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 		b.bubbles.splashViewport.SetContent(b.logView())
 	}
 
+	b.checkActiveViewPortBounds()
+
 	return cmd
 }
 
@@ -204,7 +205,6 @@ func (b *Bubble) scrollView(dir string) {
 	default:
 		log.Panic("Invalid scroll direction: " + dir)
 	}
-	b.checkActiveViewPortBounds()
 }
 
 func (b *Bubble) updateActiveMod() {

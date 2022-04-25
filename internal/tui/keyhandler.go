@@ -38,30 +38,15 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			b.nav.listSelected = b.nav.listCursor
 		}
-		b.checkActiveViewPortBounds()
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
 		switch b.activeBox {
-		case internal.SearchView:
-			b.inputRequested = false
+		case internal.ModListView, internal.SearchView:
+			b.toggleSelectedItem()
 		case internal.EnterKspDirView:
-			b.inputRequested = false
 			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
-		case internal.ModListView:
-			id := b.registry.ModMapIndex[b.nav.listCursor]
-			modMap := b.registry.GetActiveModList()
-			mod := modMap[id.Key]
-
-			// toggle mod selection
-			b.nav.listSelected = b.nav.listCursor
-			if b.nav.installSelected[mod.Identifier].Identifier != "" {
-				delete(b.nav.installSelected, mod.Identifier)
-			} else {
-				b.nav.installSelected[mod.Identifier] = mod
-			}
-
-			b.checkActiveViewPortBounds()
 		}
+		b.inputRequested = false
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
 		cmds = append(cmds, b.resetView())
@@ -129,6 +114,20 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	}
 
 	return tea.Batch(cmds...)
+}
+
+func (b *Bubble) toggleSelectedItem() {
+	id := b.registry.ModMapIndex[b.nav.listCursor]
+	modMap := b.registry.GetActiveModList()
+	mod := modMap[id.Key]
+
+	// toggle mod selection
+	b.nav.listSelected = b.nav.listCursor
+	if b.nav.installSelected[mod.Identifier].Identifier != "" {
+		delete(b.nav.installSelected, mod.Identifier)
+	} else {
+		b.nav.installSelected[mod.Identifier] = mod
+	}
 }
 
 func (b *Bubble) resetView() tea.Cmd {

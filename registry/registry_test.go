@@ -13,7 +13,7 @@ import (
 
 var reg Registry
 var db *CkanDB
-var fs *billy.Filesystem
+var fs billy.Filesystem
 var logPath = "../logs/registry_test.log"
 
 func TestMain(m *testing.M) {
@@ -121,10 +121,11 @@ func BenchmarkCheckRepoChanges(b *testing.B) {
 
 func TestCloneRepo(t *testing.T) {
 	var err error
-	fs, err = cloneRepo()
+	repo, err := cloneRepo()
 	if err != nil {
 		t.Error(err)
 	}
+	fs = repo
 }
 
 func BenchmarkCloneRepo(b *testing.B) {
@@ -139,8 +140,8 @@ func BenchmarkCloneRepo(b *testing.B) {
 
 func TestUpdateDBDirect(t *testing.T) {
 	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(*fs, ".ckan")...)
-	err := db.updateDB(fs, filesToScan)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
+	err := db.updateDB(&fs, filesToScan)
 	if err != nil {
 		t.Error(err)
 	}
@@ -148,9 +149,9 @@ func TestUpdateDBDirect(t *testing.T) {
 
 func BenchmarkUpdateDBDirect(b *testing.B) {
 	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(*fs, ".ckan")...)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 	for n := 0; n < b.N; n++ {
-		err := db.updateDB(fs, filesToScan)
+		err := db.updateDB(&fs, filesToScan)
 		if err != nil {
 			b.Error(err)
 		}

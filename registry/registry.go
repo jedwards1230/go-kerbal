@@ -85,7 +85,7 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 	var mod Ckan
 	newMap := make(map[string][]Ckan)
 	total := 0
-	r.DB.View(func(tx *buntdb.Tx) error {
+	err = r.DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
 			err := json.Unmarshal([]byte(value), &mod)
 			if err != nil {
@@ -102,11 +102,14 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 		})
 		return nil
 	})
+	if err != nil {
+		log.Fatalf("Error viewing db: %v", err)
+	}
 
 	log.Printf("Loaded %v mod files from database", total)
 	if len(r.InstalledModList) > 0 {
 		for _, mod := range r.InstalledModList {
-			log.Printf("Found %v installed", mod.Name)
+			log.Printf("Found installed: %v", mod.Name)
 		}
 	} else {
 		log.Printf("Found %d mods installed", len(r.InstalledModList))

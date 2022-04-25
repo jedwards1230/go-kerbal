@@ -169,18 +169,18 @@ func (c *Ckan) cleanVersions(raw map[string]interface{}) error {
 			if v == "any" {
 				vMax, _ = version.NewVersion(cfg.Settings.KerbalVer)
 				vMin, _ = version.NewVersion("0.0")
-			}
+			} else {
+				newVKsp, _, err := c.cleanModVersion(v.(string))
+				if err != nil {
+					return fmt.Errorf("invalid mod version: %v", v.(string))
+				}
 
-			newVKsp, _, err := c.cleanModVersion(v.(string))
-			if err != nil {
-				return fmt.Errorf("invalid mod version: %v", v.(string))
-			}
-
-			if vMax == nil {
-				vMax = newVKsp
-			}
-			if vMin == nil {
-				vMin = newVKsp
+				if vMax == nil {
+					vMax = newVKsp
+				}
+				if vMin == nil {
+					vMin = newVKsp
+				}
 			}
 		}
 

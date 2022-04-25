@@ -145,19 +145,17 @@ func (b Bubble) modInfoView() string {
 		title = b.styleTitle(mod.Name)
 
 		abstractStyle := lipgloss.NewStyle().
-			Bold(true).
+			Bold(false).
 			Align(lipgloss.Center).
 			Width(b.bubbles.secondaryViewport.Width).
 			Height(3).
 			Padding(1, 2)
 
 		abstract := abstractStyle.
-			Bold(false).
 			Render(mod.Abstract)
 
 		if mod.Description != "" {
 			abstract = abstractStyle.
-				Bold(false).
 				Render(mod.Description)
 		}
 
@@ -166,13 +164,13 @@ func (b Bubble) modInfoView() string {
 		}
 
 		identifier := drawKV("Identifier", mod.Identifier)
-
 		author := drawKV("Author", mod.Author)
-
 		version := drawKV("Mod Version", mod.Versions.Mod)
-
 		versionKspValue := fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax)
 		versionKsp := drawKV("KSP Versions", valueStyle.Render(versionKspValue))
+		installDir := drawKV("Install dir", mod.Install.InstallTo)
+		download := drawKV("Download", mod.Download.URL)
+		license := drawKV("License", mod.License)
 
 		installedValue := valueStyle.Render("Not Installed")
 		if mod.Install.Installed {
@@ -181,10 +179,6 @@ func (b Bubble) modInfoView() string {
 				Render("Installed")
 		}
 		installed := drawKV("Installed", installedValue)
-
-		installDir := drawKV("Install dir", mod.Install.InstallTo)
-
-		download := drawKV("Download", mod.Download.URL)
 
 		dependenciesValue := valueStyle.Render("None")
 		if len(mod.ModDepends) > 0 {
@@ -201,8 +195,6 @@ func (b Bubble) modInfoView() string {
 				Render(strings.Join(mod.ModConflicts, ", "))
 		}
 		conflicts := drawKV("Conflicts", conflictsValue)
-
-		license := drawKV("License", mod.License)
 
 		body = lipgloss.JoinVertical(
 			lipgloss.Top,
