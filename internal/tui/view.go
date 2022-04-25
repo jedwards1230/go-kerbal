@@ -140,7 +140,7 @@ func (b Bubble) modInfoView() string {
 		valueStyle := lipgloss.NewStyle().
 			Align(lipgloss.Left).
 			Width(b.bubbles.secondaryViewport.Width*3/4).
-			Padding(0, 5)
+			Padding(0, 2)
 
 		title = b.styleTitle(mod.Name)
 
@@ -163,38 +163,34 @@ func (b Bubble) modInfoView() string {
 			return connectSides(keyStyle.Render(k), valueStyle.Render(v))
 		}
 
+		drawKVColor := func(k, v string, color lipgloss.AdaptiveColor) string {
+			return connectSides(
+				keyStyle.
+					Render(k),
+				valueStyle.Copy().
+					Foreground(color).
+					Render(v))
+		}
+
 		identifier := drawKV("Identifier", mod.Identifier)
+		license := drawKV("License", mod.License)
 		author := drawKV("Author", mod.Author)
 		version := drawKV("Mod Version", mod.Versions.Mod)
-		versionKspValue := fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax)
-		versionKsp := drawKV("KSP Versions", valueStyle.Render(versionKspValue))
+		versionKsp := drawKV("KSP Versions", fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax))
+		installed := drawKV("Installed", "Not Installed")
+		if mod.Install.Installed {
+			installed = drawKVColor("Installed", "Installed", b.theme.InstalledColor)
+		}
 		installDir := drawKV("Install dir", mod.Install.InstallTo)
 		download := drawKV("Download", mod.Download.URL)
-		license := drawKV("License", mod.License)
-
-		installedValue := valueStyle.Render("Not Installed")
-		if mod.Install.Installed {
-			installedValue = valueStyle.Copy().
-				Foreground(b.theme.InstalledColor).
-				Render("Installed")
-		}
-		installed := drawKV("Installed", installedValue)
-
-		dependenciesValue := valueStyle.Render("None")
+		dependencies := drawKV("Dependencies", "None")
 		if len(mod.ModDepends) > 0 {
-			dependenciesValue = valueStyle.Copy().
-				Foreground(b.theme.Orange).
-				Render(strings.Join(mod.ModDepends, ", "))
+			dependencies = drawKVColor("Dependencies", "None", b.theme.Orange)
 		}
-		dependencies := drawKV("Dependencies", dependenciesValue)
-
-		conflictsValue := valueStyle.Render("None")
+		conflicts := drawKV("Conflicts", "None")
 		if len(mod.ModConflicts) > 0 {
-			conflictsValue = valueStyle.Copy().
-				Foreground(b.theme.Red).
-				Render(strings.Join(mod.ModConflicts, ", "))
+			conflicts = drawKVColor("Conflicts", strings.Join(mod.ModConflicts, ", "), b.theme.Red)
 		}
-		conflicts := drawKV("Conflicts", conflictsValue)
 
 		body = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -287,7 +283,7 @@ func (b Bubble) logView() string {
 func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
 
-	title := b.styleTitle("Mod List")
+	title := b.styleTitle("Options")
 
 	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
@@ -297,17 +293,41 @@ func (b Bubble) settingsView() string {
 
 	valueStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
-		Width(b.bubbles.secondaryViewport.Width*3/4).
-		Padding(0, 5)
+		Padding(0, 2)
 
 	drawKV := func(k, v string) string {
 		return connectSides(keyStyle.Render(k), valueStyle.Render(v))
 	}
 
+	drawKVColor := func(k, v string) string {
+		return connectSides(
+			keyStyle.
+				Render(k),
+			valueStyle.
+				Foreground(b.theme.UnselectedListItemColor).
+				Background(b.theme.SelectedListItemColor).
+				Render(v))
+	}
+
 	var lines []string
-	lines = append(lines, drawKV("Sort Order", b.registry.SortOptions.SortOrder))
-	lines = append(lines, drawKV("Sort By", b.registry.SortOptions.SortTag))
-	lines = append(lines, drawKV("Hide Compatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods)))
+	sortOrder := drawKV("Sort Order", b.registry.SortOptions.SortOrder)
+	sortBy := drawKV("Sort By", b.registry.SortOptions.SortTag)
+	compat := drawKV("Hide Compatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods))
+
+	switch b.nav.menuCursor {
+	case internal.MenuSortOrder:
+		sortOrder = drawKVColor("Sort Order", b.registry.SortOptions.SortOrder)
+	case internal.MenuSortTag:
+		sortBy = drawKVColor("Sort By", b.registry.SortOptions.SortTag)
+	case internal.MenuCompatible:
+		compat = drawKVColor("Hide Compatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods))
+	}
+
+	sortOrder = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(sortOrder)
+	sortBy = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(sortBy)
+	compat = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(compat)
+
+	lines = append(lines, sortOrder, sortBy, compat)
 
 	config := lipgloss.JoinVertical(lipgloss.Top, lines...)
 
@@ -340,14 +360,29 @@ func (b Bubble) configView() string {
 	valueStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Width(b.bubbles.secondaryViewport.Width*3/4).
-		Padding(0, 5)
+		Padding(0, 2)
 
 	drawKV := func(k, v string) string {
 		return connectSides(keyStyle.Render(k), valueStyle.Render(v))
 	}
 
+	drawKVColor := func(k, v string) string {
+		return connectSides(
+			keyStyle.
+				Render(k),
+			valueStyle.Copy().
+				Foreground(b.theme.UnselectedListItemColor).
+				Background(b.theme.SelectedListItemColor).
+				Render(v))
+	}
+
 	var lines []string
-	lines = append(lines, drawKV("Kerbal Directory", cfg.Settings.KerbalDir))
+
+	if b.nav.menuCursor == internal.MenuKspDir {
+		lines = append(lines, drawKVColor("Kerbal Directory", cfg.Settings.KerbalDir))
+	} else {
+		lines = append(lines, drawKV("Kerbal Directory", cfg.Settings.KerbalDir))
+	}
 	lines = append(lines, drawKV("Kerbal Version", cfg.Settings.KerbalVer))
 	lines = append(lines, drawKV("Logging", fmt.Sprintf("%v", cfg.Settings.EnableLogging)))
 	lines = append(lines, drawKV("Mousewheel", fmt.Sprintf("%v", cfg.Settings.EnableMouseWheel)))
@@ -509,7 +544,6 @@ func (b Bubble) statusBarView() string {
 
 func (b Bubble) getMainButtonsView() string {
 	var buttonRow string
-	cfg := config.GetConfig()
 
 	buttonStyle := lipgloss.NewStyle().
 		Underline(true).
@@ -521,16 +555,9 @@ func (b Bubble) getMainButtonsView() string {
 		Render("Esc. Home")
 
 	refresh := buttonStyle.Render("1. Refresh")
-	showCompatible := buttonStyle.Render("2. Hide incompatible mods")
-	sortOrder := buttonStyle.Render("3. Sort Order")
-	enterDir := buttonStyle.Render("4. Enter KSP Dir")
 	apply := buttonStyle.Render("5. Apply mods")
 	search := buttonStyle.Render("6. Search")
 	enter := buttonStyle.Render("Ent. Install mod")
-
-	if cfg.Settings.HideIncompatibleMods {
-		showCompatible = buttonStyle.Render("2. Show incompatible mods")
-	}
 
 	if b.nav.activeMod.Install.Installed {
 		enter = buttonStyle.Render("Ent. Remove mod")
@@ -538,15 +565,12 @@ func (b Bubble) getMainButtonsView() string {
 
 	settings := buttonStyle.
 		Align(lipgloss.Right).
-		Render("0. Settings")
+		Render("0. Options")
 
 	switch b.activeBox {
 	case internal.ModInfoView, internal.ModListView:
 		leftColumn := connectSides(
 			refresh,
-			showCompatible,
-			sortOrder,
-			enterDir,
 			apply,
 			search,
 			enter,
@@ -563,8 +587,6 @@ func (b Bubble) getMainButtonsView() string {
 	case internal.SearchView:
 		leftColumn := connectSides(
 			escape,
-			showCompatible,
-			sortOrder,
 			apply,
 		)
 

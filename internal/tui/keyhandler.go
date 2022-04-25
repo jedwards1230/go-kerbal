@@ -45,6 +45,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.toggleSelectedItem()
 		case internal.EnterKspDirView:
 			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
+		case internal.SettingsView:
+			cmds = append(cmds, b.handleSettingsInput())
 		}
 		b.inputRequested = false
 	// Escape
@@ -69,32 +71,6 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.ready = false
 			cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
 		}
-	// Hide incompatible
-	case key.Matches(msg, b.keyMap.HideIncompatible):
-		if !b.inputRequested {
-			cfg := config.GetConfig()
-			viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
-			viper.WriteConfigAs(viper.ConfigFileUsed())
-			b.ready = false
-			cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
-		}
-	// Swap sort order
-	case key.Matches(msg, b.keyMap.SwapSortOrder):
-		if !b.inputRequested {
-			switch b.registry.SortOptions.SortOrder {
-			case "ascend":
-				b.registry.SortOptions.SortOrder = "descend"
-			case "descend":
-				b.registry.SortOptions.SortOrder = "ascend"
-			}
-			log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
-
-			cmds = append(cmds, b.sortModMapCmd())
-		}
-	// Input KSP dir
-	case key.Matches(msg, b.keyMap.EnterKspDir):
-		cmd = b.prepareKspDirView()
-		cmds = append(cmds, cmd)
 	// Apply Changes
 	case key.Matches(msg, b.keyMap.Apply):
 		b.ready = false
@@ -195,7 +171,8 @@ func (b *Bubble) prepareSearchView() tea.Cmd {
 }
 
 // Handle settings page
-func (b *Bubble) prepareSettingsView() {
+func (b *Bubble) prepareSettingsView() tea.Cmd {
+	var cmd tea.Cmd
 	switch b.activeBox {
 	case internal.SettingsView:
 		b.switchActiveView(internal.ModListView)
@@ -203,6 +180,35 @@ func (b *Bubble) prepareSettingsView() {
 		b.switchActiveView(internal.SettingsView)
 		b.bubbles.secondaryViewport.GotoTop()
 	}
+	return cmd
+}
+
+func (b *Bubble) handleSettingsInput() tea.Cmd {
+	var cmds []tea.Cmd
+
+	switch b.nav.menuCursor {
+	case internal.MenuSortOrder:
+		switch b.registry.SortOptions.SortOrder {
+		case "ascend":
+			b.registry.SortOptions.SortOrder = "descend"
+		case "descend":
+			b.registry.SortOptions.SortOrder = "ascend"
+		}
+		log.Printf("Swapping sort order to %s", b.registry.SortOptions.SortOrder)
+
+		cmds = append(cmds, b.sortModMapCmd())
+	case internal.MenuSortTag:
+		// todo: filtering
+	case internal.MenuCompatible:
+		cfg := config.GetConfig()
+		viper.Set("settings.hide_incompatible", !cfg.Settings.HideIncompatibleMods)
+		viper.WriteConfigAs(viper.ConfigFileUsed())
+		b.ready = false
+		cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
+	case internal.MenuKspDir:
+		cmds = append(cmds, b.prepareKspDirView())
+	}
+	return tea.Batch(cmds...)
 }
 
 func trimLastChar(s string) string {

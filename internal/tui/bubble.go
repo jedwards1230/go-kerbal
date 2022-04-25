@@ -38,11 +38,11 @@ type Bubbles struct {
 }
 
 type Nav struct {
-	activeMod         registry.Ckan
-	listCursor        int
-	listSelected      int
-	installSelected   map[string]registry.Ckan
-	mainButtonsCursor int
+	activeMod       registry.Ckan
+	listCursor      int
+	listSelected    int
+	installSelected map[string]registry.Ckan
+	menuCursor      int
 }
 
 func InitialModel() Bubble {
@@ -92,9 +92,9 @@ func InitialModel() Bubble {
 	h := bubbles.NewHelpBubble(theme.DefaultTextColor)
 
 	nav := Nav{
-		listSelected:      -1,
-		mainButtonsCursor: 0,
-		installSelected:   make(map[string]registry.Ckan),
+		listSelected:    -1,
+		menuCursor:      0,
+		installSelected: make(map[string]registry.Ckan),
 	}
 
 	bubs := Bubbles{

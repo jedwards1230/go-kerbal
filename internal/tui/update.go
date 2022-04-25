@@ -169,6 +169,12 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		} else if b.bubbles.secondaryViewport.AtTop() {
 			b.bubbles.secondaryViewport.GotoTop()
 		}
+	case internal.SettingsView:
+		if b.nav.menuCursor >= internal.MenuInputs {
+			b.nav.menuCursor = 0
+		} else if b.nav.menuCursor < 0 {
+			b.nav.menuCursor = internal.MenuInputs - 1
+		}
 	case internal.LogView:
 		if b.bubbles.splashViewport.AtBottom() {
 			b.bubbles.splashViewport.GotoBottom()
@@ -189,6 +195,8 @@ func (b *Bubble) scrollView(dir string) {
 			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
+		case internal.SettingsView:
+			b.nav.menuCursor--
 		case internal.LogView:
 			b.bubbles.splashViewport.LineUp(1)
 		}
@@ -199,6 +207,8 @@ func (b *Bubble) scrollView(dir string) {
 			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
+		case internal.SettingsView:
+			b.nav.menuCursor++
 		case internal.LogView:
 			b.bubbles.splashViewport.LineDown(1)
 		}

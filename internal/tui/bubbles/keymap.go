@@ -18,13 +18,10 @@ type KeyMap struct {
 	SwapView key.Binding
 	ShowLogs key.Binding
 
-	RefreshList      key.Binding
-	HideIncompatible key.Binding
-	SwapSortOrder    key.Binding
-	EnterKspDir      key.Binding
-	Apply            key.Binding
-	Search           key.Binding
-	Settings         key.Binding
+	RefreshList key.Binding
+	Apply       key.Binding
+	Search      key.Binding
+	Settings    key.Binding
 
 	PageDown     key.Binding
 	PageUp       key.Binding
@@ -70,18 +67,6 @@ func GetKeyMap() KeyMap {
 		RefreshList: key.NewBinding(
 			key.WithKeys("1"),
 			key.WithHelp("1", "refresh mod list"),
-		),
-		HideIncompatible: key.NewBinding(
-			key.WithKeys("2"),
-			key.WithHelp("2", "toggle incompatible mods view"),
-		),
-		SwapSortOrder: key.NewBinding(
-			key.WithKeys("3"),
-			key.WithHelp("3", "swap sort order (asc/desc)"),
-		),
-		EnterKspDir: key.NewBinding(
-			key.WithKeys("4"),
-			key.WithHelp("4", "swap sort order (asc/desc)"),
 		),
 		Apply: key.NewBinding(
 			key.WithKeys("5"),
