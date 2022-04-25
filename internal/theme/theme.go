@@ -5,9 +5,9 @@ import "github.com/charmbracelet/lipgloss"
 // Theme represents the properties that make up a theme.
 type Theme struct {
 	Green  lipgloss.Color
-	Orange lipgloss.Color
-	Red    lipgloss.Color
 	Blue   lipgloss.Color
+	Red    lipgloss.AdaptiveColor
+	Orange lipgloss.AdaptiveColor
 
 	DefaultTextColor lipgloss.AdaptiveColor
 	ErrorColor       lipgloss.AdaptiveColor
@@ -23,31 +23,35 @@ type Theme struct {
 
 // appColors contains the different types of colors.
 type appColors struct {
-	white  string
-	black  string
-	green  string
-	orange string
-	red    string
-	blue   string
+	white                  string
+	black                  string
+	green                  string
+	orange                 string
+	slightlyBrighterOrange string
+	red                    string
+	slightlyBrighterRed    string
+	blue                   string
 }
 
 // Colors contains the different kinds of Colors and their values.
 var Colors = appColors{
-	white:  "#FFFDF5",
-	black:  "#000000",
-	green:  "#00aa00",
-	orange: "#cf8611",
-	red:    "#cc241d",
-	blue:   "#0040ff",
+	white:                  "#FFFDF5",
+	black:                  "#000000",
+	green:                  "#00aa00",
+	orange:                 "#cf8611",
+	slightlyBrighterOrange: "#f79c25",
+	red:                    "#cc241d",
+	slightlyBrighterRed:    "#ff0a00",
+	blue:                   "#0040ff",
 }
 
 // themeMap represents the mapping of different themes.
 var themeMap = map[string]Theme{
 	"default": {
 		Green:  lipgloss.Color(Colors.green),
-		Orange: lipgloss.Color(Colors.orange),
-		Red:    lipgloss.Color(Colors.red),
 		Blue:   lipgloss.Color(Colors.blue),
+		Red:    lipgloss.AdaptiveColor{Dark: Colors.slightlyBrighterRed, Light: Colors.red},
+		Orange: lipgloss.AdaptiveColor{Dark: Colors.slightlyBrighterOrange, Light: Colors.orange},
 
 		DefaultTextColor: lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
 		ErrorColor:       lipgloss.AdaptiveColor{Dark: Colors.red, Light: Colors.red},

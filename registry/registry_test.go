@@ -13,7 +13,7 @@ import (
 
 var reg Registry
 var db *CkanDB
-var fs billy.Filesystem
+var fs *billy.Filesystem
 var logPath = "../logs/registry_test.log"
 
 func TestMain(m *testing.M) {
@@ -53,20 +53,14 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	installedList, err := dirfs.CheckInstalledMods()
-	if err != nil {
-		log.Printf("Error checking installed mods: %v", err)
-	}
-
 	sortOpts := SortOptions{
 		SortTag:   "name",
 		SortOrder: "ascend",
 	}
 
 	reg = Registry{
-		DB:               db,
-		InstalledModList: installedList,
-		SortOptions:      sortOpts,
+		DB:          db,
+		SortOptions: sortOpts,
 	}
 
 	code := m.Run()
@@ -145,8 +139,8 @@ func BenchmarkCloneRepo(b *testing.B) {
 
 func TestUpdateDBDirect(t *testing.T) {
 	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
-	err := db.updateDB(&fs, filesToScan)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(*fs, ".ckan")...)
+	err := db.updateDB(fs, filesToScan)
 	if err != nil {
 		t.Error(err)
 	}
@@ -154,9 +148,9 @@ func TestUpdateDBDirect(t *testing.T) {
 
 func BenchmarkUpdateDBDirect(b *testing.B) {
 	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(*fs, ".ckan")...)
 	for n := 0; n < b.N; n++ {
-		err := db.updateDB(&fs, filesToScan)
+		err := db.updateDB(fs, filesToScan)
 		if err != nil {
 			b.Error(err)
 		}

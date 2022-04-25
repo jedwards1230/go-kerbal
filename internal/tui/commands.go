@@ -14,12 +14,12 @@ import (
 
 type (
 	UpdatedModMapMsg    map[string][]registry.Ckan
-	InstalledModListMsg map[string]bool
+	InstalledModListMsg map[string]interface{}
 	UpdateKspDirMsg     bool
 	ErrorMsg            error
-	MyTickMsg           bool
 	SearchMsg           registry.ModIndex
-	SortedMsg           bool
+	SortedMsg           map[string]interface{}
+	MyTickMsg           map[string]interface{}
 )
 
 // Request the mod list from the database
@@ -38,7 +38,7 @@ func (b Bubble) getAvailableModsCmd() tea.Cmd {
 
 func (b *Bubble) sortModMapCmd() tea.Cmd {
 	return func() tea.Msg {
-		return SortedMsg(true)
+		return SortedMsg{}
 	}
 }
 
@@ -65,11 +65,11 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 func (b *Bubble) applyModsCmd() tea.Cmd {
 	return func() tea.Msg {
 		b.LogCommandf("Selected %d mods to apply", len(b.nav.installSelected))
-		installedMods, err := b.registry.ApplyMods(b.nav.installSelected)
+		err := b.registry.ApplyMods(b.nav.installSelected)
 		if err != nil {
 			return ErrorMsg(err)
 		}
-		return InstalledModListMsg(installedMods)
+		return InstalledModListMsg{}
 	}
 }
 
@@ -88,7 +88,7 @@ func (b Bubble) searchCmd(s string) tea.Cmd {
 func (b Bubble) MyTickCmd() tea.Cmd {
 	return func() tea.Msg {
 		time.Sleep(1 * time.Second)
-		return MyTickMsg(true)
+		return MyTickMsg{}
 	}
 }
 

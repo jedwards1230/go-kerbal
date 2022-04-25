@@ -54,9 +54,9 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	// Get currently downloaded .ckan files
 	log.Printf("Searching for .ckan files")
 	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
+	filesToScan = append(filesToScan, dirfs.FindFilePaths(*fs, ".ckan")...)
 
-	err = db.updateDB(&fs, filesToScan)
+	err = db.updateDB(fs, filesToScan)
 
 	return err
 }
@@ -184,7 +184,7 @@ func checkRepoChanges() bool {
 	return true
 }
 
-func cloneRepo() (billy.Filesystem, error) {
+func cloneRepo() (*billy.Filesystem, error) {
 	cfg := config.GetConfig()
 	log.Println("Cloning database repo")
 	fs := memfs.New()
@@ -205,5 +205,5 @@ func cloneRepo() (billy.Filesystem, error) {
 	viper.Set("settings.last_repo_hash", ref.Hash().String())
 	viper.WriteConfigAs(viper.ConfigFileUsed())
 
-	return fs, nil
+	return &fs, nil
 }

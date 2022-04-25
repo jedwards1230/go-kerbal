@@ -66,28 +66,26 @@ func FindKspPath(home string) (string, error) {
 		}
 	}
 
-	path := ""
+	var path string
 	log.Printf("Searching directory: %s", home)
-	re := regexp.MustCompile("Kerbal Space Program")
+	//re := regexp.MustCompile("Kerbal Space Program")
 	err := filepath.WalkDir(home, func(s string, dir fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if dir.IsDir() && re.MatchString(dir.Name()) {
+		if dir.IsDir() && strings.Contains(dir.Name(), "Kerbal Space Program") {
 			path = s
-			return io.EOF
+			return nil
 		}
 		return nil
 	})
-	if err == io.EOF {
-		err = nil
-	} else if err != nil {
-		return path, err
+	if err != nil {
+		return "", err
 	}
 
 	if path == "" {
-		return path, errors.New("unable to find KSP version")
+		return "", errors.New("unable to find KSP path")
 	}
 	return path, nil
 }

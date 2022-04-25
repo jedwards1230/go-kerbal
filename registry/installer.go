@@ -18,6 +18,7 @@ import (
 )
 
 func (r *Registry) RemoveMods(toRemove []Ckan) error {
+
 	for i := range toRemove {
 		log.Printf("Removing %v", toRemove[i].Name)
 	}
@@ -225,7 +226,7 @@ func (r *Registry) checkConflicts(mods []Ckan) error {
 		if len(mods[i].ModConflicts) > 0 {
 			for j, conflict := range mods[i].ModConflicts {
 				// check conflicts with installed mods
-				if r.InstalledModList[conflict] {
+				if r.InstalledModList[conflict].Identifier != "" {
 					return fmt.Errorf("%v requires %v which conflicts with installed %v", mods[i].Name, mods[j].Name, conflict)
 				}
 

@@ -22,7 +22,7 @@ type Registry struct {
 	SortedCompatibleMap    map[string]Ckan
 	SortedNonCompatibleMap map[string]Ckan
 	ModMapIndex            ModIndex
-	InstalledModList       map[string]bool
+	InstalledModList       map[string]Ckan
 	DB                     *CkanDB
 	SortOptions            SortOptions
 	InstallQueue           []Ckan
@@ -31,10 +31,6 @@ type Registry struct {
 // Initializes database and registry
 func GetRegistry() Registry {
 	db := GetDB()
-	installedList, err := dirfs.CheckInstalledMods()
-	if err != nil {
-		log.Printf("Error checking installed mods: %v", err)
-	}
 
 	sortOpts := SortOptions{
 		SortTag:   "name",
@@ -42,9 +38,8 @@ func GetRegistry() Registry {
 	}
 
 	return Registry{
-		DB:               db,
-		InstalledModList: installedList,
-		SortOptions:      sortOpts,
+		DB:          db,
+		SortOptions: sortOpts,
 	}
 }
 
@@ -79,6 +74,11 @@ func (r *Registry) SortModList() error {
 func (r *Registry) GetEntireModList() map[string][]Ckan {
 	log.Println("Gathering mod list from database")
 
+	installedMap, err := dirfs.CheckInstalledMods()
+	if err != nil {
+		log.Printf("Error checking installed mods: %v", err)
+	}
+
 	var mod Ckan
 	newMap := make(map[string][]Ckan)
 	total := 0
@@ -90,7 +90,7 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 			}
 
 			// check if mod is installed
-			r.checkModInstalled(&mod)
+			r.checkModInstalled(&mod, installedMap)
 
 			// add to list
 			newMap[mod.Identifier] = append(newMap[mod.Identifier], mod)
@@ -104,13 +104,13 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 	return newMap
 }
 
-func (r Registry) checkModInstalled(mod *Ckan) {
-	if len(r.InstalledModList) > 0 {
-		if r.InstalledModList[mod.Install.Find] || r.InstalledModList[mod.Install.File] {
+func (r Registry) checkModInstalled(mod *Ckan, installedMap map[string]bool) {
+	if len(installedMap) > 0 {
+		if installedMap[mod.Install.Find] || installedMap[mod.Install.File] {
 			mod.Install.Installed = true
 		} else if mod.Install.FindRegex != "" {
 			re := regexp.MustCompile(mod.Install.FindRegex)
-			for k, v := range r.InstalledModList {
+			for k, v := range installedMap {
 				if re.MatchString(k) {
 					mod.Install.Installed = v
 					break
@@ -156,9 +156,9 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	return searchMapIndex, nil
 }
 
-func (r *Registry) ApplyMods(modMap map[string]Ckan) (map[string]bool, error) {
+func (r *Registry) ApplyMods(modMap map[string]Ckan) error {
 	if len(modMap) <= 0 {
-		return nil, errors.New("no mods to apply")
+		return errors.New("no mods to apply")
 	}
 	var toDownload, toRemove []Ckan
 	for i := range modMap {
@@ -169,32 +169,29 @@ func (r *Registry) ApplyMods(modMap map[string]Ckan) (map[string]bool, error) {
 		}
 	}
 
+	// Remove Mods
 	if len(toRemove) > 0 {
 		err := r.RemoveMods(toRemove)
 		if err != nil {
-			return nil, fmt.Errorf("error removing: %v", err)
+			return fmt.Errorf("error removing: %v", err)
 		}
 	}
 
+	// Install Mods
 	if len(toDownload) > 0 {
 		err := r.DownloadMods(toDownload)
 		if err != nil {
-			return nil, fmt.Errorf("error downloading: %v", err)
+			return fmt.Errorf("error downloading: %v", err)
 		}
 
 		if len(r.InstallQueue) > 0 {
 			err = r.InstallMods()
 			if err != nil {
-				return nil, fmt.Errorf("error installing: %v", err)
+				return fmt.Errorf("error installing: %v", err)
 			}
 		}
 	}
-
-	installedModList, err := dirfs.CheckInstalledMods()
-	if err != nil {
-		return nil, err
-	}
-	return installedModList, nil
+	return nil
 }
 
 // Create r.ModMapIndex from given modMap

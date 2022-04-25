@@ -161,62 +161,48 @@ func (b Bubble) modInfoView() string {
 				Render(mod.Description)
 		}
 
-		identifierKey := keyStyle.Render("Identifier")
-		identifierValue := valueStyle.Render(mod.Identifier)
-		identifier := connectSides(identifierKey, identifierValue)
+		drawKV := func(k, v string) string {
+			return connectSides(keyStyle.Render(k), valueStyle.Render(v))
+		}
 
-		authorKey := keyStyle.Render("Author")
-		authorValue := valueStyle.Render(mod.Author)
-		author := connectSides(authorKey, authorValue)
+		identifier := drawKV("Identifier", mod.Identifier)
 
-		versionKey := keyStyle.Render("Mod Version")
-		versionValue := valueStyle.Render(mod.Versions.Mod)
-		version := connectSides(versionKey, versionValue)
+		author := drawKV("Author", mod.Author)
 
-		versionKspKey := keyStyle.Render("KSP Versions")
+		version := drawKV("Mod Version", mod.Versions.Mod)
+
 		versionKspValue := fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax)
-		versionKspValue = valueStyle.Render(versionKspValue)
-		versionKsp := connectSides(versionKspKey, versionKspValue)
+		versionKsp := drawKV("KSP Versions", valueStyle.Render(versionKspValue))
 
-		installedKey := keyStyle.
-			Foreground(lipgloss.NoColor{}).
-			Render("Installed?")
-		installedValue := ""
+		installedValue := valueStyle.Render("Not Installed")
 		if mod.Install.Installed {
 			installedValue = valueStyle.Copy().
 				Foreground(b.theme.InstalledColor).
 				Render("Installed")
-		} else {
-			installedValue = valueStyle.
-				Render("Not Installed")
 		}
-		installed := connectSides(installedKey, installedValue)
+		installed := drawKV("Installed", installedValue)
 
-		installDirKey := keyStyle.Render("Install dir")
-		installDirValue := valueStyle.Render(mod.Install.InstallTo)
-		installDir := connectSides(installDirKey, installDirValue)
+		installDir := drawKV("Install dir", mod.Install.InstallTo)
 
-		downloadKey := keyStyle.Render("Download")
-		downloadValue := valueStyle.Render(mod.Download.URL)
-		download := connectSides(downloadKey, downloadValue)
+		download := drawKV("Download", mod.Download.URL)
 
-		dependenciesKey := keyStyle.Render("Dependencies")
 		dependenciesValue := valueStyle.Render("None")
 		if len(mod.ModDepends) > 0 {
-			dependenciesValue = valueStyle.Render(strings.Join(mod.ModDepends, ", "))
+			dependenciesValue = valueStyle.Copy().
+				Foreground(b.theme.Orange).
+				Render(strings.Join(mod.ModDepends, ", "))
 		}
-		dependencies := connectSides(dependenciesKey, dependenciesValue)
+		dependencies := drawKV("Dependencies", dependenciesValue)
 
-		conflictsKey := keyStyle.Render("Conflicts")
 		conflictsValue := valueStyle.Render("None")
 		if len(mod.ModConflicts) > 0 {
-			conflictsValue = valueStyle.Render(strings.Join(mod.ModConflicts, ", "))
+			conflictsValue = valueStyle.Copy().
+				Foreground(b.theme.Red).
+				Render(strings.Join(mod.ModConflicts, ", "))
 		}
-		conflicts := connectSides(conflictsKey, conflictsValue)
+		conflicts := drawKV("Conflicts", conflictsValue)
 
-		licenseKey := keyStyle.Render("License")
-		licenseValue := valueStyle.Render(mod.License)
-		license := connectSides(licenseKey, licenseValue)
+		license := drawKV("License", mod.License)
 
 		body = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -261,7 +247,7 @@ func (b Bubble) logView() string {
 	i := 1
 	for scanner.Scan() {
 		lineWords := strings.Fields(scanner.Text())
-		if len(lineWords) > 1 {
+		if len(lineWords) > 2 {
 			idx := lipgloss.NewStyle().
 				Align(lipgloss.Left).
 				Width(6).
@@ -275,7 +261,9 @@ func (b Bubble) logView() string {
 				Foreground(b.theme.Orange).
 				Width(16).
 				Render(lineWords[1])
-			line := connectSides(idx, strings.Join(lineWords, " "))
+			line := lipgloss.NewStyle().
+				Width(b.bubbles.splashViewport.Width - 5).
+				Render(connectSides(idx, strings.Join(lineWords, " ")))
 			bodyList = append(bodyList, line)
 			i++
 		}
@@ -303,7 +291,7 @@ func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
 	title := b.styleTitle("Settings")
 
-	/* keyStyle := lipgloss.NewStyle().
+	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Bold(true).
 		Width(b.bubbles.secondaryViewport.Width/4).
@@ -312,23 +300,22 @@ func (b Bubble) settingsView() string {
 	valueStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Width(b.bubbles.secondaryViewport.Width*3/4).
-		Padding(0, 5) */
+		Padding(0, 5)
 
-	//kspDir := connectSides(keyStyle.Render("Kerbal Directory"), valueStyle.Render(cfg.Settings.KerbalDir))
+	drawKV := func(k, v string) string {
+		return connectSides(keyStyle.Render(k), valueStyle.Render(v))
+	}
 
-	lineStyle := lipgloss.NewStyle().
-		Padding(1).
-		Align(lipgloss.Left).
-		Width(b.bubbles.secondaryViewport.Width)
+	var lines []string
+	lines = append(lines, drawKV("Kerbal Directory", cfg.Settings.KerbalDir))
+	lines = append(lines, drawKV("Kerbal Version", cfg.Settings.KerbalVer))
+	lines = append(lines, drawKV("Logging", fmt.Sprintf("%v", cfg.Settings.EnableLogging)))
+	lines = append(lines, drawKV("Mousewheel", fmt.Sprintf("%v", cfg.Settings.EnableMouseWheel)))
+	lines = append(lines, drawKV("Metadata Repo", cfg.Settings.MetaRepo))
+	lines = append(lines, drawKV("Last Repo Hash", cfg.Settings.LastRepoHash))
+	lines = append(lines, drawKV("Theme", cfg.AppTheme))
 
-	content := lineStyle.Render(fmt.Sprintf("Kerbal Directory: %v", cfg.Settings.KerbalDir))
-	content += lineStyle.Render(fmt.Sprintf("Kerbal Version: %v", cfg.Settings.KerbalVer))
-	content += lineStyle.Render(fmt.Sprintf("Logging: %v", cfg.Settings.EnableLogging))
-	content += lineStyle.Render(fmt.Sprintf("Mousewheel: %v", cfg.Settings.EnableMouseWheel))
-	content += lineStyle.Render(fmt.Sprintf("Hide incompatible: %v", cfg.Settings.HideIncompatibleMods))
-	content += lineStyle.Render(fmt.Sprintf("Metadata Repo: %v", cfg.Settings.MetaRepo))
-	content += lineStyle.Render(fmt.Sprintf("Last Repo Hash: %v", cfg.Settings.LastRepoHash))
-	content += lineStyle.Render(fmt.Sprintf("Theme: %v", cfg.AppTheme))
+	content := lipgloss.JoinVertical(lipgloss.Top, lines...)
 
 	body := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
