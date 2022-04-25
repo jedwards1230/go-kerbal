@@ -45,6 +45,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		case internal.SearchView:
 			b.inputRequested = false
 		case internal.EnterKspDirView:
+			b.inputRequested = false
 			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
 		case internal.ModListView:
 			id := b.registry.ModMapIndex[b.nav.listCursor]
@@ -201,7 +202,7 @@ func (b *Bubble) prepareSettingsView() {
 		b.switchActiveView(internal.ModListView)
 	case internal.ModListView, internal.ModInfoView:
 		b.switchActiveView(internal.SettingsView)
-		b.bubbles.splashViewport.GotoTop()
+		b.bubbles.secondaryViewport.GotoTop()
 	}
 }
 

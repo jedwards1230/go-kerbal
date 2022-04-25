@@ -103,12 +103,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Printf("%T", msg)
 	}
 
-	if b.activeBox == internal.EnterKspDirView || b.activeBox == internal.SearchView {
-		if b.inputRequested {
-			b.bubbles.textInput.Focus()
-		} else {
-			b.bubbles.textInput.Blur()
-		}
+	if b.inputRequested {
+		b.bubbles.textInput.Focus()
+	} else {
+		b.bubbles.textInput.Blur()
 	}
 
 	cmds = append(cmds, b.updateActiveView(msg))
@@ -127,12 +125,13 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
+	case internal.EnterKspDirView:
+		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.secondaryViewport.SetContent(b.inputKspView())
+	case internal.SettingsView:
+		b.bubbles.secondaryViewport.SetContent(b.settingsView())
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
-	case internal.EnterKspDirView:
-		b.bubbles.splashViewport.SetContent(b.inputKspView())
-	case internal.SettingsView:
-		b.bubbles.splashViewport.SetContent(b.settingsView())
 	}
 
 	return cmd
