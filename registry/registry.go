@@ -8,11 +8,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/hashicorp/go-version"
 	"github.com/segmentio/encoding/json"
 
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/tidwall/buntdb"
 )
 
@@ -26,6 +28,7 @@ type Registry struct {
 	DB                     *CkanDB
 	SortOptions            SortOptions
 	InstallQueue           []Ckan
+	theme                  theme.Theme
 }
 
 // Initializes database and registry
@@ -47,7 +50,7 @@ func GetRegistry() Registry {
 }
 
 func (r *Registry) SortModList() error {
-	log.Printf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
+	r.LogCommandf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
 
 	// Get map with most compatible mod
@@ -69,7 +72,7 @@ func (r *Registry) SortModList() error {
 	r.SortedCompatibleMap = compatMap
 	r.SortedNonCompatibleMap = incompatMap
 
-	log.Printf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
+	r.LogSuccessf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
 	return nil
 }
 
@@ -79,7 +82,7 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 
 	installedMap, err := dirfs.CheckInstalledMods()
 	if err != nil {
-		log.Printf("Error checking installed mods: %v", err)
+		r.LogErrorf("Error checking installed mods: %v", err)
 	}
 
 	var mod Ckan
@@ -89,7 +92,7 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 		tx.Ascend("", func(_, value string) bool {
 			err := json.Unmarshal([]byte(value), &mod)
 			if err != nil {
-				log.Printf("Error loading into Ckan struct: %v", err)
+				r.LogErrorf("Error loading into Ckan struct: %v", err)
 			}
 
 			// check if mod is installed
@@ -106,14 +109,8 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 		log.Fatalf("Error viewing db: %v", err)
 	}
 
-	log.Printf("Loaded %v mod files from database", total)
-	if len(r.InstalledModList) > 0 {
-		for _, mod := range r.InstalledModList {
-			log.Printf("Found installed: %v", mod.Name)
-		}
-	} else {
-		log.Printf("Found %d mods installed", len(r.InstalledModList))
-	}
+	r.LogSuccessf("Loaded %v mod files from database", total)
+	log.Printf("Found %d mods installed", len(r.InstalledModList))
 
 	return newMap
 }
@@ -284,4 +281,40 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) (map[string]Ckan, erro
 
 	//log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
 	return modMap, nil
+}
+
+func (r *Registry) SetTheme(t theme.Theme) {
+	r.theme = t
+}
+
+func (r *Registry) LogCommand(msg string) {
+	log.Print(lipgloss.NewStyle().Foreground(r.theme.Blue).Render(msg))
+}
+
+func (r *Registry) LogCommandf(format string, a ...interface{}) {
+	r.LogCommand(fmt.Sprintf(format, a...))
+}
+
+func (r *Registry) LogSuccess(msg string) {
+	log.Print(lipgloss.NewStyle().Foreground(r.theme.Green).Render(msg))
+}
+
+func (r *Registry) LogSuccessf(format string, a ...interface{}) {
+	r.LogSuccess(fmt.Sprintf(format, a...))
+}
+
+func (r *Registry) LogWarning(msg string) {
+	log.Print(lipgloss.NewStyle().Foreground(r.theme.Orange).Render(msg))
+}
+
+func (r *Registry) LogWarningf(format string, a ...interface{}) {
+	r.LogWarning(fmt.Sprintf(format, a...))
+}
+
+func (r *Registry) LogError(msg string) {
+	log.Print(lipgloss.NewStyle().Foreground(r.theme.Red).Render(msg))
+}
+
+func (r *Registry) LogErrorf(format string, a ...interface{}) {
+	r.LogError(fmt.Sprintf(format, a...))
 }

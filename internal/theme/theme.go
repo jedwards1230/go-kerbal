@@ -4,8 +4,8 @@ import "github.com/charmbracelet/lipgloss"
 
 // Theme represents the properties that make up a theme.
 type Theme struct {
-	Green  lipgloss.Color
-	Blue   lipgloss.Color
+	Blue   lipgloss.AdaptiveColor
+	Green  lipgloss.AdaptiveColor
 	Red    lipgloss.AdaptiveColor
 	Orange lipgloss.AdaptiveColor
 
@@ -37,27 +37,27 @@ type appColors struct {
 var Colors = appColors{
 	white:                  "#FFFDF5",
 	black:                  "#000000",
-	green:                  "#00aa00",
+	green:                  "#00bf0d",
 	orange:                 "#cf8611",
-	slightlyBrighterOrange: "#f79c25",
+	slightlyBrighterOrange: "#ffff00",
 	red:                    "#cc241d",
 	slightlyBrighterRed:    "#ff0a00",
-	blue:                   "#0040ff",
+	blue:                   "#0091ff",
 }
 
 // themeMap represents the mapping of different themes.
 var themeMap = map[string]Theme{
 	"default": {
-		Green:  lipgloss.Color(Colors.green),
-		Blue:   lipgloss.Color(Colors.blue),
+		Blue:   lipgloss.AdaptiveColor{Dark: Colors.blue, Light: Colors.blue},
+		Green:  lipgloss.AdaptiveColor{Dark: Colors.green, Light: Colors.green},
 		Red:    lipgloss.AdaptiveColor{Dark: Colors.slightlyBrighterRed, Light: Colors.red},
 		Orange: lipgloss.AdaptiveColor{Dark: Colors.slightlyBrighterOrange, Light: Colors.orange},
 
 		DefaultTextColor: lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
-		ErrorColor:       lipgloss.AdaptiveColor{Dark: Colors.red, Light: Colors.red},
+		ErrorColor:       lipgloss.AdaptiveColor{Dark: Colors.slightlyBrighterRed, Light: Colors.red},
 
 		InstalledColor:    lipgloss.AdaptiveColor{Dark: Colors.green, Light: Colors.green},
-		IncompatibleColor: lipgloss.AdaptiveColor{Dark: Colors.orange, Light: Colors.orange},
+		IncompatibleColor: lipgloss.AdaptiveColor{Dark: Colors.slightlyBrighterOrange, Light: Colors.orange},
 
 		SelectedListItemColor:   lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
 		UnselectedListItemColor: lipgloss.AdaptiveColor{Dark: Colors.black, Light: Colors.white},

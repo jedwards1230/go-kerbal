@@ -20,7 +20,7 @@ import (
 
 func (r *Registry) RemoveMods(toRemove []Ckan) error {
 	for i := range toRemove {
-		err := removeMod(toRemove[i])
+		err := r.removeMod(toRemove[i])
 		if err != nil {
 			return err
 		}
@@ -28,8 +28,8 @@ func (r *Registry) RemoveMods(toRemove []Ckan) error {
 	return nil
 }
 
-func removeMod(mod Ckan) error {
-	log.Printf("Removing %v", mod.Name)
+func (r *Registry) removeMod(mod Ckan) error {
+	r.LogErrorf("Removing %v", mod.Name)
 
 	// find path
 	cfg := config.GetConfig()
@@ -40,7 +40,6 @@ func removeMod(mod Ckan) error {
 		return fmt.Errorf("cannot get KSP dir: %v", err)
 	}
 
-	log.Printf("Checking dir: %v", destination)
 	files, err := ioutil.ReadDir(destination)
 	if err != nil {
 		return err
@@ -63,11 +62,11 @@ func removeMod(mod Ckan) error {
 				removePath = modName
 			}
 		} else {
-			log.Printf("Cannot find for %v", mod.Name)
+			r.LogErrorf("Cannot find for %v", mod.Name)
 		}
 	}
 	removePath = destination + "/" + removePath
-	log.Printf("%v", removePath)
+	//r.LogErrorf("Deleting \"%v\"", removePath)
 	err = os.RemoveAll(removePath)
 	if err != nil {
 		return fmt.Errorf("cannot remove mod %s: %v", mod.Name, err)
@@ -99,7 +98,7 @@ func (r *Registry) DownloadMods(toDownload []Ckan) error {
 	}
 
 	if len(mods) > 0 {
-		log.Printf("Downloading %d mods", len(mods))
+		r.LogCommandf("Downloading %d mods", len(mods))
 
 		// Create tmp dir
 		err := os.MkdirAll("./tmp", os.ModePerm)
@@ -165,12 +164,12 @@ func (r *Registry) downloadMod(mod Ckan) error {
 func (r *Registry) InstallMods() error {
 	if len(r.InstallQueue) > 0 {
 
-		log.Printf("Installing %d mods", len(r.InstallQueue))
+		r.LogCommandf("Installing %d mods", len(r.InstallQueue))
 		g := new(errgroup.Group)
 		for i := range r.InstallQueue {
 			mod := r.InstallQueue[i]
 			g.Go(func() error {
-				err := installMod(mod)
+				err := r.installMod(mod)
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
@@ -180,14 +179,14 @@ func (r *Registry) InstallMods() error {
 		if err := g.Wait(); err != nil {
 			return err
 		}
-		log.Printf("Installed %v mods", len(r.InstallQueue))
+		r.LogSuccessf("Installed %v mods", len(r.InstallQueue))
 		return nil
 	}
 	return errors.New("install queue empty")
 }
 
 // Install a mod
-func installMod(mod Ckan) error {
+func (r *Registry) installMod(mod Ckan) error {
 	// open zip
 	zipReader, err := zip.OpenReader(mod.Download.Path)
 	if err != nil {
@@ -205,7 +204,7 @@ func installMod(mod Ckan) error {
 	installTo := regexp.MustCompile("(?i)" + mod.Install.InstallTo)
 	// unzip all into GameData folder
 	for _, f := range zipReader.File {
-		destination, err := getInstallDir(f.Name, gameDataDir, installTo)
+		destination, err := r.getInstallDir(f.Name, gameDataDir, installTo)
 		if err != nil {
 			return err
 		}
@@ -220,7 +219,7 @@ func installMod(mod Ckan) error {
 	return nil
 }
 
-func getInstallDir(file, gameDataDir string, installTo *regexp.Regexp) (string, error) {
+func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Regexp) (string, error) {
 	if file != "" {
 		// verify file path matches GameData directory
 		if installTo.MatchString(file) {
@@ -254,7 +253,7 @@ func getInstallDir(file, gameDataDir string, installTo *regexp.Regexp) (string, 
 
 		// warn if overwriting vanilla game data
 		if strings.Contains(filePath, "GameData/Squad/") || strings.Contains(filePath, "GameData/SquadExpansion/") {
-			log.Printf("Warning: attempting to overwrite KSP data: %s", filePath)
+			r.LogWarningf("Warning: attempting to overwrite KSP data: %s", filePath)
 		}
 
 		return filePath, nil
@@ -269,7 +268,7 @@ func (r *Registry) checkDependencies(toDownload []Ckan) ([]Ckan, error) {
 	count := 0
 	for _, mod := range toDownload {
 		if !mod.IsCompatible {
-			log.Printf("Warning: %v is not compatible with your current configuration", mod.Name)
+			r.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
 		}
 		if len(mod.ModDepends) > 0 {
 			for i := range mod.ModDepends {
@@ -277,7 +276,7 @@ func (r *Registry) checkDependencies(toDownload []Ckan) ([]Ckan, error) {
 				if dependent.Identifier != "" {
 					if !dependencies[dependent.Identifier] {
 						if !dependent.IsCompatible {
-							log.Printf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
+							r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 						}
 						if !dependent.Install.Installed {
 							mods = append(mods, dependent)

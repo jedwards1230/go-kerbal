@@ -183,11 +183,11 @@ func (b Bubble) modInfoView() string {
 		}
 		installDir := drawKV("Install dir", mod.Install.InstallTo)
 		download := drawKV("Download", mod.Download.URL)
-		dependencies := drawKV("Dependencies", "None")
+		dependencies := drawKVColor("Dependencies", "None", b.theme.Green)
 		if len(mod.ModDepends) > 0 {
-			dependencies = drawKVColor("Dependencies", "None", b.theme.Orange)
+			dependencies = drawKVColor("Dependencies", strings.Join(mod.ModDepends, ", "), b.theme.Orange)
 		}
-		conflicts := drawKV("Conflicts", "None")
+		conflicts := drawKVColor("Conflicts", "None", b.theme.Green)
 		if len(mod.ModConflicts) > 0 {
 			conflicts = drawKVColor("Conflicts", strings.Join(mod.ModConflicts, ", "), b.theme.Red)
 		}
@@ -232,7 +232,7 @@ func (b Bubble) logView() string {
 
 	bodyList := make([]string, 0)
 	scanner := bufio.NewScanner(file)
-	width := lipgloss.Width
+	//width := lipgloss.Width
 	i := 1
 	for scanner.Scan() {
 		lineWords := strings.Fields(scanner.Text())
@@ -249,13 +249,18 @@ func (b Bubble) logView() string {
 				Render(lineWords[0])
 			// file info
 			lineWords[1] = lipgloss.NewStyle().
-				Foreground(b.theme.Orange).
+				Foreground(b.theme.Blue).
 				Width(17).
 				Render(lineWords[1])
 			// log output
-			line := lipgloss.NewStyle().
-				Width(b.bubbles.splashViewport.Width - width(lineWords[0]) - width(lineWords[1])).
-				Render(connectSides(idx, strings.Join(lineWords, " ")))
+			/* line := lipgloss.NewStyle().
+			//Width(b.bubbles.splashViewport.Width - width(lineWords[0]) - width(lineWords[1])).
+			Render(connectSides(idx, strings.Join(lineWords, " "))) */
+
+			line := truncate.StringWithTail(
+				connectSides(idx, strings.Join(lineWords, " ")),
+				uint(b.bubbles.splashViewport.Width-2),
+				internal.EllipsisStyle)
 
 			bodyList = append(bodyList, line)
 			i++
@@ -288,7 +293,7 @@ func (b Bubble) settingsView() string {
 	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Bold(true).
-		Width(b.bubbles.secondaryViewport.Width/4).
+		Width((b.bubbles.secondaryViewport.Width/4)+3).
 		Padding(0, 2)
 
 	valueStyle := lipgloss.NewStyle().
@@ -312,7 +317,7 @@ func (b Bubble) settingsView() string {
 	var lines []string
 	sortOrder := drawKV("Sort Order", b.registry.SortOptions.SortOrder)
 	sortBy := drawKV("Sort By", b.registry.SortOptions.SortTag)
-	compat := drawKV("Hide Compatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods))
+	compat := drawKV("Hide Incompatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods))
 
 	switch b.nav.menuCursor {
 	case internal.MenuSortOrder:
@@ -320,7 +325,7 @@ func (b Bubble) settingsView() string {
 	case internal.MenuSortTag:
 		sortBy = drawKVColor("Sort By", b.registry.SortOptions.SortTag)
 	case internal.MenuCompatible:
-		compat = drawKVColor("Hide Compatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods))
+		compat = drawKVColor("Hide Incompatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods))
 	}
 
 	sortOrder = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(sortOrder)
@@ -329,10 +334,11 @@ func (b Bubble) settingsView() string {
 
 	lines = append(lines, sortOrder, sortBy, compat)
 
-	config := lipgloss.JoinVertical(lipgloss.Top, lines...)
+	content := lipgloss.JoinVertical(lipgloss.Top, lines...)
+	content = lipgloss.NewStyle().PaddingTop(1).Render(content)
 
 	body := lipgloss.JoinVertical(lipgloss.Top,
-		config,
+		content,
 		b.configView(),
 	)
 
@@ -391,6 +397,7 @@ func (b Bubble) configView() string {
 	lines = append(lines, drawKV("Theme", cfg.AppTheme))
 
 	content := lipgloss.JoinVertical(lipgloss.Top, lines...)
+	content = lipgloss.NewStyle().PaddingTop(1).Render(content)
 
 	body := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
@@ -548,6 +555,7 @@ func (b Bubble) getMainButtonsView() string {
 	buttonStyle := lipgloss.NewStyle().
 		Underline(true).
 		Padding(0, 2).
+		Align(lipgloss.Right).
 		Height(internal.StatusBarHeight)
 
 	escape := buttonStyle.
@@ -555,24 +563,21 @@ func (b Bubble) getMainButtonsView() string {
 		Render("Esc. Home")
 
 	refresh := buttonStyle.Render("1. Refresh")
-	apply := buttonStyle.Render("5. Apply mods")
-	search := buttonStyle.Render("6. Search")
+	search := buttonStyle.Render("2. Search")
+	apply := buttonStyle.Render("3. Apply mods")
 	enter := buttonStyle.Render("Ent. Install mod")
+	settings := buttonStyle.Render("0. Options")
 
 	if b.nav.activeMod.Install.Installed {
 		enter = buttonStyle.Render("Ent. Remove mod")
 	}
 
-	settings := buttonStyle.
-		Align(lipgloss.Right).
-		Render("0. Options")
-
 	switch b.activeBox {
 	case internal.ModInfoView, internal.ModListView:
 		leftColumn := connectSides(
 			refresh,
-			apply,
 			search,
+			apply,
 			enter,
 		)
 

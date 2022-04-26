@@ -16,7 +16,6 @@ import (
 // Handles all key press events
 func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmds []tea.Cmd
-	var cmd tea.Cmd
 
 	switch {
 	// Quit
@@ -71,14 +70,13 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.ready = false
 			cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
 		}
+	// Search mods
+	case key.Matches(msg, b.keyMap.Search):
+		cmds = append(cmds, b.prepareSearchView())
 	// Apply Changes
 	case key.Matches(msg, b.keyMap.Apply):
 		b.ready = false
 		cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
-	// Search mods
-	case key.Matches(msg, b.keyMap.Search):
-		cmd = b.prepareSearchView()
-		cmds = append(cmds, cmd)
 	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
 		b.prepareSettingsView()

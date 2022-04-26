@@ -28,7 +28,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return b, b.sortModMapCmd()
 	case SortedMsg:
 		b.registry.SortModList()
-		b.LogSuccess("Sorted mod map")
+		//b.LogSuccess("Sorted mod map")
 		b.ready = true
 		b.bubbles.primaryViewport.GotoTop()
 		if b.activeBox == internal.SearchView {
@@ -36,7 +36,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case InstalledModListMsg:
 		b.ready = true
-		b.LogSuccess("Updated installed mod list")
 		cmds = append(cmds, b.getAvailableModsCmd())
 	// Update KSP dir
 	case UpdateKspDirMsg:

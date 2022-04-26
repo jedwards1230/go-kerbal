@@ -19,8 +19,8 @@ type KeyMap struct {
 	ShowLogs key.Binding
 
 	RefreshList key.Binding
-	Apply       key.Binding
 	Search      key.Binding
+	Apply       key.Binding
 	Settings    key.Binding
 
 	PageDown     key.Binding
@@ -68,13 +68,13 @@ func GetKeyMap() KeyMap {
 			key.WithKeys("1"),
 			key.WithHelp("1", "refresh mod list"),
 		),
-		Apply: key.NewBinding(
-			key.WithKeys("5"),
-			key.WithHelp("5", "download selected mod"),
-		),
 		Search: key.NewBinding(
-			key.WithKeys("6"),
-			key.WithHelp("6", "search mods"),
+			key.WithKeys("2"),
+			key.WithHelp("2", "search mods"),
+		),
+		Apply: key.NewBinding(
+			key.WithKeys("3"),
+			key.WithHelp("3", "download selected mod"),
 		),
 		Settings: key.NewBinding(
 			key.WithKeys("0"),

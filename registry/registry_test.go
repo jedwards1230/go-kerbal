@@ -141,7 +141,7 @@ func BenchmarkCloneRepo(b *testing.B) {
 func TestUpdateDBDirect(t *testing.T) {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
-	err := db.updateDB(&fs, filesToScan)
+	err := reg.updateDB(&fs, filesToScan)
 	if err != nil {
 		t.Error(err)
 	}
@@ -151,7 +151,7 @@ func BenchmarkUpdateDBDirect(b *testing.B) {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 	for n := 0; n < b.N; n++ {
-		err := db.updateDB(&fs, filesToScan)
+		err := reg.updateDB(&fs, filesToScan)
 		if err != nil {
 			b.Error(err)
 		}

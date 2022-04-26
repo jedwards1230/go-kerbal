@@ -33,7 +33,7 @@ func GetDB() *CkanDB {
 }
 
 // Update the database by checking the repo and applying any new changes
-func (db *CkanDB) UpdateDB(force_update bool) error {
+func (r *Registry) UpdateDB(force_update bool) error {
 	log.Printf("Updating DB. Force Update: %v", force_update)
 	// Check if update is required
 	if !force_update {
@@ -56,12 +56,12 @@ func (db *CkanDB) UpdateDB(force_update bool) error {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
-	err = db.updateDB(&fs, filesToScan)
+	err = r.updateDB(&fs, filesToScan)
 
 	return err
 }
 
-func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
+func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	var mods []Ckan
 
 	errCount := 0
@@ -75,7 +75,7 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 
 			mod, err := parseCKAN(*fs, filesToScan[i])
 			if err != nil {
-				//viewParseErrors(mod)
+				//r.viewParseErrors(mod)
 				errCount++
 			} else if mod.Valid {
 				mods = append(mods, *mod)
@@ -87,7 +87,7 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	wg.Wait()
 
 	log.Printf("Adding %d mods to database", len(mods))
-	err := db.Update(func(tx *buntdb.Tx) error {
+	err := r.DB.Update(func(tx *buntdb.Tx) error {
 		for i := range mods {
 			byteValue, err := json.Marshal(mods[i])
 			if err != nil {
@@ -102,7 +102,7 @@ func (db *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	return err
 }
 
-func viewParseErrors(mod *Ckan) {
+func (r *Registry) viewParseErrors(mod *Ckan) {
 	if len(mod.Errors) > 0 {
 		if mod.Errors["raw"] != nil {
 			raw := mod.Errors["raw"].(map[string]interface{})
@@ -113,9 +113,10 @@ func viewParseErrors(mod *Ckan) {
 			log.Print("\n")
 			for k, v := range mod.Errors {
 				if k != "raw" {
-					log.Printf("%v: %v", k, v)
+					r.LogErrorf("%v: %v", k, v)
 				}
 			}
+			log.Print("\n")
 		}
 	}
 }

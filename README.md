@@ -19,7 +19,7 @@ go build && ./go-kerbal
 ## Images
 ![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true "Main view")
 ![Mod Selected](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/modInfo.png?raw=true "Mod Info")
-![Search View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/search.png?raw=true "Search")
+![Options View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/options.png?raw=true "Options")
 ![Log View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/logs.png?raw=true "Logs")
 
 ## TODO:

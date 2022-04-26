@@ -26,10 +26,10 @@ type (
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
 		b.LogCommand("Checking available mods")
-		b.registry.DB.UpdateDB(false)
+		b.registry.UpdateDB(false)
 		updatedModMap := b.registry.GetEntireModList()
 		if len(updatedModMap) == 0 {
-			b.registry.DB.UpdateDB(true)
+			b.registry.UpdateDB(true)
 			updatedModMap = b.registry.GetEntireModList()
 		}
 		return UpdatedModMapMsg(updatedModMap)

@@ -49,6 +49,7 @@ func InitialModel() Bubble {
 	cfg := config.GetConfig()
 	theme := theme.GetTheme(cfg.AppTheme)
 	reg := registry.GetRegistry()
+	reg.SetTheme(theme)
 
 	iRequested := false
 	if cfg.Settings.KerbalDir == "" {
