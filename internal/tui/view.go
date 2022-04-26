@@ -16,16 +16,46 @@ import (
 func (b Bubble) View() string {
 	var body string
 
-	if b.activeBox == internal.LogView {
+	switch b.activeBox {
+	case internal.LogView:
 		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(b.theme.ActiveBoxBorderColor)
-		body = b.bubbles.splashViewport.View()
-	} else {
+		body = lipgloss.JoinVertical(lipgloss.Top,
+			b.styleTitle("Logs"),
+			b.bubbles.splashViewport.View(),
+		)
+	case internal.EnterKspDirView:
+		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
+			PaddingLeft(internal.BoxPadding).
+			PaddingRight(internal.BoxPadding).
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(b.theme.ActiveBoxBorderColor)
+		body = lipgloss.JoinVertical(lipgloss.Top,
+			b.styleTitle("Enter Kerbal Space Program Directory"),
+			b.bubbles.splashViewport.View(),
+		)
+	default:
 		var primaryBox string
 		var secondaryBox string
+
+		primaryTitle := b.styleTitle("Mod List")
+		secondaryTitle := b.styleTitle("Help Menu")
+		switch b.activeBox {
+		case internal.ModListView, internal.ModInfoView:
+			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+			}
+		case internal.SettingsView:
+			secondaryTitle = b.styleTitle("Options")
+		case internal.SearchView:
+			primaryTitle = b.styleTitle("Search Mods")
+			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+			}
+		}
 
 		// set colors
 		primaryBoxBorderColor := b.theme.InactiveBoxBorderColor
@@ -44,15 +74,22 @@ func (b Bubble) View() string {
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(primaryBoxBorderColor)
-		primaryBox = b.bubbles.primaryViewport.View()
+			BorderForeground(primaryBoxBorderColor).
+			Align(lipgloss.Center)
+		primaryBox = lipgloss.JoinVertical(lipgloss.Top,
+			primaryTitle,
+			b.bubbles.primaryViewport.View(),
+		)
 
 		b.bubbles.secondaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.NormalBorder()).
 			BorderForeground(secondaryBoxBorderColor)
-		secondaryBox = b.bubbles.secondaryViewport.View()
+		secondaryBox = lipgloss.JoinVertical(lipgloss.Top,
+			secondaryTitle,
+			b.bubbles.secondaryViewport.View(),
+		)
 
 		// organize views
 		body = connectSides(
@@ -71,11 +108,6 @@ func (b Bubble) View() string {
 
 func (b Bubble) modListView() string {
 	modMap := b.registry.GetActiveModList()
-
-	title := b.styleTitle("Mod List")
-	if b.activeBox == internal.SearchView {
-		title = b.styleTitle("Search Mods")
-	}
 
 	s := ""
 	for i, id := range b.registry.ModMapIndex {
@@ -114,20 +146,13 @@ func (b Bubble) modListView() string {
 		s += "\n"
 	}
 
-	body := lipgloss.NewStyle().
+	return lipgloss.NewStyle().
 		Width(b.bubbles.primaryViewport.Width).
 		Height(b.bubbles.primaryViewport.Height - 3).
 		Render(s)
-
-	return lipgloss.JoinVertical(lipgloss.Top,
-		title,
-		body,
-	)
 }
 
 func (b Bubble) modInfoView() string {
-	var title, body string
-
 	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
 		mod := b.nav.activeMod
 
@@ -141,8 +166,6 @@ func (b Bubble) modInfoView() string {
 			Align(lipgloss.Left).
 			Width(b.bubbles.secondaryViewport.Width*3/4).
 			Padding(0, 2)
-
-		title = b.styleTitle(mod.Name)
 
 		abstractStyle := lipgloss.NewStyle().
 			Bold(false).
@@ -192,7 +215,7 @@ func (b Bubble) modInfoView() string {
 			conflicts = drawKVColor("Conflicts", strings.Join(mod.ModConflicts, ", "), b.theme.Red)
 		}
 
-		body = lipgloss.JoinVertical(
+		return lipgloss.JoinVertical(
 			lipgloss.Top,
 			abstract,
 			"\n",
@@ -210,17 +233,12 @@ func (b Bubble) modInfoView() string {
 			dependencies,
 			conflicts,
 		)
-	} else {
-		title = b.styleTitle("Help Menu")
-		body = lipgloss.NewStyle().
-			Width(b.bubbles.secondaryViewport.Width).
-			Height(b.bubbles.secondaryViewport.Height - 3).
-			Render(b.bubbles.help.View())
 	}
-	return lipgloss.JoinVertical(lipgloss.Top,
-		title,
-		body,
-	)
+	// default to help view
+	return lipgloss.NewStyle().
+		Width(b.bubbles.secondaryViewport.Width).
+		Height(b.bubbles.secondaryViewport.Height - 3).
+		Render(b.bubbles.help.View())
 }
 
 func (b Bubble) logView() string {
@@ -271,24 +289,21 @@ func (b Bubble) logView() string {
 		log.Fatal(err)
 	}
 
-	title := b.styleTitle("Logs")
-
 	body := lipgloss.JoinVertical(lipgloss.Top, bodyList...)
-	body = lipgloss.NewStyle().
+	return lipgloss.NewStyle().
 		Width(b.bubbles.splashViewport.Width - 1).
 		Height(b.bubbles.splashViewport.Height - 3).
-		Render(string(body))
-
-	return lipgloss.JoinVertical(lipgloss.Top,
-		title,
-		body,
-	)
+		Render(body)
 }
 
 func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
 
-	title := b.styleTitle("Options")
+	title := lipgloss.NewStyle().
+		Padding(1, 5).
+		Width(b.bubbles.secondaryViewport.Width).
+		Align(lipgloss.Left).
+		Render("Sorting")
 
 	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
@@ -335,7 +350,6 @@ func (b Bubble) settingsView() string {
 	lines = append(lines, sortOrder, sortBy, compat)
 
 	content := lipgloss.JoinVertical(lipgloss.Top, lines...)
-	content = lipgloss.NewStyle().PaddingTop(1).Render(content)
 
 	body := lipgloss.JoinVertical(lipgloss.Top,
 		content,
@@ -355,7 +369,11 @@ func (b Bubble) settingsView() string {
 
 func (b Bubble) configView() string {
 	cfg := config.GetConfig()
-	title := b.styleTitle("Config")
+	title := lipgloss.NewStyle().
+		Padding(1, 5).
+		Width(b.bubbles.secondaryViewport.Width).
+		Align(lipgloss.Left).
+		Render("Config")
 
 	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
@@ -397,7 +415,6 @@ func (b Bubble) configView() string {
 	lines = append(lines, drawKV("Theme", cfg.AppTheme))
 
 	content := lipgloss.JoinVertical(lipgloss.Top, lines...)
-	content = lipgloss.NewStyle().PaddingTop(1).Render(content)
 
 	body := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
@@ -411,8 +428,6 @@ func (b Bubble) configView() string {
 }
 
 func (b Bubble) inputKspView() string {
-	title := b.styleTitle("Kerbal Space Program Directory")
-
 	question := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Width(b.width).
@@ -434,7 +449,6 @@ func (b Bubble) inputKspView() string {
 		Render(inText)
 
 	return lipgloss.JoinVertical(lipgloss.Top,
-		title,
 		question,
 		inText,
 	)
@@ -556,6 +570,7 @@ func (b Bubble) getMainButtonsView() string {
 		Underline(true).
 		Padding(0, 2).
 		Align(lipgloss.Right).
+		//Foreground(b.theme.LightGray).
 		Height(internal.StatusBarHeight)
 
 	escape := buttonStyle.
@@ -641,20 +656,26 @@ func (b Bubble) getMainButtonsView() string {
 }
 
 func (b Bubble) styleTitle(s string) string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Height(3).
-		Border(lipgloss.NormalBorder(), false, false, true).
-		Padding(1)
-	if b.activeBox == internal.LogView {
-		return titleStyle.
+	switch b.activeBox {
+	case internal.LogView, internal.EnterKspDirView:
+		return lipgloss.NewStyle().
+			Bold(true).
+			Align(lipgloss.Center).
+			Height(3).
+			Border(lipgloss.NormalBorder()).
+			Padding(1).
 			Width(b.bubbles.splashViewport.Width).
 			Render(s)
+	default:
+		return lipgloss.NewStyle().
+			Bold(true).
+			Align(lipgloss.Center).
+			Height(3).
+			Border(lipgloss.NormalBorder()).
+			Padding(1).
+			Width(b.bubbles.primaryViewport.Width + 2).
+			Render(s)
 	}
-	return titleStyle.
-		Width(b.bubbles.primaryViewport.Width).
-		Render(s)
 }
 
 func connectSides(strs ...string) string {

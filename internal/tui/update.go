@@ -75,12 +75,12 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.help.Width = msg.Width
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.splashViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
+		b.bubbles.splashViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 5
 
 		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.primaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize()
+		b.bubbles.primaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 5
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.secondaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize()
+		b.bubbles.secondaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 5
 	// Key pressed
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
@@ -123,7 +123,7 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
-		b.bubbles.secondaryViewport.SetContent(b.inputKspView())
+		b.bubbles.splashViewport.SetContent(b.inputKspView())
 	case internal.SettingsView:
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())
 	case internal.LogView:
@@ -144,8 +144,8 @@ func (b *Bubble) switchActiveView(newView int) {
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		top := b.bubbles.primaryViewport.YOffset - 3
-		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 4
+		top := b.bubbles.primaryViewport.YOffset
+		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
 
 		if b.nav.listCursor < top {
 			b.bubbles.primaryViewport.LineUp(1)
