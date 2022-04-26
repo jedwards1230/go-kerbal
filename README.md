@@ -1,6 +1,6 @@
 # go-kerbal (WIP)
  
-This will eventually be a Go clone of the Kerbal [CKAN Mod Manager](https://github.com/KSP-CKAN/CKAN). This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta).
+This will eventually be a Go clone of the Kerbal [CKAN Mod Manager](https://github.com/KSP-CKAN/CKAN). This uses the metadata files from [CKAN-Meta](https://github.com/KSP-CKAN/CKAN-meta). I used [Bubble Tea](https://github.com/charmbracelet/bubbletea) to build the UI.
 
 I use CKAN every time I play KSP. This project is mostly to get comfortable with Go. I would like to have this functional and ready to port for KSP 2 whenever that is released.
 
