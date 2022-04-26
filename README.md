@@ -10,7 +10,7 @@ go build && ./go-kerbal
 ```
 ## Features so far:
  * Automatically keeps metadata up to date
- * Searcb through mods
+ * Search through mods
  * View logs in-app
  * Download, install, and remove mods
  * Automatically check for conflicts/dependencies
