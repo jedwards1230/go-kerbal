@@ -10,11 +10,10 @@ go build && ./go-kerbal
 ```
 ## Features so far:
  * Automatically keeps metadata up to date
- * View and sort mods
- * Displays logs in-app
- * Downloads and installs multiple mods
- * Finds Kerbal game directory (prompts for directory if not found)
- * Finds installed mods
+ * Searcb through mods
+ * View logs in-app
+ * Download, install, and remove mods
+ * Automatically check for conflicts/dependencies
 
 ## Images
 ![Main View](https://github.com/jedwards1230/go-kerbal/blob/main/screenshots/main.png?raw=true "Main view")
