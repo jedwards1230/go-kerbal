@@ -18,6 +18,7 @@ type (
 		EnableLogging        bool   `mapstructure:"enable_logging"`
 		EnableMouseWheel     bool   `mapstructure:"enable_mousewheel"`
 		HideIncompatibleMods bool   `mapstructure:"hide_incompatible"`
+		Debug                bool   `mapstructure:"debug"`
 	}
 
 	ThemeConfig struct {
@@ -64,6 +65,7 @@ func LoadConfig(dir string) {
 	viper.SetDefault("settings.enable_logging", true)
 	viper.SetDefault("settings.enable_mousewheel", true)
 	viper.SetDefault("settings.hide_incompatible", true)
+	viper.SetDefault("settings.debug", true)
 	viper.SetDefault("theme.app_theme", "default")
 
 	if err := viper.SafeWriteConfig(); err != nil {
