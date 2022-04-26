@@ -297,6 +297,23 @@ func (b Bubble) logView() string {
 }
 
 func (b Bubble) settingsView() string {
+
+	body := lipgloss.JoinVertical(lipgloss.Top,
+		b.sortOptionsView(),
+		b.configView(),
+	)
+
+	body = lipgloss.NewStyle().
+		Width(b.bubbles.secondaryViewport.Width).
+		Height(b.bubbles.secondaryViewport.Height - 3).
+		Render(body)
+
+	return lipgloss.JoinVertical(lipgloss.Top,
+		body,
+	)
+}
+
+func (b Bubble) sortOptionsView() string {
 	cfg := config.GetConfig()
 
 	title := lipgloss.NewStyle().
@@ -351,15 +368,9 @@ func (b Bubble) settingsView() string {
 
 	content := lipgloss.JoinVertical(lipgloss.Top, lines...)
 
-	body := lipgloss.JoinVertical(lipgloss.Top,
-		content,
-		b.configView(),
-	)
-
-	body = lipgloss.NewStyle().
+	body := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
-		Height(b.bubbles.secondaryViewport.Height - 3).
-		Render(body)
+		Render(content)
 
 	return lipgloss.JoinVertical(lipgloss.Top,
 		title,
@@ -418,7 +429,6 @@ func (b Bubble) configView() string {
 
 	body := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
-		Height(b.bubbles.secondaryViewport.Height - 3).
 		Render(content)
 
 	return lipgloss.JoinVertical(lipgloss.Top,

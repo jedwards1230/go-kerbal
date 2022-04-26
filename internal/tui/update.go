@@ -114,6 +114,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Update content for active view
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
+	b.checkActiveViewPortBounds()
 	b.bubbles.primaryViewport.SetContent(b.modListView())
 
 	switch b.activeBox {
@@ -129,8 +130,6 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
 	}
-
-	b.checkActiveViewPortBounds()
 
 	return cmd
 }

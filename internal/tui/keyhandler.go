@@ -112,6 +112,7 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.inputRequested = false
 	b.searchInput = false
 	b.switchActiveView(internal.ModListView)
+	b.lastActiveBox = internal.ModListView
 	return b.sortModMapCmd()
 }
 
