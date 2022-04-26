@@ -46,6 +46,9 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
 		case internal.SettingsView:
 			cmds = append(cmds, b.handleSettingsInput())
+		case internal.QueueView:
+			b.ready = false
+			cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
 		}
 		b.inputRequested = false
 	// Escape
@@ -75,8 +78,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		cmds = append(cmds, b.prepareSearchView())
 	// Apply Changes
 	case key.Matches(msg, b.keyMap.Apply):
-		b.ready = false
-		cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
+		b.switchActiveView(internal.QueueView)
 	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
 		b.prepareSettingsView()

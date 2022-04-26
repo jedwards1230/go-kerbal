@@ -8,23 +8,19 @@ import (
 func (b Bubble) View() string {
 	var body string
 
+	b.bubbles.splashViewport.Style = lipgloss.NewStyle().
+		PaddingLeft(internal.BoxPadding).
+		PaddingRight(internal.BoxPadding).
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(b.theme.ActiveBoxBorderColor)
+
 	switch b.activeBox {
 	case internal.LogView:
-		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(internal.BoxPadding).
-			PaddingRight(internal.BoxPadding).
-			Border(lipgloss.NormalBorder()).
-			BorderForeground(b.theme.ActiveBoxBorderColor)
 		body = lipgloss.JoinVertical(lipgloss.Top,
 			b.styleTitle("Logs"),
 			b.bubbles.splashViewport.View(),
 		)
 	case internal.EnterKspDirView:
-		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(internal.BoxPadding).
-			PaddingRight(internal.BoxPadding).
-			Border(lipgloss.NormalBorder()).
-			BorderForeground(b.theme.ActiveBoxBorderColor)
 		body = lipgloss.JoinVertical(lipgloss.Top,
 			b.styleTitle("Enter Kerbal Space Program Directory"),
 			b.bubbles.splashViewport.View(),
@@ -33,31 +29,34 @@ func (b Bubble) View() string {
 		var primaryBox string
 		var secondaryBox string
 
+		// set colors
+		primaryBoxBorderColor := b.theme.InactiveBoxBorderColor
+		secondaryBoxBorderColor := b.theme.InactiveBoxBorderColor
+
 		primaryTitle := b.styleTitle("Mod List")
 		secondaryTitle := b.styleTitle("Help Menu")
 		switch b.activeBox {
-		case internal.ModListView, internal.ModInfoView:
+		case internal.ModListView:
+			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+			}
+		case internal.ModInfoView:
+			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.SettingsView:
 			secondaryTitle = b.styleTitle("Options")
+			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 		case internal.SearchView:
 			primaryTitle = b.styleTitle("Search Mods")
+			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
-		}
-
-		// set colors
-		primaryBoxBorderColor := b.theme.InactiveBoxBorderColor
-		secondaryBoxBorderColor := b.theme.InactiveBoxBorderColor
-
-		// format active box
-		switch b.activeBox {
-		case internal.ModListView, internal.SearchView:
-			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-		case internal.ModInfoView, internal.EnterKspDirView, internal.SettingsView:
+		case internal.QueueView:
+			secondaryTitle = b.styleTitle("Queue")
 			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 		}
 

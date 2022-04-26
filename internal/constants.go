@@ -9,6 +9,7 @@ const (
 	EnterKspDirView = 4
 	SearchView      = 5
 	SettingsView    = 6
+	QueueView       = 7
 )
 
 const (

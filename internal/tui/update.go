@@ -129,6 +129,9 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
+	case internal.QueueView:
+		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
+		b.bubbles.secondaryViewport.SetContent(b.queueView())
 	}
 
 	return cmd

@@ -43,6 +43,7 @@ type Nav struct {
 	listSelected    int
 	installSelected map[string]registry.Ckan
 	menuCursor      int
+	boolCursor      bool
 }
 
 func InitialModel() Bubble {
@@ -95,6 +96,7 @@ func InitialModel() Bubble {
 	nav := Nav{
 		listSelected:    -1,
 		menuCursor:      0,
+		boolCursor:      false,
 		installSelected: make(map[string]registry.Ckan),
 	}
 

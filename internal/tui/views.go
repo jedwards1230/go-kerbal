@@ -203,12 +203,71 @@ func (b Bubble) logView() string {
 		Render(body)
 }
 
-func (b Bubble) settingsView() string {
+func (b Bubble) queueView() string {
+	titleStyle := lipgloss.NewStyle().
+		Padding(1, 5).
+		Bold(true).
+		Width(b.bubbles.secondaryViewport.Width).
+		Align(lipgloss.Left)
 
+	removeStyle := lipgloss.NewStyle().
+		Width(int(b.bubbles.secondaryViewport.Width)).
+		Foreground(b.theme.Red)
+
+	installStyle := lipgloss.NewStyle().
+		Width(int(b.bubbles.secondaryViewport.Width)).
+		Foreground(b.theme.Green)
+
+	var removeList, installList []string
+
+	modMap := b.nav.installSelected
+	for i := range modMap {
+		if modMap[i].Install.Installed {
+			removeList = append(removeList, removeStyle.Render(modMap[i].Name))
+		} else {
+			installList = append(installList, installStyle.Render(modMap[i].Name))
+		}
+	}
+	removeContent := lipgloss.JoinVertical(lipgloss.Top, removeList...)
+
+	installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
+	content := lipgloss.JoinVertical(lipgloss.Top,
+		titleStyle.Render("To Remove"),
+		removeContent,
+		titleStyle.Render("To Install"),
+		installContent,
+	)
+
+	optionStyle := lipgloss.NewStyle().
+		Padding(0, 2)
+
+	cancel := optionStyle.Render("Cancel")
+	confirm := optionStyle.Render("Confirm")
+
+	options := connectSides(cancel, confirm)
+
+	options = lipgloss.NewStyle().
+		Width(int(b.bubbles.secondaryViewport.Width)).
+		Align(lipgloss.Center).
+		Render(options)
+
+	content = lipgloss.JoinVertical(lipgloss.Top,
+		content,
+		options,
+	)
+
+	return lipgloss.NewStyle().
+		Width(b.bubbles.splashViewport.Width - 1).
+		Height(b.bubbles.splashViewport.Height - 3).
+		Render(content)
+}
+
+func (b Bubble) settingsView() string {
 	cfg := config.GetConfig()
 
 	titleStyle := lipgloss.NewStyle().
 		Padding(1, 5).
+		Bold(true).
 		Width(b.bubbles.secondaryViewport.Width).
 		Align(lipgloss.Left)
 
