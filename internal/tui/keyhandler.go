@@ -24,7 +24,11 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	// Down
 	case key.Matches(msg, b.keyMap.Down):
-		b.scrollView("down")
+		if b.nav.listSelected == -1 {
+			b.nav.listSelected = 0
+		} else {
+			b.scrollView("down")
+		}
 		b.inputRequested = false
 
 	// Up

@@ -33,7 +33,6 @@ type Bubbles struct {
 	secondaryViewport bubbles.Viewport
 	splashViewport    bubbles.Viewport
 	commandViewport   bubbles.Viewport
-	help              bubbles.HelpBubble
 	spinner           spinner.Model
 	textInput         textinput.Model
 }
@@ -99,8 +98,6 @@ func InitialModel() Bubble {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(splashBoxBorderColor)
 
-	h := bubbles.NewHelpBubble(theme.DefaultTextColor)
-
 	nav := Nav{
 		listSelected:    -1,
 		menuCursor:      0,
@@ -115,7 +112,6 @@ func InitialModel() Bubble {
 		splashViewport:    splashVP,
 		spinner:           spin,
 		textInput:         t,
-		help:              h,
 	}
 
 	return Bubble{

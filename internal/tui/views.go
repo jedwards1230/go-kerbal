@@ -138,11 +138,21 @@ func (b Bubble) modInfoView() string {
 			conflicts,
 		)
 	}
-	// default to help view
+	// default to home view
 	return lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
 		Height(b.bubbles.secondaryViewport.Height - 3).
-		Render(b.bubbles.help.View())
+		Render(b.homeView())
+}
+
+func (b Bubble) homeView() string {
+	contentStyle := lipgloss.NewStyle().
+		Width(b.bubbles.commandViewport.Width - 5).
+		Padding(2).
+		Render
+
+	return contentStyle("Go-Kerbal Home Page")
+
 }
 
 func (b Bubble) logView() string {
@@ -657,10 +667,6 @@ func (b Bubble) helpView() string {
 		Align(lipgloss.Left).
 		Width(b.bubbles.commandViewport.Width).
 		Padding(1, 2)
-
-	//contentStyle := lipgloss.NewStyle().
-	//	Padding(0, 2).Render
-	//Align(lipgloss.Center).Render
 
 	itemStyle := lipgloss.NewStyle().
 		Width((b.bubbles.commandViewport.Width / 2)).

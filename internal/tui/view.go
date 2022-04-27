@@ -34,7 +34,7 @@ func (b Bubble) View() string {
 		secondaryBoxBorderColor := b.theme.InactiveBoxBorderColor
 
 		primaryTitle := b.styleTitle("Mod List")
-		secondaryTitle := b.styleTitle("Help Menu")
+		secondaryTitle := b.styleTitle("Go-Kerbal")
 		switch b.activeBox {
 		case internal.ModListView:
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor

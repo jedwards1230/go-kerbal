@@ -28,6 +28,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case SortedMsg:
 		b.registry.SortModList()
+		b.nav.listSelected = -1
 		b.ready = true
 		b.bubbles.primaryViewport.GotoTop()
 		if b.activeBox == internal.SearchView {
@@ -87,9 +88,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.splashViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.splashViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 5
-
-		//b.bubbles.help.Width = b.bubbles.commandViewport.Width - 4
-		//b.bubbles.help.Height = b.bubbles.commandViewport.Height
 
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
