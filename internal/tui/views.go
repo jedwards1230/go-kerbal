@@ -675,26 +675,26 @@ func (b Bubble) helpView() string {
 		Width(b.bubbles.commandViewport.Width).
 		Padding(1, 2, 0)
 
-	itemStyle := lipgloss.NewStyle().
-		Width((b.bubbles.commandViewport.Width / 2)).
-		Padding(0, 4).
-		Align(lipgloss.Left).
-		Render
+	/* itemStyle := lipgloss.NewStyle().
+	Width((b.bubbles.commandViewport.Width / 2)).
+	Padding(0, 4).
+	Align(lipgloss.Left).
+	Render */
 
 	leftColumn := []string{
-		itemStyle("up: Move up"),
-		itemStyle("down: Move down"),
-		itemStyle("space: Toggle mod info"),
-		itemStyle("enter: Add to queue"),
-		itemStyle("tab: Swap active windows"),
+		b.drawHelpKV("up", "Move up"),
+		b.drawHelpKV("down", "Move down"),
+		b.drawHelpKV("space", "Toggle mod info"),
+		b.drawHelpKV("enter", "Add to queue"),
+		b.drawHelpKV("tab", "Swap active windows"),
 	}
 
 	rightColumn := []string{
-		itemStyle("1: Refresh"),
-		itemStyle("2: Search"),
-		itemStyle("3: Apply"),
-		itemStyle("0: Settings"),
-		itemStyle("shift + o: logs"),
+		b.drawHelpKV("1", "Refresh"),
+		b.drawHelpKV("2", "Search"),
+		b.drawHelpKV("3", "Apply"),
+		b.drawHelpKV("0", "Settings"),
+		b.drawHelpKV("shift", "Logs"),
 	}
 
 	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))

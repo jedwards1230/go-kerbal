@@ -146,6 +146,20 @@ func (b Bubble) drawKV(k, v string, color bool) string {
 	}
 }
 
+func (b Bubble) drawHelpKV(k, v string) string {
+	keyStyle := lipgloss.NewStyle().
+		Align(lipgloss.Left).
+		Bold(true).
+		Width(b.bubbles.secondaryViewport.Width/6).
+		Padding(0, 1, 0, 2)
+
+	valueStyle := lipgloss.NewStyle().
+		Align(lipgloss.Left).
+		PaddingRight(3)
+
+	return connectHorz(keyStyle.Render(k), valueStyle.Render(v))
+}
+
 func connectHorz(strs ...string) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, strs...)
 }
