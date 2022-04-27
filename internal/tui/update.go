@@ -75,15 +75,21 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
-		b.bubbles.help.Width = msg.Width
-
-		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.splashViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 5
 
 		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.primaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 5
+
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.secondaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 5
+		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 2
+
+		b.bubbles.commandViewport.Width = (msg.Width / 2) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize()
+		b.bubbles.commandViewport.Height = (msg.Height / 3) - (internal.StatusBarHeight * 2) - b.bubbles.commandViewport.Style.GetVerticalFrameSize()
+
+		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.splashViewport.Style.GetHorizontalFrameSize()
+		b.bubbles.splashViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 5
+
+		//b.bubbles.help.Width = b.bubbles.commandViewport.Width - 4
+		//b.bubbles.help.Height = b.bubbles.commandViewport.Height
 
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
@@ -120,10 +126,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	b.checkActiveViewPortBounds()
+	b.bubbles.commandViewport.SetContent(b.commandView())
 
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.ModInfoView:
@@ -138,7 +144,6 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
 	case internal.QueueView:
-		b.bubbles.primaryViewport, cmd = b.bubbles.primaryViewport.Update(msg)
 		b.bubbles.primaryViewport.SetContent(b.queueView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	}
@@ -154,7 +159,7 @@ func (b *Bubble) switchActiveView(newView int) {
 // Handles wrapping and button scrolling in the viewport
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
-	case internal.ModListView, internal.SearchView:
+	case internal.ModListView, internal.SearchView, internal.QueueView:
 		top := b.bubbles.primaryViewport.YOffset
 		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
 
@@ -185,39 +190,39 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		} else if b.nav.menuCursor < 0 {
 			b.nav.menuCursor = internal.MenuInputs - 1
 		}
-	case internal.QueueView:
-		listLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
-		top := b.bubbles.primaryViewport.YOffset
-		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
+	/* case internal.QueueView:
+	listLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
+	top := b.bubbles.primaryViewport.YOffset
+	bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
 
-		cursor := b.nav.listCursor
-		if cursor >= len(b.registry.Queue.RemoveQueue) {
-			cursor += len(b.registry.Queue.RemoveQueue)
-		}
-		if cursor >= len(b.registry.Queue.InstallQueue) {
-			cursor += len(b.registry.Queue.InstallQueue)
-		}
-		if cursor >= len(b.registry.Queue.DependencyQueue) {
-			cursor += len(b.registry.Queue.DependencyQueue)
-		}
+	cursor := b.nav.listCursor
+	if cursor >= len(b.registry.Queue.RemoveQueue) {
+		cursor += len(b.registry.Queue.RemoveQueue)
+	}
+	if cursor >= len(b.registry.Queue.InstallQueue) {
+		cursor += len(b.registry.Queue.InstallQueue)
+	}
+	if cursor >= len(b.registry.Queue.DependencyQueue) {
+		cursor += len(b.registry.Queue.DependencyQueue)
+	}
 
-		log.Printf("c: %v cur: %v top: %v bot: %v", cursor, b.nav.listCursor, top, bottom)
+	log.Printf("c: %v cur: %v top: %v bot: %v", cursor, b.nav.listCursor, top, bottom)
 
-		if cursor < top {
-			b.bubbles.primaryViewport.LineUp(1)
-		} else if cursor > bottom {
-			b.bubbles.primaryViewport.LineDown(1)
-		}
+	if cursor < top {
+		b.bubbles.primaryViewport.LineUp(1)
+	} else if cursor > bottom {
+		b.bubbles.primaryViewport.LineDown(1)
+	}
 
-		if b.nav.listCursor > listLen-1 {
-			b.nav.listCursor = -1
-			b.nav.listSelected = b.nav.listCursor
-			b.bubbles.primaryViewport.GotoTop()
-		} else if b.nav.listCursor < -1 {
-			b.nav.listCursor = listLen - 1
-			b.nav.listSelected = b.nav.listCursor
-			b.bubbles.primaryViewport.GotoBottom()
-		}
+	if b.nav.listCursor > listLen-1 {
+		b.nav.listCursor = -1
+		b.nav.listSelected = b.nav.listCursor
+		b.bubbles.primaryViewport.GotoTop()
+	} else if b.nav.listCursor < -1 {
+		b.nav.listCursor = listLen - 1
+		b.nav.listSelected = b.nav.listCursor
+		b.bubbles.primaryViewport.GotoBottom()
+	} */
 	case internal.LogView:
 		if b.bubbles.splashViewport.AtBottom() {
 			b.bubbles.splashViewport.GotoBottom()

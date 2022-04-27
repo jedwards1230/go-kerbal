@@ -2,7 +2,6 @@ package tui
 
 import (
 	"log"
-	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -35,23 +34,25 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	// Left
 	case key.Matches(msg, b.keyMap.Left):
-		if b.activeBox == internal.QueueView {
+		switch b.activeBox {
+		case internal.QueueView:
 			if b.nav.listSelected == -1 {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
-				b.nav.listCursor = -1
 				b.nav.boolCursor = false
+				b.nav.listSelected = -1
 			}
 		}
 
 	// Right
 	case key.Matches(msg, b.keyMap.Right):
-		if b.activeBox == internal.QueueView {
+		switch b.activeBox {
+		case internal.QueueView:
 			if b.nav.listSelected == -1 {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
-				b.nav.listCursor = -1
 				b.nav.boolCursor = true
+				b.nav.listSelected = -1
 			}
 		}
 
@@ -158,13 +159,16 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 	case internal.SettingsView:
 		cmds = append(cmds, b.handleSettingsInput())
 	case internal.QueueView:
-		if b.nav.listCursor == -1 {
+		if b.nav.listSelected == -1 {
 			// apply mods in queue
 			if b.nav.boolCursor {
 				b.ready = false
 				cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
 			} else {
 				b.switchActiveView(internal.ModListView)
+				b.nav.listCursor = 0
+				b.ready = false
+				cmds = append(cmds, b.sortModMapCmd())
 			}
 		}
 	}
@@ -299,12 +303,4 @@ func (b *Bubble) prepareQueueView() {
 		b.LogErrorf("Cannot build queue index: %v", err)
 	}
 	b.registry.ModMapIndex = idx
-}
-
-func trimLastChar(s string) string {
-	r, size := utf8.DecodeLastRuneInString(s)
-	if r == utf8.RuneError && (size == 0 || size == 1) {
-		size = 0
-	}
-	return s[:len(s)-size]
 }

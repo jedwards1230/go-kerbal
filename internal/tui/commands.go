@@ -6,7 +6,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/spf13/viper"
@@ -111,28 +110,4 @@ func (b Bubble) MyTickCmd() tea.Cmd {
 		time.Sleep(1 * time.Second)
 		return MyTickMsg{}
 	}
-}
-
-func (b *Bubble) LogCommand(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(b.theme.Blue).Render(msg))
-}
-
-func (b *Bubble) LogCommandf(format string, a ...interface{}) {
-	b.LogCommand(fmt.Sprintf(format, a...))
-}
-
-func (b *Bubble) LogSuccess(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(b.theme.Green).Render(msg))
-}
-
-func (b *Bubble) LogSuccessf(format string, a ...interface{}) {
-	b.LogCommand(fmt.Sprintf(format, a...))
-}
-
-func (b *Bubble) LogError(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(b.theme.Red).Render(msg))
-}
-
-func (b *Bubble) LogErrorf(format string, a ...interface{}) {
-	b.LogError(fmt.Sprintf(format, a...))
 }

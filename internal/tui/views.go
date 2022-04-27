@@ -36,19 +36,17 @@ func (b Bubble) modListView() string {
 				Foreground(b.theme.UnselectedListItemColor).
 				Width(b.bubbles.primaryViewport.Width).
 				Render(line)
+		} else if mod.Install.Installed {
+			s += lipgloss.NewStyle().
+				Foreground(b.theme.InstalledColor).
+				Render(line)
+		} else if !mod.IsCompatible {
+			s += lipgloss.NewStyle().
+				Foreground(b.theme.Orange).
+				Render(line)
 		} else {
-			if mod.Install.Installed {
-				s += lipgloss.NewStyle().
-					Foreground(b.theme.InstalledColor).
-					Render(line)
-			} else if !mod.IsCompatible {
-				s += lipgloss.NewStyle().
-					Foreground(b.theme.Orange).
-					Render(line)
-			} else {
-				s += lipgloss.NewStyle().
-					Render(line)
-			}
+			s += lipgloss.NewStyle().
+				Render(line)
 		}
 		s += "\n"
 	}
@@ -90,11 +88,11 @@ func (b Bubble) modInfoView() string {
 		}
 
 		drawKV := func(k, v string) string {
-			return connectSides(keyStyle.Render(k), valueStyle.Render(v))
+			return connectHorz(keyStyle.Render(k), valueStyle.Render(v))
 		}
 
 		drawKVColor := func(k, v string, color lipgloss.AdaptiveColor) string {
-			return connectSides(
+			return connectHorz(
 				keyStyle.
 					Render(k),
 				valueStyle.Copy().
@@ -122,8 +120,7 @@ func (b Bubble) modInfoView() string {
 			conflicts = drawKVColor("Conflicts", strings.Join(mod.ModConflicts, ", "), b.theme.Red)
 		}
 
-		return lipgloss.JoinVertical(
-			lipgloss.Top,
+		return connectVert(
 			abstract,
 			"\n",
 			author,
@@ -157,7 +154,6 @@ func (b Bubble) logView() string {
 
 	bodyList := make([]string, 0)
 	scanner := bufio.NewScanner(file)
-	//width := lipgloss.Width
 	i := 1
 	for scanner.Scan() {
 		lineWords := strings.Fields(scanner.Text())
@@ -177,13 +173,9 @@ func (b Bubble) logView() string {
 				Foreground(b.theme.Blue).
 				Width(17).
 				Render(lineWords[1])
-			// log output
-			/* line := lipgloss.NewStyle().
-			//Width(b.bubbles.splashViewport.Width - width(lineWords[0]) - width(lineWords[1])).
-			Render(connectSides(idx, strings.Join(lineWords, " "))) */
-
+			// logs
 			line := truncate.StringWithTail(
-				connectSides(idx, strings.Join(lineWords, " ")),
+				connectHorz(idx, strings.Join(lineWords, " ")),
 				uint(b.bubbles.splashViewport.Width-2),
 				internal.EllipsisStyle)
 
@@ -196,7 +188,7 @@ func (b Bubble) logView() string {
 		log.Fatal(err)
 	}
 
-	body := lipgloss.JoinVertical(lipgloss.Top, bodyList...)
+	body := connectVert(bodyList...)
 	return lipgloss.NewStyle().
 		Width(b.bubbles.splashViewport.Width - 1).
 		Height(b.bubbles.splashViewport.Height - 3).
@@ -213,6 +205,15 @@ func (b Bubble) queueView() string {
 	entryStyle := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width-1).
 		Padding(0, 0, 0, 4)
+		/*
+			removeStyle := entryStyle.Copy().
+				Foreground(b.theme.UnselectedListItemColor)
+		*/
+	downloadStyle := entryStyle.Copy().
+		Foreground(b.theme.Blue)
+
+	installStyle := entryStyle.Copy().
+		Foreground(b.theme.Green)
 
 	if len(b.nav.installSelected) > 0 {
 		selectedStyle := entryStyle.Copy().
@@ -221,21 +222,23 @@ func (b Bubble) queueView() string {
 
 		// Display mods to remove
 		if len(b.registry.Queue.RemoveQueue) > 0 {
-			/* removeStyle := entryStyle.Copy().
-			Foreground(b.theme.UnselectedListItemColor) */
-
 			var removeList []string
 			for i, mod := range b.registry.Queue.RemoveQueue {
-				if b.nav.listCursor == i {
-					removeList = append(removeList, selectedStyle.Render(mod.Name))
+				name := truncate.StringWithTail(
+					mod.Name,
+					uint(b.bubbles.primaryViewport.Width-6),
+					internal.EllipsisStyle)
+
+				if b.nav.listSelected == i {
+					removeList = append(removeList, selectedStyle.Render(name))
 				} else if false {
 					// mark mod removed
 				} else {
-					removeList = append(removeList, entryStyle.Render(mod.Name))
+					removeList = append(removeList, entryStyle.Render(name))
 				}
 			}
-			removeContent := lipgloss.JoinVertical(lipgloss.Top, removeList...)
-			content = lipgloss.JoinVertical(lipgloss.Top,
+			removeContent := connectVert(removeList...)
+			content = connectVert(
 				titleStyle.Foreground(b.theme.Red).Render("To Remove"),
 				removeContent,
 			)
@@ -243,29 +246,26 @@ func (b Bubble) queueView() string {
 
 		// Display mods to intall
 		if len(b.registry.Queue.InstallQueue) > 0 {
-			/* downloadStyle := entryStyle.Copy().
-				Foreground(b.theme.Blue)
-
-			installStyle := entryStyle.Copy().
-				Foreground(b.theme.Green) */
-
 			var installList []string
 			for i, mod := range b.registry.Queue.InstallQueue {
 				name := truncate.StringWithTail(
 					mod.Name,
-					uint(b.bubbles.primaryViewport.Width-5),
+					uint(b.bubbles.primaryViewport.Width-6),
 					internal.EllipsisStyle)
 
-				if b.nav.listCursor-len(b.registry.Queue.RemoveQueue) == i {
+				if mod.Install.Installed {
+					installList = append(installList, installStyle.Render(name))
+				} else if mod.Download.Downloaded {
+					installList = append(installList, downloadStyle.Render(name))
+				} else if b.nav.listSelected-len(b.registry.Queue.RemoveQueue) == i && b.nav.listSelected != -1 {
 					installList = append(installList, selectedStyle.Render(name))
 				} else {
 					installList = append(installList, entryStyle.Render(name))
 				}
 			}
-			installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
-			log.Print(installContent)
+			installContent := connectVert(installList...)
 
-			content = lipgloss.JoinVertical(lipgloss.Top,
+			content = connectVert(
 				content,
 				titleStyle.Foreground(b.theme.Green).Render("To Install"),
 				installContent,
@@ -274,26 +274,25 @@ func (b Bubble) queueView() string {
 
 		// Display mod dependencies to install
 		if len(b.registry.Queue.DependencyQueue) > 0 {
-			downloadStyle := entryStyle.Copy().
-				Foreground(b.theme.Blue)
-
-			installStyle := entryStyle.Copy().
-				Foreground(b.theme.Green)
-
 			var installList []string
 			for i, mod := range b.registry.Queue.DependencyQueue {
+				name := truncate.StringWithTail(
+					mod.Name,
+					uint(b.bubbles.primaryViewport.Width-6),
+					internal.EllipsisStyle)
+
 				if mod.Install.Installed {
-					installList = append(installList, installStyle.Render(mod.Name))
+					installList = append(installList, installStyle.Render(name))
 				} else if mod.Download.Downloaded {
-					installList = append(installList, downloadStyle.Render(mod.Name))
-				} else if b.nav.listCursor-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.listCursor != -1 {
-					installList = append(installList, selectedStyle.Render(mod.Name))
+					installList = append(installList, downloadStyle.Render(name))
+				} else if b.nav.listSelected-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.listSelected != -1 {
+					installList = append(installList, selectedStyle.Render(name))
 				} else {
-					installList = append(installList, entryStyle.Render(mod.Name))
+					installList = append(installList, entryStyle.Render(name))
 				}
 			}
-			installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
-			content = lipgloss.JoinVertical(lipgloss.Top,
+			installContent := connectVert(installList...)
+			content = connectVert(
 				content,
 				titleStyle.Foreground(b.theme.Green).Render("Dependencies"),
 				installContent,
@@ -301,12 +300,6 @@ func (b Bubble) queueView() string {
 		}
 
 		if content != "" {
-			if b.ready {
-				content = lipgloss.JoinVertical(lipgloss.Top,
-					content,
-					b.getBoolOptionsView(),
-				)
-			}
 			return lipgloss.NewStyle().
 				Width(b.bubbles.secondaryViewport.Width - 1).
 				Height(b.bubbles.secondaryViewport.Height - 3).
@@ -375,29 +368,29 @@ func (b Bubble) settingsView() string {
 		configLines[i] = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(configLines[i])
 	}
 
-	sortContent := lipgloss.JoinVertical(lipgloss.Top, sortLines...)
+	sortContent := connectVert(sortLines...)
 
 	sortContent = lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
 		Render(sortContent)
 
-	sortOptions := lipgloss.JoinVertical(lipgloss.Top,
+	sortOptions := connectVert(
 		titleStyle.Render("Sorting"),
 		sortContent,
 	)
 
-	configContent := lipgloss.JoinVertical(lipgloss.Top, configLines...)
+	configContent := connectVert(configLines...)
 
 	configContent = lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width).
 		Render(configContent)
 
-	configOptions := lipgloss.JoinVertical(lipgloss.Top,
+	configOptions := connectVert(
 		titleStyle.Render("Config"),
 		configContent,
 	)
 
-	body := lipgloss.JoinVertical(lipgloss.Top,
+	body := connectVert(
 		sortOptions,
 		configOptions,
 	)
@@ -407,7 +400,7 @@ func (b Bubble) settingsView() string {
 		Height(b.bubbles.secondaryViewport.Height - 3).
 		Render(body)
 
-	return lipgloss.JoinVertical(lipgloss.Top,
+	return connectVert(
 		body,
 	)
 }
@@ -433,7 +426,7 @@ func (b Bubble) inputKspView() string {
 		Padding(1).
 		Render(inText)
 
-	return lipgloss.JoinVertical(lipgloss.Top,
+	return connectVert(
 		question,
 		inText,
 	)
@@ -469,7 +462,7 @@ func (b Bubble) statusBarView() string {
 
 	colorLegend := installedLegend
 	if !cfg.Settings.HideIncompatibleMods {
-		colorLegend = connectSides(
+		colorLegend = connectHorz(
 			incompatibleLegend,
 			installedLegend)
 	}
@@ -501,7 +494,7 @@ func (b Bubble) statusBarView() string {
 		for scanner.Scan() {
 			lineWords := strings.Fields(scanner.Text())
 			if len(lineWords) > 1 {
-				line := connectSides(strings.Join(lineWords[2:], " "))
+				line := connectHorz(strings.Join(lineWords[2:], " "))
 				bodyList = append(bodyList, line)
 			}
 		}
@@ -534,18 +527,36 @@ func (b Bubble) statusBarView() string {
 				Render(b.bubbles.spinner.View())
 		}
 
-		status = connectSides(
+		status = connectHorz(
 			spin,
 			status,
 		)
 	}
 
-	return connectSides(
+	return connectHorz(
 		status,
 		colorLegend,
 		sortOptions,
 		fileCount,
 	)
+}
+
+func (b Bubble) commandView() string {
+	commandStyle := lipgloss.NewStyle().
+		Align(lipgloss.Center)
+
+	switch b.activeBox {
+	case internal.QueueView:
+		if b.ready {
+			options := commandStyle.Render(b.getBoolOptionsView())
+			return lipgloss.NewStyle().
+				Width(b.bubbles.commandViewport.Width).
+				Height(b.bubbles.commandViewport.Height).
+				Render(options)
+		}
+	}
+
+	return commandStyle.Render(b.helpView())
 }
 
 func (b Bubble) getMainButtonsView() string {
@@ -574,7 +585,7 @@ func (b Bubble) getMainButtonsView() string {
 
 	switch b.activeBox {
 	case internal.ModInfoView, internal.ModListView:
-		leftColumn := connectSides(
+		leftColumn := connectHorz(
 			refresh,
 			search,
 			apply,
@@ -585,12 +596,12 @@ func (b Bubble) getMainButtonsView() string {
 			Width(b.width - lipgloss.Width(settings)).
 			Render(leftColumn)
 
-		buttonRow = connectSides(
+		buttonRow = connectHorz(
 			leftColumn,
 			settings,
 		)
 	case internal.SearchView:
-		leftColumn := connectSides(
+		leftColumn := connectHorz(
 			escape,
 			apply,
 		)
@@ -606,7 +617,7 @@ func (b Bubble) getMainButtonsView() string {
 
 		leftColumn = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(leftColumn)
 
-		buttonRow = connectSides(
+		buttonRow = connectHorz(
 			leftColumn,
 			enableInput,
 		)
@@ -622,14 +633,14 @@ func (b Bubble) getMainButtonsView() string {
 
 		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(escape)
 
-		buttonRow = connectSides(
+		buttonRow = connectHorz(
 			escape,
 			enableInput,
 		)
 	case internal.SettingsView:
 		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(settings)).Render(escape)
 
-		buttonRow = connectSides(
+		buttonRow = connectHorz(
 			escape,
 			settings,
 		)
@@ -640,14 +651,68 @@ func (b Bubble) getMainButtonsView() string {
 	return buttonRow
 }
 
+func (b Bubble) helpView() string {
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Left).
+		Width(b.bubbles.commandViewport.Width).
+		Padding(1, 2)
+
+	//contentStyle := lipgloss.NewStyle().
+	//	Padding(0, 2).Render
+	//Align(lipgloss.Center).Render
+
+	itemStyle := lipgloss.NewStyle().
+		Width((b.bubbles.commandViewport.Width / 2)).
+		Padding(0, 4).
+		Align(lipgloss.Left).
+		Render
+
+	leftColumn := []string{
+		itemStyle("up: move up"),
+		itemStyle("down: move down"),
+		itemStyle("space: space"),
+		itemStyle("enter: enter"),
+		itemStyle("tab: tab"),
+	}
+
+	rightColumn := []string{
+		itemStyle("1: Refresh"),
+		itemStyle("2: Search"),
+		itemStyle("3: Apply"),
+		itemStyle("0: Settings"),
+		itemStyle("shift + o: logs"),
+	}
+
+	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
+
+	content = connectVert(
+		titleStyle.Render("Help Menu"),
+		content,
+	)
+
+	return lipgloss.NewStyle().
+		Width(b.bubbles.commandViewport.Width).
+		Render(content)
+}
+
 func (b Bubble) getBoolOptionsView() string {
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Width(b.bubbles.commandViewport.Width-4).
+		Padding(1, 2, 0)
+
 	optionStyle := lipgloss.NewStyle().
-		Padding(0, 2)
+		Border(lipgloss.RoundedBorder()).
+		Align(lipgloss.Center).
+		Padding(1, 4).
+		Margin(1, 1)
 
 	cancel := optionStyle.Render("Cancel")
 	confirm := optionStyle.Render("Confirm")
 
-	if b.nav.listCursor == -1 {
+	if b.nav.listSelected == -1 {
 		if b.nav.boolCursor {
 			confirm = optionStyle.Copy().
 				Foreground(b.theme.UnselectedListItemColor).
@@ -661,11 +726,19 @@ func (b Bubble) getBoolOptionsView() string {
 		}
 	}
 
-	options := connectSides(cancel, confirm)
+	options := connectHorz(cancel, "  ", confirm)
+	options = lipgloss.NewStyle().
+		Width(b.bubbles.commandViewport.Width - 4).
+		Align(lipgloss.Center).
+		Render(options)
+
+	content := connectVert(
+		titleStyle.Render("Apply?"),
+		options,
+	)
 
 	return lipgloss.NewStyle().
-		Width(int(b.bubbles.secondaryViewport.Width)).
-		Align(lipgloss.Center).
-		Padding(3).
-		Render(options)
+		Width(b.bubbles.commandViewport.Width).
+		//Padding(3).
+		Render(content)
 }

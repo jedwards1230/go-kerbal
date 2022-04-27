@@ -3,6 +3,7 @@ package internal
 import "github.com/charmbracelet/lipgloss"
 
 const (
+	CommandView     = 0
 	ModListView     = 1
 	ModInfoView     = 2
 	LogView         = 3

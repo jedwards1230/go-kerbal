@@ -32,6 +32,7 @@ type Bubbles struct {
 	primaryViewport   bubbles.Viewport
 	secondaryViewport bubbles.Viewport
 	splashViewport    bubbles.Viewport
+	commandViewport   bubbles.Viewport
 	help              bubbles.HelpBubble
 	spinner           spinner.Model
 	textInput         textinput.Model
@@ -74,21 +75,28 @@ func InitialModel() Bubble {
 	primaryVP.Style = lipgloss.NewStyle().
 		PaddingLeft(internal.BoxPadding).
 		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.RoundedBorder()).
 		BorderForeground(primaryBoxBorderColor)
 
 	secondaryVP := bubbles.NewViewport(0, 0)
 	secondaryVP.Style = lipgloss.NewStyle().
 		PaddingLeft(internal.BoxPadding).
 		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(secondaryBoxBorderColor)
+
+	commandVP := bubbles.NewViewport(0, 0)
+	commandVP.Style = lipgloss.NewStyle().
+		PaddingLeft(internal.BoxPadding).
+		PaddingRight(internal.BoxPadding).
+		Border(lipgloss.RoundedBorder()).
 		BorderForeground(secondaryBoxBorderColor)
 
 	splashVP := bubbles.NewViewport(0, 0)
 	splashVP.Style = lipgloss.NewStyle().
 		PaddingLeft(internal.BoxPadding).
 		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.RoundedBorder()).
 		BorderForeground(splashBoxBorderColor)
 
 	h := bubbles.NewHelpBubble(theme.DefaultTextColor)
@@ -103,6 +111,7 @@ func InitialModel() Bubble {
 	bubs := Bubbles{
 		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
+		commandViewport:   commandVP,
 		splashViewport:    splashVP,
 		spinner:           spin,
 		textInput:         t,

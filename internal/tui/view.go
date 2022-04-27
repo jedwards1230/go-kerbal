@@ -11,17 +11,17 @@ func (b Bubble) View() string {
 	b.bubbles.splashViewport.Style = lipgloss.NewStyle().
 		PaddingLeft(internal.BoxPadding).
 		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.RoundedBorder()).
 		BorderForeground(b.theme.ActiveBoxBorderColor)
 
 	switch b.activeBox {
 	case internal.LogView:
-		body = lipgloss.JoinVertical(lipgloss.Top,
+		body = connectVert(
 			b.styleTitle("Logs"),
 			b.bubbles.splashViewport.View(),
 		)
 	case internal.EnterKspDirView:
-		body = lipgloss.JoinVertical(lipgloss.Top,
+		body = connectVert(
 			b.styleTitle("Enter Kerbal Space Program Directory"),
 			b.bubbles.splashViewport.View(),
 		)
@@ -68,10 +68,10 @@ func (b Bubble) View() string {
 		b.bubbles.primaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			BorderForeground(primaryBoxBorderColor).
 			Align(lipgloss.Center)
-		primaryBox = lipgloss.JoinVertical(lipgloss.Top,
+		primaryBox = connectVert(
 			primaryTitle,
 			b.bubbles.primaryViewport.View(),
 		)
@@ -79,22 +79,22 @@ func (b Bubble) View() string {
 		b.bubbles.secondaryViewport.Style = lipgloss.NewStyle().
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			BorderForeground(secondaryBoxBorderColor)
-		secondaryBox = lipgloss.JoinVertical(lipgloss.Top,
+		secondaryBox = connectVert(
 			secondaryTitle,
 			b.bubbles.secondaryViewport.View(),
+			b.bubbles.commandViewport.View(),
 		)
 
 		// organize views
-		body = connectSides(
+		body = connectHorz(
 			primaryBox,
 			secondaryBox,
 		)
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Top,
+	return connectVert(
 		b.getMainButtonsView(),
 		body,
 		b.statusBarView(),
@@ -108,7 +108,7 @@ func (b Bubble) styleTitle(s string) string {
 			Bold(true).
 			Align(lipgloss.Center).
 			Height(3).
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			Padding(1).
 			Width(b.bubbles.splashViewport.Width).
 			Render(s)
@@ -117,7 +117,7 @@ func (b Bubble) styleTitle(s string) string {
 			Bold(true).
 			Align(lipgloss.Center).
 			Height(3).
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			Padding(1).
 			Width(b.bubbles.primaryViewport.Width + 2).
 			Render(s)
@@ -136,7 +136,7 @@ func (b Bubble) drawKV(k, v string, color bool) string {
 		Padding(0, 2)
 
 	if color {
-		return connectSides(
+		return connectHorz(
 			keyStyle.Copy().
 				Render(k),
 			valueStyle.Copy().
@@ -144,10 +144,14 @@ func (b Bubble) drawKV(k, v string, color bool) string {
 				Background(b.theme.SelectedListItemColor).
 				Render(v))
 	} else {
-		return connectSides(keyStyle.Render(k), valueStyle.Render(v))
+		return connectHorz(keyStyle.Render(k), valueStyle.Render(v))
 	}
 }
 
-func connectSides(strs ...string) string {
+func connectHorz(strs ...string) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, strs...)
+}
+
+func connectVert(strs ...string) string {
+	return lipgloss.JoinVertical(lipgloss.Top, strs...)
 }
