@@ -78,16 +78,16 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.height = msg.Height
 
 		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.primaryViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 5
+		b.bubbles.primaryViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 6
 
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 3
+		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 4
 
 		b.bubbles.commandViewport.Width = (msg.Width / 2) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.commandViewport.Height = (msg.Height / 3) - internal.StatusBarHeight - b.bubbles.commandViewport.Style.GetVerticalFrameSize()
+		b.bubbles.commandViewport.Height = (msg.Height / 3) - internal.StatusBarHeight - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.splashViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 5
+		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 6
 
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
