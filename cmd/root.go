@@ -73,9 +73,8 @@ func Execute() {
 	}
 
 	m := tui.InitialModel()
-	var opts []tea.ProgramOption
 
-	// Always append alt screen program option.
+	var opts []tea.ProgramOption
 	opts = append(opts, tea.WithAltScreen())
 
 	// If mousewheel is enabled, append it to the program options.

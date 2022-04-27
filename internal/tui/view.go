@@ -155,6 +155,7 @@ func (b Bubble) drawHelpKV(k, v string) string {
 
 	valueStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
+		Faint(true).
 		PaddingRight(3)
 
 	return connectHorz(keyStyle.Render(k), valueStyle.Render(v))

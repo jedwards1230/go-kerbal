@@ -151,10 +151,12 @@ func (b Bubble) homeView() string {
 		Padding(2).
 		Render
 
-	content := "Go-Kerbal Home Page\n" +
-		"\n" +
+	content := "" +
 		"To do:\n " +
 		"- Display error messages\n " +
+		"- Make install queue editable\n " +
+		"- Window resizing on Windows\n " +
+		"- Pagination\n " +
 		"- Ensure mods install/uninstall properly\n " +
 		"- Dynamic command view\n "
 
@@ -576,7 +578,7 @@ func (b Bubble) commandView() string {
 	return commandStyle.Render(b.helpView())
 }
 
-func (b Bubble) getMainButtonsView() string {
+/* func (b Bubble) getMainButtonsView() string {
 	var buttonRow string
 
 	buttonStyle := lipgloss.NewStyle().
@@ -666,20 +668,14 @@ func (b Bubble) getMainButtonsView() string {
 	}
 
 	return buttonRow
-}
+} */
 
 func (b Bubble) helpView() string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Left).
-		Width(b.bubbles.commandViewport.Width).
-		Padding(1, 2, 0)
-
-	/* itemStyle := lipgloss.NewStyle().
-	Width((b.bubbles.commandViewport.Width / 2)).
-	Padding(0, 4).
+	/* titleStyle := lipgloss.NewStyle().
+	Bold(true).
 	Align(lipgloss.Left).
-	Render */
+	Width(b.bubbles.commandViewport.Width).
+	Padding(1, 2, 0) */
 
 	leftColumn := []string{
 		b.drawHelpKV("up", "Move up"),
@@ -694,17 +690,15 @@ func (b Bubble) helpView() string {
 		b.drawHelpKV("2", "Search"),
 		b.drawHelpKV("3", "Apply"),
 		b.drawHelpKV("0", "Settings"),
-		b.drawHelpKV("shift", "Logs"),
+		b.drawHelpKV("shift+o", "Logs"),
 	}
 
 	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
 
-	content = lipgloss.NewStyle().Padding(1).Render(content)
-
-	content = connectVert(
-		titleStyle.Render("Help Menu"),
-		content,
-	)
+	content = lipgloss.NewStyle().
+		Padding(1).
+		Margin(1, 0).
+		Render(content)
 
 	return lipgloss.NewStyle().
 		Width(b.bubbles.commandViewport.Width).
@@ -721,6 +715,7 @@ func (b Bubble) getBoolOptionsView() string {
 	optionStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Align(lipgloss.Center).
+		BorderForeground(b.theme.InactiveBoxBorderColor).
 		Padding(0, 4).
 		Margin(1, 1)
 
@@ -730,14 +725,20 @@ func (b Bubble) getBoolOptionsView() string {
 	if b.nav.listSelected == -1 {
 		if b.nav.boolCursor {
 			confirm = optionStyle.Copy().
-				Foreground(b.theme.UnselectedListItemColor).
-				Background(b.theme.SelectedListItemColor).
+				BorderForeground(b.theme.ActiveBoxBorderColor).
+				Border(lipgloss.RoundedBorder()).
 				Render("Confirm")
+			cancel = optionStyle.Copy().
+				Faint(true).
+				Render("Cancel")
 		} else {
 			cancel = optionStyle.Copy().
-				Foreground(b.theme.UnselectedListItemColor).
-				Background(b.theme.SelectedListItemColor).
+				BorderForeground(b.theme.ActiveBoxBorderColor).
+				Border(lipgloss.RoundedBorder()).
 				Render("Cancel")
+			confirm = optionStyle.Copy().
+				Faint(true).
+				Render("Confirm")
 		}
 	}
 
