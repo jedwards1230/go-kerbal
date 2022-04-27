@@ -211,10 +211,8 @@ func (b Bubble) queueView() string {
 		Width(b.bubbles.secondaryViewport.Width)
 
 	entryStyle := lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width - 5).
-		PaddingLeft(4)
-
-	//fullWidth := lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width - 2).Render
+		Width(b.bubbles.secondaryViewport.Width-1).
+		Padding(0, 0, 0, 4)
 
 	if len(b.nav.installSelected) > 0 {
 		selectedStyle := entryStyle.Copy().
@@ -253,22 +251,19 @@ func (b Bubble) queueView() string {
 
 			var installList []string
 			for i, mod := range b.registry.Queue.InstallQueue {
+				name := truncate.StringWithTail(
+					mod.Name,
+					uint(b.bubbles.primaryViewport.Width-5),
+					internal.EllipsisStyle)
+
 				if b.nav.listCursor-len(b.registry.Queue.RemoveQueue) == i {
-					installList = append(installList, selectedStyle.Render(mod.Name))
+					installList = append(installList, selectedStyle.Render(name))
 				} else {
-					installList = append(installList, entryStyle.Render(mod.Name))
+					installList = append(installList, entryStyle.Render(name))
 				}
 			}
 			installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
-
-			/* installContent := ""
-			for i, mod := range b.registry.Queue.InstallQueue {
-				if b.nav.listCursor-len(b.registry.Queue.RemoveQueue) == i {
-					installContent += fullWidth(selectedStyle.Copy().Render(mod.Name)) + "\n"
-				} else {
-					installContent += fullWidth(entryStyle.Copy().Render(mod.Name)) + "\n"
-				}
-			} */
+			log.Print(installContent)
 
 			content = lipgloss.JoinVertical(lipgloss.Top,
 				content,

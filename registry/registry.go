@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/hashicorp/go-version"
 	"github.com/segmentio/encoding/json"
 
@@ -29,6 +28,8 @@ type Registry struct {
 	theme                  theme.Theme
 	Queue                  queue
 }
+
+type ModIndex []Entry
 
 // Initializes database and registry
 func GetRegistry() Registry {
@@ -168,6 +169,22 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	return searchMapIndex, nil
 }
 
+func (r *Registry) BuildQueueIndex() (ModIndex, error) {
+	idx := make(ModIndex, 0)
+
+	for _, mod := range r.Queue.RemoveQueue {
+		idx = append(idx, Entry{mod.Identifier, mod.SearchableName})
+	}
+	for _, mod := range r.Queue.InstallQueue {
+		idx = append(idx, Entry{mod.Identifier, mod.SearchableName})
+	}
+	for _, mod := range r.Queue.DependencyQueue {
+		idx = append(idx, Entry{mod.Identifier, mod.SearchableName})
+	}
+
+	return idx, nil
+}
+
 // Create r.ModMapIndex from given modMap
 //
 // Sorts by order and tags saved to registry
@@ -242,40 +259,4 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) (map[string]Ckan, erro
 
 	//log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
 	return modMap, nil
-}
-
-func (r *Registry) SetTheme(t theme.Theme) {
-	r.theme = t
-}
-
-func (r *Registry) LogCommand(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(r.theme.Blue).Render(msg))
-}
-
-func (r *Registry) LogCommandf(format string, a ...interface{}) {
-	r.LogCommand(fmt.Sprintf(format, a...))
-}
-
-func (r *Registry) LogSuccess(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(r.theme.Green).Render(msg))
-}
-
-func (r *Registry) LogSuccessf(format string, a ...interface{}) {
-	r.LogSuccess(fmt.Sprintf(format, a...))
-}
-
-func (r *Registry) LogWarning(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(r.theme.Orange).Render(msg))
-}
-
-func (r *Registry) LogWarningf(format string, a ...interface{}) {
-	r.LogWarning(fmt.Sprintf(format, a...))
-}
-
-func (r *Registry) LogError(msg string) {
-	log.Print(lipgloss.NewStyle().Foreground(r.theme.Red).Render(msg))
-}
-
-func (r *Registry) LogErrorf(format string, a ...interface{}) {
-	r.LogError(fmt.Sprintf(format, a...))
 }

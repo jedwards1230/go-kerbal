@@ -294,6 +294,11 @@ func (b *Bubble) prepareQueueView() {
 	} else {
 		b.LogError("no mods provided")
 	}
+	idx, err := b.registry.BuildQueueIndex()
+	if err != nil {
+		b.LogErrorf("Cannot build queue index: %v", err)
+	}
+	b.registry.ModMapIndex = idx
 }
 
 func trimLastChar(s string) string {
