@@ -160,3 +160,11 @@ func (c Ckan) checkCompatible() bool {
 	}
 	return true
 }
+
+func (c *Ckan) markDownloaded() {
+	c.Download.Downloaded = true
+}
+
+func (c *Ckan) markInstalled() {
+	c.Install.Installed = true
+}

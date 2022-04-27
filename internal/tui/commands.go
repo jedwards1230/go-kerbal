@@ -64,10 +64,31 @@ func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 // Download selected mods
 func (b *Bubble) applyModsCmd() tea.Cmd {
 	return func() tea.Msg {
-		b.LogCommandf("Selected %d mods to apply", len(b.nav.installSelected))
-		err := b.registry.ApplyMods(b.nav.installSelected)
-		if err != nil {
-			return ErrorMsg(err)
+
+		// Remove Mods
+		if len(b.registry.Queue.RemoveQueue) > 0 {
+			b.LogCommandf("Removing %d mods", len(b.registry.Queue.RemoveQueue))
+			err := b.registry.RemoveMods()
+			if err != nil {
+				return fmt.Errorf("error removing: %v", err)
+			}
+		}
+
+		// Install Mods
+		if len(b.registry.Queue.InstallQueue) > 0 {
+			b.LogCommandf("Downloading %d mods", len(b.registry.Queue.InstallQueue))
+			err := b.registry.DownloadMods()
+			if err != nil {
+				return fmt.Errorf("error downloading: %v", err)
+			}
+
+			if len(b.registry.Queue.InstallQueue) > 0 {
+				b.LogCommandf("Installing %d mods", len(b.registry.Queue.InstallQueue))
+				err = b.registry.InstallMods()
+				if err != nil {
+					return fmt.Errorf("error installing: %v", err)
+				}
+			}
 		}
 		return InstalledModListMsg{}
 	}

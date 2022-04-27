@@ -204,62 +204,145 @@ func (b Bubble) logView() string {
 }
 
 func (b Bubble) queueView() string {
+	var content = ""
 	titleStyle := lipgloss.NewStyle().
-		Padding(1, 5).
+		Padding(2, 2).
 		Bold(true).
-		Width(b.bubbles.secondaryViewport.Width).
-		Align(lipgloss.Left)
+		Width(b.bubbles.secondaryViewport.Width)
 
-	removeStyle := lipgloss.NewStyle().
-		Width(int(b.bubbles.secondaryViewport.Width)).
-		Foreground(b.theme.Red)
+	entryStyle := lipgloss.NewStyle().
+		Width(b.bubbles.secondaryViewport.Width-1).
+		Padding(0, 6)
 
-	installStyle := lipgloss.NewStyle().
-		Width(int(b.bubbles.secondaryViewport.Width)).
-		Foreground(b.theme.Green)
+	if len(b.nav.installSelected) > 0 {
+		selectedStyle := entryStyle.Copy().
+			Foreground(b.theme.UnselectedListItemColor).
+			Background(b.theme.SelectedListItemColor)
 
-	var removeList, installList []string
+		if len(b.registry.Queue.RemoveQueue) > 0 {
+			/* removeStyle := entryStyle.Copy().
+			Foreground(b.theme.UnselectedListItemColor) */
 
-	modMap := b.nav.installSelected
-	for i := range modMap {
-		if modMap[i].Install.Installed {
-			removeList = append(removeList, removeStyle.Render(modMap[i].Name))
+			var removeList []string
+			for i, mod := range b.registry.Queue.RemoveQueue {
+				if b.nav.queueCursor == i && b.nav.queueCursor != -1 {
+					removeList = append(removeList, selectedStyle.Render(mod.Name))
+				} else if false {
+					// mark mod removed
+				} else {
+					removeList = append(removeList, entryStyle.Render(mod.Name))
+				}
+			}
+			removeContent := lipgloss.JoinVertical(lipgloss.Top, removeList...)
+			content = lipgloss.JoinVertical(lipgloss.Top,
+				titleStyle.Foreground(b.theme.Red).Render("To Remove"),
+				removeContent,
+			)
+		}
+
+		if len(b.registry.Queue.InstallQueue) > 0 {
+			downloadStyle := entryStyle.Copy().
+				Foreground(b.theme.Blue)
+
+			installStyle := entryStyle.Copy().
+				Foreground(b.theme.Green)
+
+			var installList []string
+			for i, mod := range b.registry.Queue.InstallQueue {
+				if mod.Install.Installed {
+					installList = append(installList, installStyle.Render(mod.Name))
+				} else if mod.Download.Downloaded {
+					installList = append(installList, downloadStyle.Render(mod.Name))
+				} else if b.nav.queueCursor-len(b.registry.Queue.RemoveQueue) == i && b.nav.queueCursor != -1 {
+					installList = append(installList, selectedStyle.Render(mod.Name))
+				} else {
+					installList = append(installList, entryStyle.Render(mod.Name))
+				}
+			}
+			installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
+			content = lipgloss.JoinVertical(lipgloss.Top,
+				content,
+				titleStyle.Foreground(b.theme.Green).Render("To Install"),
+				installContent,
+			)
+		}
+
+		if len(b.registry.Queue.DependencyQueue) > 0 {
+			downloadStyle := entryStyle.Copy().
+				Foreground(b.theme.Blue)
+
+			installStyle := entryStyle.Copy().
+				Foreground(b.theme.Green)
+
+			var installList []string
+			for i, mod := range b.registry.Queue.DependencyQueue {
+				if mod.Install.Installed {
+					installList = append(installList, installStyle.Render(mod.Name))
+				} else if mod.Download.Downloaded {
+					installList = append(installList, downloadStyle.Render(mod.Name))
+				} else if b.nav.queueCursor-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.queueCursor != -1 {
+					installList = append(installList, selectedStyle.Render(mod.Name))
+				} else {
+					installList = append(installList, entryStyle.Render(mod.Name))
+				}
+			}
+			installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
+			content = lipgloss.JoinVertical(lipgloss.Top,
+				content,
+				titleStyle.Foreground(b.theme.Green).Render("Dependencies"),
+				installContent,
+			)
+		}
+
+		if content != "" {
+			if b.ready {
+				optionStyle := lipgloss.NewStyle().
+					Padding(0, 2)
+
+				cancel := optionStyle.Render("Cancel")
+				confirm := optionStyle.Render("Confirm")
+
+				if b.nav.queueCursor == -1 {
+					if b.nav.boolCursor {
+						confirm = optionStyle.Copy().
+							Foreground(b.theme.UnselectedListItemColor).
+							Background(b.theme.SelectedListItemColor).
+							Render("Confirm")
+					} else {
+						cancel = optionStyle.Copy().
+							Foreground(b.theme.UnselectedListItemColor).
+							Background(b.theme.SelectedListItemColor).
+							Render("Cancel")
+					}
+				}
+
+				options := connectSides(cancel, confirm)
+
+				options = lipgloss.NewStyle().
+					Width(int(b.bubbles.secondaryViewport.Width)).
+					Align(lipgloss.Center).
+					Padding(3).
+					Render(options)
+
+				content = lipgloss.JoinVertical(lipgloss.Top,
+					content,
+					options,
+				)
+			}
+			return lipgloss.NewStyle().
+				Width(b.bubbles.secondaryViewport.Width - 1).
+				Height(b.bubbles.secondaryViewport.Height - 3).
+				Render(content)
 		} else {
-			installList = append(installList, installStyle.Render(modMap[i].Name))
+			b.LogErrorf("Unable to parse queue: %v", b.nav.installSelected)
 		}
 	}
-	removeContent := lipgloss.JoinVertical(lipgloss.Top, removeList...)
-
-	installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
-	content := lipgloss.JoinVertical(lipgloss.Top,
-		titleStyle.Render("To Remove"),
-		removeContent,
-		titleStyle.Render("To Install"),
-		installContent,
-	)
-
-	optionStyle := lipgloss.NewStyle().
-		Padding(0, 2)
-
-	cancel := optionStyle.Render("Cancel")
-	confirm := optionStyle.Render("Confirm")
-
-	options := connectSides(cancel, confirm)
-
-	options = lipgloss.NewStyle().
-		Width(int(b.bubbles.secondaryViewport.Width)).
-		Align(lipgloss.Center).
-		Render(options)
-
-	content = lipgloss.JoinVertical(lipgloss.Top,
-		content,
-		options,
-	)
-
 	return lipgloss.NewStyle().
-		Width(b.bubbles.splashViewport.Width - 1).
-		Height(b.bubbles.splashViewport.Height - 3).
-		Render(content)
+		Padding(2).
+		Align(lipgloss.Center).
+		Width(b.bubbles.secondaryViewport.Width).
+		Height(b.bubbles.secondaryViewport.Height - 3).
+		Render("No mods in queue")
 }
 
 func (b Bubble) settingsView() string {

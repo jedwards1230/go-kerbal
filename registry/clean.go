@@ -260,6 +260,7 @@ func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 	}
 
 	c.Download.Path = "./tmp/" + c.Identifier + ".zip"
+	c.Download.Downloaded = false
 
 	return nil
 }

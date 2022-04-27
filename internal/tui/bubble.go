@@ -39,10 +39,11 @@ type Bubbles struct {
 
 type Nav struct {
 	activeMod       registry.Ckan
-	listCursor      int
-	listSelected    int
 	installSelected map[string]registry.Ckan
+	listSelected    int
+	listCursor      int
 	menuCursor      int
+	queueCursor     int
 	boolCursor      bool
 }
 
@@ -96,6 +97,7 @@ func InitialModel() Bubble {
 	nav := Nav{
 		listSelected:    -1,
 		menuCursor:      0,
+		queueCursor:     -1,
 		boolCursor:      false,
 		installSelected: make(map[string]registry.Ckan),
 	}

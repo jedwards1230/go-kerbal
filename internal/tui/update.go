@@ -25,18 +25,20 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Update mod list
 	case UpdatedModMapMsg:
 		b.registry.TotalModMap = msg
-		return b, b.sortModMapCmd()
+		cmds = append(cmds, b.sortModMapCmd())
+
 	case SortedMsg:
 		b.registry.SortModList()
-		//b.LogSuccess("Sorted mod map")
 		b.ready = true
 		b.bubbles.primaryViewport.GotoTop()
 		if b.activeBox == internal.SearchView {
 			cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
 		}
+
 	case InstalledModListMsg:
 		b.ready = true
 		cmds = append(cmds, b.getAvailableModsCmd())
+
 	// Update KSP dir
 	case UpdateKspDirMsg:
 		b.ready = true
@@ -51,6 +53,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.Placeholder = "Try again..."
 		}
+
 	case SearchMsg:
 		if len(msg) >= 0 {
 			b.nav.listSelected = -1
@@ -58,9 +61,11 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			b.LogError("Error searching")
 		}
+
 	case ErrorMsg:
 		b.ready = true
 		b.LogErrorf("ErrorMsg: %v", msg)
+
 	case spinner.TickMsg:
 		if !b.ready {
 			b.bubbles.spinner, cmd = b.bubbles.spinner.Update(msg)
@@ -68,7 +73,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			b.bubbles.spinner.Finish()
 		}
-	// Window resize
+
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
@@ -81,10 +86,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.primaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 5
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.secondaryViewport.Height = msg.Height - (internal.StatusBarHeight * 2) - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 5
-	// Key pressed
+
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
-	// Mouse input
+
 	case tea.MouseMsg:
 		switch msg.Type {
 		case tea.MouseWheelUp:
@@ -92,8 +97,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.MouseWheelDown:
 			b.scrollView("down")
 		}
+
 	case MyTickMsg:
 		cmds = append(cmds, b.MyTickCmd())
+
 	default:
 		log.Printf("%T", msg)
 	}
@@ -176,6 +183,13 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		} else if b.nav.menuCursor < 0 {
 			b.nav.menuCursor = internal.MenuInputs - 1
 		}
+	case internal.QueueView:
+		listLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
+		if b.nav.queueCursor >= listLen {
+			b.nav.queueCursor = -1
+		} else if b.nav.queueCursor < -1 {
+			b.nav.queueCursor = listLen - 1
+		}
 	case internal.LogView:
 		if b.bubbles.splashViewport.AtBottom() {
 			b.bubbles.splashViewport.GotoBottom()
@@ -198,6 +212,8 @@ func (b *Bubble) scrollView(dir string) {
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.SettingsView:
 			b.nav.menuCursor--
+		case internal.QueueView:
+			b.nav.queueCursor--
 		case internal.LogView:
 			b.bubbles.splashViewport.LineUp(1)
 		}
@@ -210,6 +226,8 @@ func (b *Bubble) scrollView(dir string) {
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:
 			b.nav.menuCursor++
+		case internal.QueueView:
+			b.nav.queueCursor++
 		case internal.LogView:
 			b.bubbles.splashViewport.LineDown(1)
 		}

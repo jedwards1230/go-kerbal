@@ -22,14 +22,29 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, b.keyMap.Quit):
 		log.Print("Quitting")
 		return tea.Quit
+
 	// Down
 	case key.Matches(msg, b.keyMap.Down):
 		b.scrollView("down")
 		b.inputRequested = false
+
 	// Up
 	case key.Matches(msg, b.keyMap.Up):
 		b.scrollView("up")
 		b.inputRequested = false
+
+	// Left
+	case key.Matches(msg, b.keyMap.Left):
+		if b.activeBox == internal.QueueView {
+			b.nav.boolCursor = !b.nav.boolCursor
+		}
+
+	// Right
+	case key.Matches(msg, b.keyMap.Right):
+		if b.activeBox == internal.QueueView {
+			b.nav.boolCursor = !b.nav.boolCursor
+		}
+
 	// Space
 	case key.Matches(msg, b.keyMap.Space):
 		if b.nav.listSelected == b.nav.listCursor {
@@ -37,23 +52,15 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			b.nav.listSelected = b.nav.listCursor
 		}
+
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
-		switch b.activeBox {
-		case internal.ModListView, internal.SearchView:
-			b.toggleSelectedItem()
-		case internal.EnterKspDirView:
-			cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
-		case internal.SettingsView:
-			cmds = append(cmds, b.handleSettingsInput())
-		case internal.QueueView:
-			b.ready = false
-			cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
-		}
-		b.inputRequested = false
+		cmds = append(cmds, b.handleEnterKey())
+
 	// Escape
 	case key.Matches(msg, b.keyMap.Esc):
 		cmds = append(cmds, b.resetView())
+
 	// Swap view
 	case key.Matches(msg, b.keyMap.SwapView):
 		switch b.activeBox {
@@ -64,21 +71,55 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 		default:
 			b.switchActiveView(internal.ModListView)
 		}
+
 	// Show logs
 	case key.Matches(msg, b.keyMap.ShowLogs):
 		b.prepareLogsView()
+
 	// Refresh list
 	case key.Matches(msg, b.keyMap.RefreshList):
 		if b.activeBox != internal.EnterKspDirView && b.activeBox != internal.SearchView {
 			b.ready = false
 			cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick)
 		}
+
 	// Search mods
 	case key.Matches(msg, b.keyMap.Search):
 		cmds = append(cmds, b.prepareSearchView())
+
 	// Apply Changes
 	case key.Matches(msg, b.keyMap.Apply):
-		b.switchActiveView(internal.QueueView)
+		if b.activeBox == internal.QueueView {
+			b.switchActiveView(internal.ModListView)
+		} else {
+			b.switchActiveView(internal.QueueView)
+			var removeQueue, installQueue []registry.Ckan
+
+			modMap := b.nav.installSelected
+			for i := range modMap {
+				if modMap[i].Install.Installed {
+					removeQueue = append(removeQueue, modMap[i])
+				} else {
+					installQueue = append(installQueue, modMap[i])
+				}
+			}
+
+			b.registry.Queue.RemoveQueue = removeQueue
+			b.registry.Queue.InstallQueue = installQueue
+
+			// collect all mods and dependencies
+			log.Print("Checking dependencies")
+			if len(b.registry.Queue.InstallQueue) > 0 {
+				mods, err := b.registry.CheckDependencies(b.registry.Queue.InstallQueue)
+				if err != nil {
+					b.LogErrorf("%v", err)
+				}
+				b.registry.Queue.DependencyQueue = mods
+			} else {
+				b.LogError("no mods provided")
+			}
+		}
+
 	// View settings
 	case key.Matches(msg, b.keyMap.Settings):
 		b.prepareSettingsView()
@@ -107,6 +148,7 @@ func (b *Bubble) toggleSelectedItem() {
 }
 
 func (b *Bubble) resetView() tea.Cmd {
+	b.nav.boolCursor = false
 	b.nav.listCursor = 0
 	b.nav.listSelected = -1
 	b.nav.installSelected = make(map[string]registry.Ckan, 0)
@@ -116,6 +158,33 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.switchActiveView(internal.ModListView)
 	b.lastActiveBox = internal.ModListView
 	return b.sortModMapCmd()
+}
+
+// Handle inputs when Enter is pressed
+func (b *Bubble) handleEnterKey() tea.Cmd {
+	var cmds []tea.Cmd
+
+	switch b.activeBox {
+	case internal.ModListView, internal.SearchView:
+		b.toggleSelectedItem()
+	case internal.EnterKspDirView:
+		cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
+	case internal.SettingsView:
+		cmds = append(cmds, b.handleSettingsInput())
+	case internal.QueueView:
+		if b.nav.queueCursor == -1 {
+			// apply mods in queue
+			if b.nav.boolCursor {
+				b.ready = false
+				cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
+			} else {
+				b.switchActiveView(internal.ModListView)
+			}
+		}
+	}
+
+	b.inputRequested = false
+	return tea.Batch(cmds...)
 }
 
 // Handle the log view

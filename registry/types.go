@@ -14,8 +14,9 @@ type versions struct {
 }
 
 type download struct {
-	URL  string
-	Path string
+	Downloaded bool
+	URL        string
+	Path       string
 }
 
 type install struct {
@@ -24,6 +25,12 @@ type install struct {
 	Find      string
 	File      string
 	InstallTo string
+}
+
+type queue struct {
+	RemoveQueue     []Ckan
+	DependencyQueue []Ckan
+	InstallQueue    []Ckan
 }
 
 type resource struct {

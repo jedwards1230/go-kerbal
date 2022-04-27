@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -27,8 +26,8 @@ type Registry struct {
 	InstalledModList       map[string]Ckan
 	DB                     *CkanDB
 	SortOptions            SortOptions
-	InstallQueue           []Ckan
 	theme                  theme.Theme
+	Queue                  queue
 }
 
 // Initializes database and registry
@@ -167,44 +166,6 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 
 	log.Printf("Found %d mods for \"%s\"", len(searchMapIndex), s)
 	return searchMapIndex, nil
-}
-
-func (r *Registry) ApplyMods(modMap map[string]Ckan) error {
-	if len(modMap) <= 0 {
-		return errors.New("no mods to apply")
-	}
-	var toDownload, toRemove []Ckan
-	for i := range modMap {
-		if modMap[i].Install.Installed {
-			toRemove = append(toRemove, modMap[i])
-		} else {
-			toDownload = append(toDownload, modMap[i])
-		}
-	}
-
-	// Remove Mods
-	if len(toRemove) > 0 {
-		err := r.RemoveMods(toRemove)
-		if err != nil {
-			return fmt.Errorf("error removing: %v", err)
-		}
-	}
-
-	// Install Mods
-	if len(toDownload) > 0 {
-		err := r.DownloadMods(toDownload)
-		if err != nil {
-			return fmt.Errorf("error downloading: %v", err)
-		}
-
-		if len(r.InstallQueue) > 0 {
-			err = r.InstallMods()
-			if err != nil {
-				return fmt.Errorf("error installing: %v", err)
-			}
-		}
-	}
-	return nil
 }
 
 // Create r.ModMapIndex from given modMap

@@ -12,6 +12,8 @@ type KeyMap struct {
 	Quit     key.Binding
 	Down     key.Binding
 	Up       key.Binding
+	Left     key.Binding
+	Right    key.Binding
 	Space    key.Binding
 	Enter    key.Binding
 	Esc      key.Binding
@@ -42,6 +44,14 @@ func GetKeyMap() KeyMap {
 		),
 		Up: key.NewBinding(
 			key.WithKeys("up"),
+			key.WithHelp("↑", "move up"),
+		),
+		Left: key.NewBinding(
+			key.WithKeys("left"),
+			key.WithHelp("↓", "move down"),
+		),
+		Right: key.NewBinding(
+			key.WithKeys("right"),
 			key.WithHelp("↑", "move up"),
 		),
 		Space: key.NewBinding(

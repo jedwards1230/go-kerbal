@@ -18,9 +18,9 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func (r *Registry) RemoveMods(toRemove []Ckan) error {
-	for i := range toRemove {
-		err := r.removeMod(toRemove[i])
+func (r *Registry) RemoveMods() error {
+	for i := range r.Queue.RemoveQueue {
+		err := r.removeMod(r.Queue.RemoveQueue[i])
 		if err != nil {
 			return err
 		}
@@ -75,14 +75,14 @@ func (r *Registry) removeMod(mod Ckan) error {
 }
 
 // Download selected mods
-func (r *Registry) DownloadMods(toDownload []Ckan) error {
+func (r *Registry) DownloadMods() error {
 	var mods []Ckan
 	var err error
 
 	// collect all mods and dependencies
 	log.Print("Checking dependencies")
-	if len(toDownload) > 0 {
-		mods, err = r.checkDependencies(toDownload)
+	if len(r.Queue.InstallQueue) > 0 {
+		mods, err = r.CheckDependencies(r.Queue.InstallQueue)
 		if err != nil {
 			return err
 		}
@@ -115,7 +115,8 @@ func (r *Registry) DownloadMods(toDownload []Ckan) error {
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
-				return err
+				mod.markDownloaded()
+				return nil
 			})
 		}
 		if err := g.Wait(); err != nil {
@@ -152,41 +153,41 @@ func (r *Registry) downloadMod(mod Ckan) error {
 	}
 
 	// Add mod to install queue if successfully downloaded
-	r.InstallQueue = append(r.InstallQueue, mod)
+	r.Queue.InstallQueue = append(r.Queue.InstallQueue, mod)
 	log.Printf("Downloaded: %v", mod.Name)
 
 	return nil
 }
 
 // Install mods in the registry install queue
-// todo: ensure mods are instsalled in order by dependency
+// todo: ensure mods are installed in order by dependency
 // todo: potentially ditch the goroutine. worried it might cause overlap errors.
 func (r *Registry) InstallMods() error {
-	if len(r.InstallQueue) > 0 {
+	if len(r.Queue.InstallQueue) > 0 {
 
-		r.LogCommandf("Installing %d mods", len(r.InstallQueue))
 		g := new(errgroup.Group)
-		for i := range r.InstallQueue {
-			mod := r.InstallQueue[i]
+		for i := range r.Queue.InstallQueue {
+			mod := r.Queue.InstallQueue[i]
 			g.Go(func() error {
-				err := r.installMod(mod)
+				err := r.installMod(&mod)
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
+				mod.markInstalled()
 				return nil
 			})
 		}
 		if err := g.Wait(); err != nil {
 			return err
 		}
-		r.LogSuccessf("Installed %v mods", len(r.InstallQueue))
+		r.LogSuccessf("Installed %v mods", len(r.Queue.InstallQueue))
 		return nil
 	}
 	return errors.New("install queue empty")
 }
 
 // Install a mod
-func (r *Registry) installMod(mod Ckan) error {
+func (r *Registry) installMod(mod *Ckan) error {
 	// open zip
 	zipReader, err := zip.OpenReader(mod.Download.Path)
 	if err != nil {
@@ -262,7 +263,7 @@ func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Reg
 }
 
 // Gather list of mods and dependencies for download
-func (r *Registry) checkDependencies(toDownload []Ckan) ([]Ckan, error) {
+func (r *Registry) CheckDependencies(toDownload []Ckan) ([]Ckan, error) {
 	var mods []Ckan
 	dependencies := make(map[string]bool)
 	count := 0
