@@ -36,13 +36,23 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Left
 	case key.Matches(msg, b.keyMap.Left):
 		if b.activeBox == internal.QueueView {
-			b.nav.boolCursor = !b.nav.boolCursor
+			if b.nav.listSelected == -1 {
+				b.nav.boolCursor = !b.nav.boolCursor
+			} else {
+				b.nav.listCursor = -1
+				b.nav.boolCursor = false
+			}
 		}
 
 	// Right
 	case key.Matches(msg, b.keyMap.Right):
 		if b.activeBox == internal.QueueView {
-			b.nav.boolCursor = !b.nav.boolCursor
+			if b.nav.listSelected == -1 {
+				b.nav.boolCursor = !b.nav.boolCursor
+			} else {
+				b.nav.listCursor = -1
+				b.nav.boolCursor = true
+			}
 		}
 
 	// Space
@@ -93,31 +103,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.switchActiveView(internal.ModListView)
 		} else {
 			b.switchActiveView(internal.QueueView)
-			var removeQueue, installQueue []registry.Ckan
-
-			modMap := b.nav.installSelected
-			for i := range modMap {
-				if modMap[i].Install.Installed {
-					removeQueue = append(removeQueue, modMap[i])
-				} else {
-					installQueue = append(installQueue, modMap[i])
-				}
-			}
-
-			b.registry.Queue.RemoveQueue = removeQueue
-			b.registry.Queue.InstallQueue = installQueue
-
-			// collect all mods and dependencies
-			log.Print("Checking dependencies")
-			if len(b.registry.Queue.InstallQueue) > 0 {
-				mods, err := b.registry.CheckDependencies(b.registry.Queue.InstallQueue)
-				if err != nil {
-					b.LogErrorf("%v", err)
-				}
-				b.registry.Queue.DependencyQueue = mods
-			} else {
-				b.LogError("no mods provided")
-			}
+			b.prepareQueueView()
 		}
 
 	// View settings
@@ -172,7 +158,7 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 	case internal.SettingsView:
 		cmds = append(cmds, b.handleSettingsInput())
 	case internal.QueueView:
-		if b.nav.queueCursor == -1 {
+		if b.nav.listCursor == -1 {
 			// apply mods in queue
 			if b.nav.boolCursor {
 				b.ready = false
@@ -279,6 +265,35 @@ func (b *Bubble) handleSettingsInput() tea.Cmd {
 		cmds = append(cmds, b.prepareKspDirView())
 	}
 	return tea.Batch(cmds...)
+}
+
+func (b *Bubble) prepareQueueView() {
+	var removeQueue, installQueue []registry.Ckan
+	b.nav.listCursor = -1
+
+	modMap := b.nav.installSelected
+	for _, mod := range modMap {
+		if mod.Install.Installed {
+			removeQueue = append(removeQueue, mod)
+		} else {
+			installQueue = append(installQueue, mod)
+		}
+	}
+
+	b.registry.Queue.RemoveQueue = removeQueue
+	b.registry.Queue.InstallQueue = installQueue
+
+	// collect all mods and dependencies
+	log.Print("Checking dependencies")
+	if len(b.registry.Queue.InstallQueue) > 0 {
+		mods, err := b.registry.CheckDependencies(b.registry.Queue.InstallQueue)
+		if err != nil {
+			b.LogErrorf("%v", err)
+		}
+		b.registry.Queue.DependencyQueue = mods
+	} else {
+		b.LogError("no mods provided")
+	}
 }
 
 func trimLastChar(s string) string {

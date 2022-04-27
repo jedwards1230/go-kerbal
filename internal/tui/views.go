@@ -206,26 +206,29 @@ func (b Bubble) logView() string {
 func (b Bubble) queueView() string {
 	var content = ""
 	titleStyle := lipgloss.NewStyle().
-		Padding(2, 2).
+		Padding(2, 0, 1, 2).
 		Bold(true).
 		Width(b.bubbles.secondaryViewport.Width)
 
 	entryStyle := lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width-1).
-		Padding(0, 6)
+		Width(b.bubbles.secondaryViewport.Width - 5).
+		PaddingLeft(4)
+
+	//fullWidth := lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width - 2).Render
 
 	if len(b.nav.installSelected) > 0 {
 		selectedStyle := entryStyle.Copy().
 			Foreground(b.theme.UnselectedListItemColor).
 			Background(b.theme.SelectedListItemColor)
 
+		// Display mods to remove
 		if len(b.registry.Queue.RemoveQueue) > 0 {
 			/* removeStyle := entryStyle.Copy().
 			Foreground(b.theme.UnselectedListItemColor) */
 
 			var removeList []string
 			for i, mod := range b.registry.Queue.RemoveQueue {
-				if b.nav.queueCursor == i && b.nav.queueCursor != -1 {
+				if b.nav.listCursor == i {
 					removeList = append(removeList, selectedStyle.Render(mod.Name))
 				} else if false {
 					// mark mod removed
@@ -240,26 +243,33 @@ func (b Bubble) queueView() string {
 			)
 		}
 
+		// Display mods to intall
 		if len(b.registry.Queue.InstallQueue) > 0 {
-			downloadStyle := entryStyle.Copy().
+			/* downloadStyle := entryStyle.Copy().
 				Foreground(b.theme.Blue)
 
 			installStyle := entryStyle.Copy().
-				Foreground(b.theme.Green)
+				Foreground(b.theme.Green) */
 
 			var installList []string
 			for i, mod := range b.registry.Queue.InstallQueue {
-				if mod.Install.Installed {
-					installList = append(installList, installStyle.Render(mod.Name))
-				} else if mod.Download.Downloaded {
-					installList = append(installList, downloadStyle.Render(mod.Name))
-				} else if b.nav.queueCursor-len(b.registry.Queue.RemoveQueue) == i && b.nav.queueCursor != -1 {
+				if b.nav.listCursor-len(b.registry.Queue.RemoveQueue) == i {
 					installList = append(installList, selectedStyle.Render(mod.Name))
 				} else {
 					installList = append(installList, entryStyle.Render(mod.Name))
 				}
 			}
 			installContent := lipgloss.JoinVertical(lipgloss.Top, installList...)
+
+			/* installContent := ""
+			for i, mod := range b.registry.Queue.InstallQueue {
+				if b.nav.listCursor-len(b.registry.Queue.RemoveQueue) == i {
+					installContent += fullWidth(selectedStyle.Copy().Render(mod.Name)) + "\n"
+				} else {
+					installContent += fullWidth(entryStyle.Copy().Render(mod.Name)) + "\n"
+				}
+			} */
+
 			content = lipgloss.JoinVertical(lipgloss.Top,
 				content,
 				titleStyle.Foreground(b.theme.Green).Render("To Install"),
@@ -267,6 +277,7 @@ func (b Bubble) queueView() string {
 			)
 		}
 
+		// Display mod dependencies to install
 		if len(b.registry.Queue.DependencyQueue) > 0 {
 			downloadStyle := entryStyle.Copy().
 				Foreground(b.theme.Blue)
@@ -280,7 +291,7 @@ func (b Bubble) queueView() string {
 					installList = append(installList, installStyle.Render(mod.Name))
 				} else if mod.Download.Downloaded {
 					installList = append(installList, downloadStyle.Render(mod.Name))
-				} else if b.nav.queueCursor-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.queueCursor != -1 {
+				} else if b.nav.listCursor-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.listCursor != -1 {
 					installList = append(installList, selectedStyle.Render(mod.Name))
 				} else {
 					installList = append(installList, entryStyle.Render(mod.Name))
@@ -296,37 +307,9 @@ func (b Bubble) queueView() string {
 
 		if content != "" {
 			if b.ready {
-				optionStyle := lipgloss.NewStyle().
-					Padding(0, 2)
-
-				cancel := optionStyle.Render("Cancel")
-				confirm := optionStyle.Render("Confirm")
-
-				if b.nav.queueCursor == -1 {
-					if b.nav.boolCursor {
-						confirm = optionStyle.Copy().
-							Foreground(b.theme.UnselectedListItemColor).
-							Background(b.theme.SelectedListItemColor).
-							Render("Confirm")
-					} else {
-						cancel = optionStyle.Copy().
-							Foreground(b.theme.UnselectedListItemColor).
-							Background(b.theme.SelectedListItemColor).
-							Render("Cancel")
-					}
-				}
-
-				options := connectSides(cancel, confirm)
-
-				options = lipgloss.NewStyle().
-					Width(int(b.bubbles.secondaryViewport.Width)).
-					Align(lipgloss.Center).
-					Padding(3).
-					Render(options)
-
 				content = lipgloss.JoinVertical(lipgloss.Top,
 					content,
-					options,
+					b.getBoolOptionsView(),
 				)
 			}
 			return lipgloss.NewStyle().
@@ -660,4 +643,34 @@ func (b Bubble) getMainButtonsView() string {
 	}
 
 	return buttonRow
+}
+
+func (b Bubble) getBoolOptionsView() string {
+	optionStyle := lipgloss.NewStyle().
+		Padding(0, 2)
+
+	cancel := optionStyle.Render("Cancel")
+	confirm := optionStyle.Render("Confirm")
+
+	if b.nav.listCursor == -1 {
+		if b.nav.boolCursor {
+			confirm = optionStyle.Copy().
+				Foreground(b.theme.UnselectedListItemColor).
+				Background(b.theme.SelectedListItemColor).
+				Render("Confirm")
+		} else {
+			cancel = optionStyle.Copy().
+				Foreground(b.theme.UnselectedListItemColor).
+				Background(b.theme.SelectedListItemColor).
+				Render("Cancel")
+		}
+	}
+
+	options := connectSides(cancel, confirm)
+
+	return lipgloss.NewStyle().
+		Width(int(b.bubbles.secondaryViewport.Width)).
+		Align(lipgloss.Center).
+		Padding(3).
+		Render(options)
 }

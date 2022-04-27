@@ -22,7 +22,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg := msg.(type) {
-	// Update mod list
 	case UpdatedModMapMsg:
 		b.registry.TotalModMap = msg
 		cmds = append(cmds, b.sortModMapCmd())
@@ -39,7 +38,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.ready = true
 		cmds = append(cmds, b.getAvailableModsCmd())
 
-	// Update KSP dir
 	case UpdateKspDirMsg:
 		b.ready = true
 		if msg {
@@ -122,23 +120,27 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	b.checkActiveViewPortBounds()
-	b.bubbles.primaryViewport.SetContent(b.modListView())
 
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
+		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
+		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.ModInfoView:
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
+		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
 		b.bubbles.splashViewport.SetContent(b.inputKspView())
 	case internal.SettingsView:
+		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
 	case internal.QueueView:
-		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
-		b.bubbles.secondaryViewport.SetContent(b.queueView())
+		b.bubbles.primaryViewport, cmd = b.bubbles.primaryViewport.Update(msg)
+		b.bubbles.primaryViewport.SetContent(b.queueView())
+		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	}
 
 	return cmd
@@ -185,10 +187,36 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		}
 	case internal.QueueView:
 		listLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
-		if b.nav.queueCursor >= listLen {
-			b.nav.queueCursor = -1
-		} else if b.nav.queueCursor < -1 {
-			b.nav.queueCursor = listLen - 1
+		top := b.bubbles.primaryViewport.YOffset
+		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
+
+		cursor := b.nav.listCursor
+		if cursor >= len(b.registry.Queue.RemoveQueue) {
+			cursor += len(b.registry.Queue.RemoveQueue)
+		}
+		if cursor >= len(b.registry.Queue.InstallQueue) {
+			cursor += len(b.registry.Queue.InstallQueue)
+		}
+		if cursor >= len(b.registry.Queue.DependencyQueue) {
+			cursor += len(b.registry.Queue.DependencyQueue)
+		}
+
+		log.Printf("c: %v cur: %v top: %v bot: %v", cursor, b.nav.listCursor, top, bottom)
+
+		if cursor < top {
+			b.bubbles.primaryViewport.LineUp(1)
+		} else if cursor > bottom {
+			b.bubbles.primaryViewport.LineDown(1)
+		}
+
+		if b.nav.listCursor > listLen-1 {
+			b.nav.listCursor = -1
+			b.nav.listSelected = b.nav.listCursor
+			b.bubbles.primaryViewport.GotoTop()
+		} else if b.nav.listCursor < -1 {
+			b.nav.listCursor = listLen - 1
+			b.nav.listSelected = b.nav.listCursor
+			b.bubbles.primaryViewport.GotoBottom()
 		}
 	case internal.LogView:
 		if b.bubbles.splashViewport.AtBottom() {
@@ -205,29 +233,25 @@ func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
 		switch b.activeBox {
-		case internal.ModListView, internal.SearchView:
+		case internal.ModListView, internal.SearchView, internal.QueueView:
 			b.nav.listCursor--
 			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.SettingsView:
 			b.nav.menuCursor--
-		case internal.QueueView:
-			b.nav.queueCursor--
 		case internal.LogView:
 			b.bubbles.splashViewport.LineUp(1)
 		}
 	case "down":
 		switch b.activeBox {
-		case internal.ModListView, internal.SearchView:
+		case internal.ModListView, internal.SearchView, internal.QueueView:
 			b.nav.listCursor++
 			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:
 			b.nav.menuCursor++
-		case internal.QueueView:
-			b.nav.queueCursor++
 		case internal.LogView:
 			b.bubbles.splashViewport.LineDown(1)
 		}
