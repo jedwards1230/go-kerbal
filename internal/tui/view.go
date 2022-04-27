@@ -95,30 +95,28 @@ func (b Bubble) View() string {
 	}
 
 	return connectVert(
-		b.getMainButtonsView(),
+		//b.getMainButtonsView(),
 		body,
 		b.statusBarView(),
 	)
 }
 
 func (b Bubble) styleTitle(s string) string {
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Height(3).
+		Border(lipgloss.RoundedBorder()).
+		Padding(1)
+		//Margin(1, 0)
+
 	switch b.activeBox {
 	case internal.LogView, internal.EnterKspDirView:
-		return lipgloss.NewStyle().
-			Bold(true).
-			Align(lipgloss.Center).
-			Height(3).
-			Border(lipgloss.RoundedBorder()).
-			Padding(1).
-			Width(b.bubbles.splashViewport.Width).
+		return titleStyle.
+			Width(b.bubbles.splashViewport.Width + 2).
 			Render(s)
 	default:
-		return lipgloss.NewStyle().
-			Bold(true).
-			Align(lipgloss.Center).
-			Height(3).
-			Border(lipgloss.RoundedBorder()).
-			Padding(1).
+		return titleStyle.
 			Width(b.bubbles.primaryViewport.Width + 2).
 			Render(s)
 	}

@@ -151,7 +151,14 @@ func (b Bubble) homeView() string {
 		Padding(2).
 		Render
 
-	return contentStyle("Go-Kerbal Home Page")
+	content := "Go-Kerbal Home Page\n" +
+		"\n" +
+		"To do:\n " +
+		"- Display error messages\n " +
+		"- Ensure mods install/uninstall properly\n " +
+		"- Dynamic command view\n "
+
+	return contentStyle(content)
 
 }
 
@@ -200,7 +207,7 @@ func (b Bubble) logView() string {
 
 	body := connectVert(bodyList...)
 	return lipgloss.NewStyle().
-		Width(b.bubbles.splashViewport.Width - 1).
+		Width(b.bubbles.splashViewport.Width).
 		Height(b.bubbles.splashViewport.Height - 3).
 		Render(body)
 }
@@ -666,7 +673,7 @@ func (b Bubble) helpView() string {
 		Bold(true).
 		Align(lipgloss.Left).
 		Width(b.bubbles.commandViewport.Width).
-		Padding(1, 2)
+		Padding(1, 2, 0)
 
 	itemStyle := lipgloss.NewStyle().
 		Width((b.bubbles.commandViewport.Width / 2)).
@@ -675,11 +682,11 @@ func (b Bubble) helpView() string {
 		Render
 
 	leftColumn := []string{
-		itemStyle("up: move up"),
-		itemStyle("down: move down"),
-		itemStyle("space: space"),
-		itemStyle("enter: enter"),
-		itemStyle("tab: tab"),
+		itemStyle("up: Move up"),
+		itemStyle("down: Move down"),
+		itemStyle("space: Toggle mod info"),
+		itemStyle("enter: Add to queue"),
+		itemStyle("tab: Swap active windows"),
 	}
 
 	rightColumn := []string{
@@ -691,6 +698,8 @@ func (b Bubble) helpView() string {
 	}
 
 	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
+
+	content = lipgloss.NewStyle().Padding(1).Render(content)
 
 	content = connectVert(
 		titleStyle.Render("Help Menu"),
@@ -712,7 +721,7 @@ func (b Bubble) getBoolOptionsView() string {
 	optionStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Align(lipgloss.Center).
-		Padding(1, 4).
+		Padding(0, 4).
 		Margin(1, 1)
 
 	cancel := optionStyle.Render("Cancel")
