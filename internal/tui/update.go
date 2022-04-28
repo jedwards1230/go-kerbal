@@ -88,7 +88,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 4
 
 		b.bubbles.commandViewport.Width = (msg.Width / 2) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.commandViewport.Height = (msg.Height / 3) - internal.StatusBarHeight - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
+		b.bubbles.commandViewport.Height = (msg.Height / 3) - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.splashViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 6
@@ -191,7 +191,11 @@ func (b *Bubble) scrollView(dir string) {
 	case "up":
 		switch b.activeBox {
 		case internal.ModListView, internal.SearchView, internal.QueueView:
-			b.bubbles.paginator.LineUp()
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.bubbles.paginator.LineUp()
+			}
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.SettingsView:
@@ -202,7 +206,11 @@ func (b *Bubble) scrollView(dir string) {
 	case "down":
 		switch b.activeBox {
 		case internal.ModListView, internal.SearchView, internal.QueueView:
-			b.bubbles.paginator.LineDown()
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.bubbles.paginator.LineDown()
+			}
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:

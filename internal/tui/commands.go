@@ -107,7 +107,7 @@ func (b Bubble) searchCmd(s string) tea.Cmd {
 
 func (b Bubble) MyTickCmd() tea.Cmd {
 	return func() tea.Msg {
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		return MyTickMsg{}
 	}
 }
