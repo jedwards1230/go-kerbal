@@ -38,12 +38,12 @@ func (b Bubble) View() string {
 		switch b.activeBox {
 		case internal.ModListView:
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.ModInfoView:
 			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.SettingsView:
@@ -52,34 +52,28 @@ func (b Bubble) View() string {
 		case internal.SearchView:
 			primaryTitle = b.styleTitle("Search Mods")
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-			if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
+			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.QueueView:
 			primaryTitle = b.styleTitle("Queue")
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-			queueLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
-			if b.nav.listSelected >= 0 && b.nav.listSelected < queueLen {
-				if b.activeBox == internal.QueueView {
-					id := b.registry.ModMapIndex[b.nav.listSelected]
-					mod := b.registry.SortedNonCompatibleMap[id.Key]
-					secondaryTitle = b.styleTitle(mod.Name)
-				} else {
-					secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
-				}
+			//queueLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
+			if !b.nav.listCursorHide {
+				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		}
 
-		// format views
-		b.bubbles.primaryViewport.Style = lipgloss.NewStyle().
+		pageStyle := lipgloss.NewStyle().
 			PaddingLeft(internal.BoxPadding).
 			PaddingRight(internal.BoxPadding).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(primaryBoxBorderColor).
-			Align(lipgloss.Center)
+			Align(lipgloss.Center).Render
+
 		primaryBox = connectVert(
 			primaryTitle,
-			b.bubbles.primaryViewport.View(),
+			pageStyle(b.bubbles.paginator.GetContent()),
 		)
 
 		b.bubbles.secondaryViewport.Style = lipgloss.NewStyle().

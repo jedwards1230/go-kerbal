@@ -10,15 +10,24 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/internal"
-	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/muesli/reflow/truncate"
 )
 
 func (b Bubble) modListView() string {
 	modMap := b.registry.GetActiveModList()
 
-	s := ""
-	for i, id := range b.registry.ModMapIndex {
+	pageStyle := lipgloss.NewStyle().
+		Width(b.bubbles.primaryViewport.Width).
+		Height(b.bubbles.paginator.PerPage + 1).Render
+
+	pagerStyle := lipgloss.NewStyle().
+		Width(b.bubbles.primaryViewport.Width).
+		Align(lipgloss.Center).Render
+
+	page := ""
+	start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
+	log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
+	for i, id := range b.registry.ModMapIndex[start:end] {
 		mod := modMap[id.Key]
 
 		checked := " "
@@ -31,42 +40,41 @@ func (b Bubble) modListView() string {
 			uint(b.bubbles.primaryViewport.Width-2),
 			internal.EllipsisStyle)
 
-		if b.nav.listSelected == i {
-			s += lipgloss.NewStyle().
+		if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
+			page += lipgloss.NewStyle().
 				Background(b.theme.SelectedListItemColor).
 				Foreground(b.theme.UnselectedListItemColor).
 				Width(b.bubbles.primaryViewport.Width).
 				Render(line)
 		} else if mod.Install.Installed {
-			s += lipgloss.NewStyle().
+			page += lipgloss.NewStyle().
 				Foreground(b.theme.InstalledColor).
 				Render(line)
 		} else if !mod.IsCompatible {
-			s += lipgloss.NewStyle().
+			page += lipgloss.NewStyle().
 				Foreground(b.theme.Orange).
 				Render(line)
 		} else {
-			s += lipgloss.NewStyle().
+			page += lipgloss.NewStyle().
 				Render(line)
 		}
-		s += "\n"
+		page += "\n"
 	}
+
+	page = connectVert(
+		pageStyle(page),
+		pagerStyle(b.bubbles.paginator.View()),
+	)
 
 	return lipgloss.NewStyle().
 		Width(b.bubbles.primaryViewport.Width).
 		Height(b.bubbles.primaryViewport.Height - 3).
-		Render(s)
+		Render(page)
 }
 
 func (b Bubble) modInfoView() string {
-	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
-		var mod registry.Ckan
-		if b.activeBox == internal.QueueView {
-			id := b.registry.ModMapIndex[b.nav.listSelected]
-			mod = b.registry.SortedNonCompatibleMap[id.Key]
-		} else {
-			mod = b.nav.activeMod
-		}
+	if !b.nav.listCursorHide {
+		mod := b.nav.activeMod
 
 		keyStyle := lipgloss.NewStyle().
 			Align(lipgloss.Left).
@@ -255,10 +263,8 @@ func (b Bubble) queueView() string {
 					uint(b.bubbles.primaryViewport.Width-6),
 					internal.EllipsisStyle)
 
-				if b.nav.listSelected == i {
+				if b.bubbles.paginator.Cursor == i {
 					removeList = append(removeList, selectedStyle.Render(name))
-				} else if false {
-					// mark mod removed
 				} else {
 					removeList = append(removeList, entryStyle.Render(name))
 				}
@@ -283,7 +289,7 @@ func (b Bubble) queueView() string {
 					installList = append(installList, installStyle.Render(name))
 				} else if mod.Download.Downloaded {
 					installList = append(installList, downloadStyle.Render(name))
-				} else if b.nav.listSelected-len(b.registry.Queue.RemoveQueue) == i && b.nav.listSelected != -1 {
+				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue.RemoveQueue) == i && b.nav.listCursorHide {
 					installList = append(installList, selectedStyle.Render(name))
 				} else {
 					installList = append(installList, entryStyle.Render(name))
@@ -311,7 +317,7 @@ func (b Bubble) queueView() string {
 					installList = append(installList, installStyle.Render(name))
 				} else if mod.Download.Downloaded {
 					installList = append(installList, downloadStyle.Render(name))
-				} else if b.nav.listSelected-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.listSelected != -1 {
+				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.listCursorHide {
 					installList = append(installList, selectedStyle.Render(name))
 				} else {
 					installList = append(installList, entryStyle.Render(name))
@@ -327,8 +333,8 @@ func (b Bubble) queueView() string {
 
 		if content != "" {
 			return lipgloss.NewStyle().
-				Width(b.bubbles.secondaryViewport.Width - 1).
-				Height(b.bubbles.secondaryViewport.Height - 3).
+				Width(b.bubbles.primaryViewport.Width - 1).
+				Height(b.bubbles.primaryViewport.Height - 3).
 				Render(content)
 		} else {
 			b.LogErrorf("Unable to parse queue: %v", b.nav.installSelected)
@@ -337,8 +343,8 @@ func (b Bubble) queueView() string {
 	return lipgloss.NewStyle().
 		Padding(2).
 		Align(lipgloss.Center).
-		Width(b.bubbles.secondaryViewport.Width).
-		Height(b.bubbles.secondaryViewport.Height - 3).
+		Width(b.bubbles.primaryViewport.Width).
+		Height(b.bubbles.primaryViewport.Height - 3).
 		Render("No mods in queue")
 }
 
@@ -742,7 +748,7 @@ func (b Bubble) getBoolOptionsView() string {
 	cancel := optionStyle.Render("Cancel")
 	confirm := optionStyle.Render("Confirm")
 
-	if b.nav.listSelected == -1 {
+	if b.nav.listCursorHide {
 		if b.nav.boolCursor {
 			confirm = optionStyle.Copy().
 				BorderForeground(b.theme.ActiveBoxBorderColor).

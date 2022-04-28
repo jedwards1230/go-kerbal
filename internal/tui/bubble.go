@@ -35,12 +35,13 @@ type Bubbles struct {
 	commandViewport   bubbles.Viewport
 	spinner           spinner.Model
 	textInput         textinput.Model
+	paginator         bubbles.Paginator
 }
 
 type Nav struct {
 	activeMod       registry.Ckan
 	installSelected map[string]registry.Ckan
-	listSelected    int
+	listCursorHide  bool
 	listCursor      int
 	menuCursor      int
 	boolCursor      bool
@@ -98,8 +99,15 @@ func InitialModel() Bubble {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(splashBoxBorderColor)
 
+	pages := bubbles.NewPaginator()
+	pages.Type = bubbles.Dots
+	pages.PerPage = 1
+	pages.ActiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render("•")
+	pages.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
+	pages.SetTotalPages(1)
+
 	nav := Nav{
-		listSelected:    -1,
+		listCursorHide:  true,
 		menuCursor:      0,
 		boolCursor:      false,
 		installSelected: make(map[string]registry.Ckan),
@@ -112,6 +120,7 @@ func InitialModel() Bubble {
 		splashViewport:    splashVP,
 		spinner:           spin,
 		textInput:         t,
+		paginator:         pages,
 	}
 
 	return Bubble{

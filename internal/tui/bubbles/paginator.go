@@ -1,0 +1,166 @@
+// Package paginator provides a Bubble Tea package for calulating pagination
+// and rendering pagination info. Note that this package does not render actual
+// pages: it's purely for handling keystrokes related to pagination, and
+// rendering pagination status.
+package bubbles
+
+import (
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+// Type specifies the way we render pagination.
+type Type int
+
+// Pagination rendering options.
+const Dots Type = iota
+
+// Paginator is the Bubble Tea model for this user interface.
+type Paginator struct {
+	Type        Type
+	Cursor      int
+	Page        int
+	PerPage     int
+	TotalPages  int
+	ActiveDot   string
+	InactiveDot string
+	Content     string
+}
+
+// SetTotalPages is a helper function for calculating the total number of pages
+// from a given number of items. It's use is optional since this pager can be
+// used for other things beyond navigating sets. Note that it both returns the
+// number of total pages and alters the model.
+func (m *Paginator) SetTotalPages(items int) int {
+	if items < 1 {
+		return m.TotalPages
+	}
+	n := items / m.PerPage
+	if items%m.PerPage > 0 {
+		n++
+	}
+	m.TotalPages = n
+	return n
+}
+
+// ItemsOnPage is a helper function for returning the numer of items on the
+// current page given the total numer of items passed as an argument.
+func (m Paginator) ItemsOnPage(totalItems int) int {
+	if totalItems < 1 {
+		return 0
+	}
+	start, end := m.GetSliceBounds(totalItems)
+	return end - start
+}
+
+// GetSliceBounds is a helper function for paginating slices. Pass the length
+// of the slice you're rendering and you'll receive the start and end bounds
+// corresponding the to pagination. For example:
+//
+//     bunchOfStuff := []stuff{...}
+//     start, end := model.GetSliceBounds(len(bunchOfStuff))
+//     sliceToRender := bunchOfStuff[start:end]
+//
+func (m *Paginator) GetSliceBounds(length int) (start int, end int) {
+	start = m.Page * m.PerPage
+	end = minPaginator(m.Page*m.PerPage+m.PerPage, length)
+	return start, end
+}
+
+func (m *Paginator) GetSliceStart() int {
+	return m.Page * m.PerPage
+}
+
+func (m *Paginator) LineDown() {
+	m.Cursor++
+	if m.Cursor >= m.PerPage {
+		m.Cursor = 0
+	}
+}
+
+func (m *Paginator) LineUp() {
+	m.Cursor--
+	if m.Cursor < 0 {
+		m.Cursor = m.PerPage - 1
+	}
+}
+
+// PrevPage is a number function for navigating one page backward. It will not
+// page beyond the first page (i.e. page 0).
+func (m *Paginator) PrevPage() {
+	if m.Page > 0 {
+		m.Page--
+	} else {
+		m.Page = m.TotalPages - 1
+	}
+	m.Cursor = 0
+}
+
+// NextPage is a helper function for navigating one page forward. It will not
+// page beyond the last page (i.e. totalPages - 1).
+func (m *Paginator) NextPage() {
+	if !m.OnLastPage() {
+		m.Page++
+	} else {
+		m.Page = 0
+	}
+	m.Cursor = 0
+}
+
+// OnLastPage returns whether or not we're on the last page.
+func (m Paginator) OnLastPage() bool {
+	return m.Page == m.TotalPages-1
+}
+
+func (m *Paginator) SetContent(s string) {
+	m.Content = s
+}
+
+func (m Paginator) GetContent() string {
+	return m.Content
+}
+
+// NewPaginator creates a new model with defaults.
+func NewPaginator() Paginator {
+	return Paginator{
+		Page:        0,
+		PerPage:     1,
+		TotalPages:  1,
+		ActiveDot:   "•",
+		InactiveDot: "○",
+		Content:     "",
+	}
+}
+
+// NewModel creates a new model with defaults.
+//
+// Deprecated. Use New instead.
+var NewModel = NewPaginator
+
+// Update is the Tea update function which binds keystrokes to pagination.
+func (m Paginator) Update(msg tea.Msg) (Paginator, tea.Cmd) {
+	return m, nil
+}
+
+// View renders the pagination to a string.
+func (m Paginator) View() string {
+	return m.dotsView()
+}
+
+func (m Paginator) dotsView() string {
+	var s string
+	for i := 0; i < m.TotalPages; i++ {
+		if i == m.Page {
+			s += m.ActiveDot
+			continue
+		}
+		s += m.InactiveDot
+	}
+	return s
+}
+
+func minPaginator(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

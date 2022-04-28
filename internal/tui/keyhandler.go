@@ -24,8 +24,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	// Down
 	case key.Matches(msg, b.keyMap.Down):
-		if b.nav.listSelected == -1 && b.activeBox == internal.QueueView {
-			b.nav.listSelected = 0
+		if b.nav.listCursorHide {
+			b.nav.listCursorHide = false
 		} else {
 			b.scrollView("down")
 		}
@@ -33,40 +33,45 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	// Up
 	case key.Matches(msg, b.keyMap.Up):
-		b.scrollView("up")
+		if b.nav.listCursorHide {
+			b.nav.listCursorHide = false
+		} else {
+			b.scrollView("up")
+		}
 		b.inputRequested = false
 
 	// Left
 	case key.Matches(msg, b.keyMap.Left):
 		switch b.activeBox {
 		case internal.QueueView:
-			if b.nav.listSelected == -1 {
+			// todo: page handling for queue. conflicts with confirm button
+			if b.nav.listCursorHide {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = false
-				b.nav.listSelected = -1
+				b.nav.listCursorHide = true
 			}
+		case internal.ModListView, internal.SearchView:
+			b.bubbles.paginator.PrevPage()
 		}
 
 	// Right
 	case key.Matches(msg, b.keyMap.Right):
 		switch b.activeBox {
 		case internal.QueueView:
-			if b.nav.listSelected == -1 {
+			if b.nav.listCursorHide {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = true
-				b.nav.listSelected = -1
+				b.nav.listCursorHide = true
 			}
+		case internal.ModListView, internal.SearchView:
+			b.bubbles.paginator.NextPage()
 		}
 
 	// Space
 	case key.Matches(msg, b.keyMap.Space):
-		if b.nav.listSelected == b.nav.listCursor {
-			b.nav.listSelected = -1
-		} else {
-			b.nav.listSelected = b.nav.listCursor
-		}
+		b.nav.listCursorHide = !b.nav.listCursorHide
 
 	// Enter
 	case key.Matches(msg, b.keyMap.Enter):
@@ -125,12 +130,12 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 }
 
 func (b *Bubble) toggleSelectedItem() {
-	id := b.registry.ModMapIndex[b.nav.listCursor]
+	cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+	id := b.registry.ModMapIndex[cursor]
 	modMap := b.registry.GetActiveModList()
 	mod := modMap[id.Key]
 
 	// toggle mod selection
-	b.nav.listSelected = b.nav.listCursor
 	if b.nav.installSelected[mod.Identifier].Identifier != "" {
 		delete(b.nav.installSelected, mod.Identifier)
 	} else {
@@ -141,7 +146,7 @@ func (b *Bubble) toggleSelectedItem() {
 func (b *Bubble) resetView() tea.Cmd {
 	b.nav.boolCursor = false
 	b.nav.listCursor = 0
-	b.nav.listSelected = -1
+	b.nav.listCursorHide = true
 	b.nav.installSelected = make(map[string]registry.Ckan, 0)
 	b.bubbles.textInput.Reset()
 	b.inputRequested = false
@@ -163,7 +168,7 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 	case internal.SettingsView:
 		cmds = append(cmds, b.handleSettingsInput())
 	case internal.QueueView:
-		if b.nav.listSelected == -1 {
+		if b.nav.listCursorHide {
 			// apply mods in queue
 			if b.nav.boolCursor {
 				b.ready = false

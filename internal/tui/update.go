@@ -16,6 +16,9 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
+	//b.bubbles.paginator, cmd = b.bubbles.paginator.Update(msg)
+	//cmds = append(cmds, cmd)
+
 	if b.inputRequested {
 		b.bubbles.textInput, cmd = b.bubbles.textInput.Update(msg)
 		cmds = append(cmds, cmd)
@@ -28,7 +31,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case SortedMsg:
 		b.registry.SortModList()
-		b.nav.listSelected = -1
+		b.nav.listCursorHide = true
 		b.ready = true
 		b.bubbles.primaryViewport.GotoTop()
 		if b.activeBox == internal.SearchView {
@@ -55,7 +58,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case SearchMsg:
 		if len(msg) >= 0 {
-			b.nav.listSelected = -1
+			b.nav.listCursorHide = true
 			b.registry.ModMapIndex = registry.ModIndex(msg)
 		} else {
 			b.LogError("Error searching")
@@ -76,6 +79,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		b.width = msg.Width
 		b.height = msg.Height
+
+		b.bubbles.paginator.PerPage = b.height - 11
 
 		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.primaryViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 6
@@ -123,13 +128,15 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Update content for active view
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
+	b.bubbles.paginator.SetTotalPages(len(b.registry.ModMapIndex))
 	b.checkActiveViewPortBounds()
+
 	b.bubbles.commandViewport.SetContent(b.commandView())
 
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		b.bubbles.primaryViewport.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
+		b.bubbles.paginator.SetContent(b.modListView())
 	case internal.ModInfoView:
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.primaryViewport.SetContent(b.modListView())
@@ -142,7 +149,7 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
 	case internal.QueueView:
-		b.bubbles.primaryViewport.SetContent(b.queueView())
+		b.bubbles.paginator.SetContent(b.queueView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	}
 
@@ -157,7 +164,7 @@ func (b *Bubble) switchActiveView(newView int) {
 // Handles wrapping and button scrolling in the viewport
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
-	case internal.ModListView, internal.SearchView, internal.QueueView:
+	case internal.QueueView:
 		top := b.bubbles.primaryViewport.YOffset
 		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
 
@@ -169,11 +176,9 @@ func (b *Bubble) checkActiveViewPortBounds() {
 
 		if b.nav.listCursor > len(b.registry.ModMapIndex)-1 {
 			b.nav.listCursor = 0
-			b.nav.listSelected = b.nav.listCursor
 			b.bubbles.primaryViewport.GotoTop()
 		} else if b.nav.listCursor < 0 {
 			b.nav.listCursor = len(b.registry.ModMapIndex) - 1
-			b.nav.listSelected = b.nav.listCursor
 			b.bubbles.primaryViewport.GotoBottom()
 		}
 	case internal.ModInfoView:
@@ -188,39 +193,6 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		} else if b.nav.menuCursor < 0 {
 			b.nav.menuCursor = internal.MenuInputs - 1
 		}
-	/* case internal.QueueView:
-	listLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
-	top := b.bubbles.primaryViewport.YOffset
-	bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
-
-	cursor := b.nav.listCursor
-	if cursor >= len(b.registry.Queue.RemoveQueue) {
-		cursor += len(b.registry.Queue.RemoveQueue)
-	}
-	if cursor >= len(b.registry.Queue.InstallQueue) {
-		cursor += len(b.registry.Queue.InstallQueue)
-	}
-	if cursor >= len(b.registry.Queue.DependencyQueue) {
-		cursor += len(b.registry.Queue.DependencyQueue)
-	}
-
-	log.Printf("c: %v cur: %v top: %v bot: %v", cursor, b.nav.listCursor, top, bottom)
-
-	if cursor < top {
-		b.bubbles.primaryViewport.LineUp(1)
-	} else if cursor > bottom {
-		b.bubbles.primaryViewport.LineDown(1)
-	}
-
-	if b.nav.listCursor > listLen-1 {
-		b.nav.listCursor = -1
-		b.nav.listSelected = b.nav.listCursor
-		b.bubbles.primaryViewport.GotoTop()
-	} else if b.nav.listCursor < -1 {
-		b.nav.listCursor = listLen - 1
-		b.nav.listSelected = b.nav.listCursor
-		b.bubbles.primaryViewport.GotoBottom()
-	} */
 	case internal.LogView:
 		if b.bubbles.splashViewport.AtBottom() {
 			b.bubbles.splashViewport.GotoBottom()
@@ -236,9 +208,10 @@ func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
 		switch b.activeBox {
-		case internal.ModListView, internal.SearchView, internal.QueueView:
+		case internal.ModListView, internal.SearchView:
+			b.bubbles.paginator.LineUp()
+		case internal.QueueView:
 			b.nav.listCursor--
-			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.SettingsView:
@@ -248,9 +221,10 @@ func (b *Bubble) scrollView(dir string) {
 		}
 	case "down":
 		switch b.activeBox {
-		case internal.ModListView, internal.SearchView, internal.QueueView:
+		case internal.ModListView, internal.SearchView:
+			b.bubbles.paginator.LineDown()
+		case internal.QueueView:
 			b.nav.listCursor++
-			b.nav.listSelected = b.nav.listCursor
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:
@@ -264,9 +238,16 @@ func (b *Bubble) scrollView(dir string) {
 }
 
 func (b *Bubble) updateActiveMod() {
-	modMap := b.registry.GetActiveModList()
-	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
-		id := b.registry.ModMapIndex[b.nav.listSelected]
-		b.nav.activeMod = modMap[id.Key]
+	if !b.nav.listCursorHide {
+		if b.activeBox == internal.QueueView {
+			cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+			id := b.registry.ModMapIndex[cursor]
+			b.nav.activeMod = b.registry.SortedNonCompatibleMap[id.Key]
+		} else {
+			modMap := b.registry.GetActiveModList()
+			cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+			id := b.registry.ModMapIndex[cursor]
+			b.nav.activeMod = modMap[id.Key]
+		}
 	}
 }
