@@ -41,7 +41,6 @@ type resource struct {
 	Repository  string
 	XScreenshot string
 }
-
 type Entry struct {
 	Key      string
 	SearchBy string

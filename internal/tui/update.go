@@ -40,7 +40,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case InstalledModListMsg:
 		b.ready = true
-		cmds = append(cmds, b.getAvailableModsCmd())
+		//cmds = append(cmds, b.getAvailableModsCmd())
 
 	case UpdateKspDirMsg:
 		b.ready = true
@@ -221,6 +221,7 @@ func (b *Bubble) updateActiveMod() {
 	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
 		cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
 
+		// todo: check if all incompat map can be used for all cases
 		if b.activeBox == internal.QueueView {
 			//log.Printf("idx: %v, cur: %v", b.registry.ModMapIndex, cursor)
 			id := b.registry.ModMapIndex[cursor]

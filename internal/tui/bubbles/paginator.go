@@ -78,7 +78,7 @@ func (m *Paginator) GetCursorIndex() int {
 
 func (m *Paginator) LineDown() {
 	m.Cursor++
-	if m.Cursor > m.PerPage-1 || m.Cursor > m.Index-1 {
+	if m.Cursor > m.PerPage-1 || m.Cursor > m.Index {
 		m.Cursor = 0
 	}
 }
@@ -153,7 +153,11 @@ func (m Paginator) Update(msg tea.Msg) (Paginator, tea.Cmd) {
 
 // View renders the pagination to a string.
 func (m Paginator) View() string {
-	return m.dotsView()
+	if m.TotalPages <= 1 {
+		return " "
+	} else {
+		return m.dotsView()
+	}
 }
 
 func (m Paginator) dotsView() string {

@@ -65,8 +65,8 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 	return func() tea.Msg {
 
 		// Remove Mods
-		if len(b.registry.Queue["remove"]) > 0 {
-			b.LogCommandf("Removing %d mods", len(b.registry.Queue["remove"]))
+		if b.registry.Queue.RemoveLen() > 0 {
+			b.LogCommandf("Removing %d mods", b.registry.Queue.RemoveLen())
 			err := b.registry.RemoveMods()
 			if err != nil {
 				return fmt.Errorf("error removing: %v", err)
@@ -74,14 +74,14 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 		}
 
 		// Install Mods
-		if len(b.registry.Queue["install"]) > 0 || len(b.registry.Queue["dependency"]) > 0 {
-			b.LogCommandf("Downloading %d mods", len(b.registry.Queue["install"])+len(b.registry.Queue["dependency"]))
+		if b.registry.Queue.InstallLen() > 0 {
+			b.LogCommandf("Downloading %d mods", b.registry.Queue.InstallLen())
 			err := b.registry.DownloadMods()
 			if err != nil {
 				return fmt.Errorf("error downloading: %v", err)
 			}
 
-			b.LogCommandf("Installing %d mods", len(b.registry.Queue["install"])+len(b.registry.Queue["dependency"]))
+			b.LogCommandf("Installing %d mods", b.registry.Queue.InstallLen())
 			err = b.registry.InstallMods()
 			if err != nil {
 				return fmt.Errorf("error installing: %v", err)

@@ -43,30 +43,25 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	// Left
 	case key.Matches(msg, b.keyMap.Left):
 		switch b.activeBox {
-		case internal.QueueView:
-			// todo: page handling for queue. conflicts with confirm button
+		case internal.ModListView, internal.SearchView, internal.QueueView:
 			if b.nav.listCursorHide {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = false
 				b.bubbles.paginator.PrevPage()
 			}
-		case internal.ModListView, internal.SearchView:
-			b.bubbles.paginator.PrevPage()
 		}
 
 	// Right
 	case key.Matches(msg, b.keyMap.Right):
 		switch b.activeBox {
-		case internal.QueueView:
+		case internal.ModListView, internal.SearchView, internal.QueueView:
 			if b.nav.listCursorHide {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = true
 				b.bubbles.paginator.NextPage()
 			}
-		case internal.ModListView, internal.SearchView:
-			b.bubbles.paginator.NextPage()
 		}
 
 	// Space
@@ -152,13 +147,13 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.nav.listCursor = 0
 	b.nav.listCursorHide = true
 	b.nav.installSelected = make(map[string]registry.Ckan, 0)
-	b.registry.Queue = make(map[string]map[string]registry.Ckan, 0)
+	b.registry.Queue.List = make(map[string]map[string]registry.Ckan, 0)
 	b.bubbles.textInput.Reset()
 	b.inputRequested = false
 	b.searchInput = false
 	b.switchActiveView(internal.ModListView)
 	b.lastActiveBox = internal.ModListView
-	return b.sortModMapCmd()
+	return b.getAvailableModsCmd()
 }
 
 // Handle inputs when Enter is pressed
@@ -174,11 +169,12 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 		cmds = append(cmds, b.handleSettingsInput())
 	case internal.QueueView:
 		if b.nav.listCursorHide {
-			// apply mods in queue
 			if b.nav.boolCursor {
+				// apply mods in queue
 				b.ready = false
 				cmds = append(cmds, b.applyModsCmd(), b.bubbles.spinner.Tick)
 			} else {
+				// cancel
 				b.switchActiveView(internal.ModListView)
 				b.nav.listCursor = 0
 				b.ready = false
@@ -299,22 +295,20 @@ func (b *Bubble) prepareQueueView() {
 	}
 
 	if len(removeQueue) > 0 {
-		b.registry.Queue["remove"] = removeQueue
+		b.registry.Queue.SetRemovals(removeQueue)
 	}
 	if len(installQueue) > 0 {
-		b.registry.Queue["install"] = installQueue
+		b.registry.Queue.SetSelections(installQueue)
 	}
 
 	// collect all mods and dependencies
 	log.Print("Checking dependencies")
-	if len(b.registry.Queue["install"]) > 0 {
+	if b.registry.Queue.InstallLen() > 0 {
 		mods, err := b.registry.CheckDependencies()
 		if err != nil {
 			b.LogErrorf("%v", err)
 		}
-		b.registry.Queue["dependency"] = mods
-	} else {
-		b.LogError("no mods provided")
+		b.registry.Queue.SetDependencies(mods)
 	}
 	idx, err := b.registry.BuildQueueIndex()
 	if err != nil {

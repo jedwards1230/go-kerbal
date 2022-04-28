@@ -26,7 +26,7 @@ type Registry struct {
 	DB                     *CkanDB
 	SortOptions            SortOptions
 	theme                  theme.Theme
-	Queue                  map[string]map[string]Ckan
+	Queue                  Queue
 }
 
 type ModIndex []Entry
@@ -35,18 +35,20 @@ type ModIndex []Entry
 func GetRegistry() Registry {
 	db := GetDB()
 
-	installedList := make(map[string]Ckan, 0)
-
 	sortOpts := SortOptions{
 		SortTag:   "name",
 		SortOrder: "ascend",
 	}
 
+	que := Queue{
+		List: make(map[string]map[string]Ckan),
+	}
+
 	return Registry{
 		DB:               db,
-		InstalledModList: installedList,
+		InstalledModList: make(map[string]Ckan, 0),
 		SortOptions:      sortOpts,
-		Queue:            make(map[string]map[string]Ckan),
+		Queue:            que,
 	}
 }
 
@@ -173,10 +175,10 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 func (r *Registry) BuildQueueIndex() (ModIndex, error) {
 	idx := make(ModIndex, 0)
 
-	for id := range r.Queue {
-		for _, mod := range r.Queue[id] {
+	for applyType := range r.Queue.List {
+		for _, mod := range r.Queue.List[applyType] {
 			if mod.Identifier != "" {
-				idx = append(idx, Entry{mod.Identifier, id})
+				idx = append(idx, Entry{mod.Identifier, applyType})
 			}
 		}
 	}

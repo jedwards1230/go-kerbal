@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/muesli/reflow/truncate"
 )
 
@@ -162,25 +163,6 @@ func (b Bubble) modInfoView() string {
 		Render(b.homeView())
 }
 
-func (b Bubble) homeView() string {
-	contentStyle := lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width - 5).
-		Padding(2).
-		Render
-
-	content := "" +
-		"To do:\n " +
-		"- Display error messages\n " +
-		"- Make install queue editable\n " +
-		"- Window resizing on Windows\n " +
-		"- Better mod info formatting\n " +
-		"- Pagination\n " +
-		"- Ensure mods install/uninstall properly\n " +
-		"- Dynamic command view\n "
-
-	return contentStyle(content)
-}
-
 func (b Bubble) logView() string {
 	file, err := os.Open("./logs/debug.log")
 	if err != nil {
@@ -249,15 +231,15 @@ func (b Bubble) queueView() string {
 	entryStyle := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width-1).
 		Padding(0, 0, 0, 4)
-		/*
-			removeStyle := entryStyle.Copy().
-				Foreground(b.theme.UnselectedListItemColor)
-		*/
+
+	/* removeStyle := entryStyle.Copy().
+	Foreground(b.theme.UnselectedListItemColor)
+
 	downloadStyle := entryStyle.Copy().
 		Foreground(b.theme.Blue)
 
 	installStyle := entryStyle.Copy().
-		Foreground(b.theme.Green)
+		Foreground(b.theme.Green) */
 
 	if len(b.nav.installSelected) > 0 {
 		selectedStyle := entryStyle.Copy().
@@ -271,47 +253,44 @@ func (b Bubble) queueView() string {
 				internal.EllipsisStyle)
 		}
 
+		applyLineStyle := func(i int, mod registry.Ckan) string {
+			/* if mod.Install.Installed {
+				return installStyle.Render(trimName(mod.Name))
+			} else if mod.Download.Downloaded {
+				return downloadStyle.Render(trimName(mod.Name))
+			} else if b.bubbles.paginator.GetCursorIndex() == i && !b.nav.listCursorHide {
+				return selectedStyle.Render(trimName(mod.Name))
+			} else {
+				return entryStyle.Render(trimName(mod.Name))
+			} */
+
+			if b.bubbles.paginator.GetCursorIndex() == i && !b.nav.listCursorHide {
+				return selectedStyle.Render(trimName(mod.Name))
+			} else {
+				return entryStyle.Render(trimName(mod.Name))
+			}
+		}
+
 		var removeList, installList, dependencyList []string
 		start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
-		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
 		for i, entry := range b.registry.ModMapIndex[start:end] {
-			typeMap := b.registry.Queue[entry.SearchBy]
+			mod := b.registry.Queue.List[entry.SearchBy][entry.Key]
 			switch entry.SearchBy {
 			case "remove":
-				mod := typeMap[entry.Key]
-				if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
-					removeList = append(removeList, selectedStyle.Render(trimName(mod.Name)))
-				} else {
-					removeList = append(removeList, entryStyle.Render(trimName(mod.Name)))
-				}
+				removeList = append(removeList, applyLineStyle(i, mod))
+
 			case "install":
-				mod := typeMap[entry.Key]
-				if mod.Install.Installed {
-					installList = append(installList, installStyle.Render(trimName(mod.Name)))
-				} else if mod.Download.Downloaded {
-					installList = append(installList, downloadStyle.Render(trimName(mod.Name)))
-				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue["remove"]) == i && !b.nav.listCursorHide {
-					installList = append(installList, selectedStyle.Render(trimName(mod.Name)))
-				} else {
-					installList = append(installList, entryStyle.Render(trimName(mod.Name)))
-				}
+				installList = append(installList, applyLineStyle(i, mod))
+
 			case "dependency":
-				mod := typeMap[entry.Key]
-				if mod.Install.Installed {
-					dependencyList = append(dependencyList, installStyle.Render(trimName(mod.Name)))
-				} else if mod.Download.Downloaded {
-					dependencyList = append(dependencyList, downloadStyle.Render(trimName(mod.Name)))
-				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue["remove"])-len(b.registry.Queue["install"]) == i && !b.nav.listCursorHide {
-					dependencyList = append(dependencyList, selectedStyle.Render(trimName(mod.Name)))
-				} else {
-					dependencyList = append(dependencyList, entryStyle.Render(trimName(mod.Name)))
-				}
+				dependencyList = append(dependencyList, applyLineStyle(i, mod))
 			}
 		}
 
 		// Display mods to remove
-		if len(b.registry.Queue["remove"]) > 0 {
+		if b.registry.Queue.RemoveLen() > 0 {
 			removeContent := connectVert(removeList...)
+
 			content = connectVert(
 				titleStyle.Foreground(b.theme.Red).Render("To Remove"),
 				removeContent,
@@ -319,7 +298,7 @@ func (b Bubble) queueView() string {
 		}
 
 		// Display mods to intall
-		if len(b.registry.Queue["install"]) > 0 {
+		if b.registry.Queue.InstallLen() > 0 {
 			installContent := connectVert(installList...)
 
 			content = connectVert(
@@ -330,12 +309,12 @@ func (b Bubble) queueView() string {
 		}
 
 		// Display mod dependencies to install
-		if len(b.registry.Queue["dependency"]) > 0 {
-			installContent := connectVert(dependencyList...)
+		if len(b.registry.Queue.GetDependencies()) > 0 {
+			deoendencyContent := connectVert(dependencyList...)
 			content = connectVert(
 				content,
 				titleStyle.Foreground(b.theme.Green).Render("Dependencies"),
-				installContent,
+				deoendencyContent,
 			)
 		}
 
@@ -352,7 +331,7 @@ func (b Bubble) queueView() string {
 		Padding(2).
 		Align(lipgloss.Center).
 		Width(b.bubbles.primaryViewport.Width).
-		Height(b.bubbles.primaryViewport.Height - 3).
+		Height(b.bubbles.paginator.PerPage + 2).
 		Render("No mods in queue")
 }
 
@@ -442,33 +421,6 @@ func (b Bubble) settingsView() string {
 
 	return connectVert(
 		body,
-	)
-}
-
-func (b Bubble) inputKspView() string {
-	question := lipgloss.NewStyle().
-		Align(lipgloss.Left).
-		Width(b.width).
-		Padding(1).
-		Render("Please enter the path to your Kerbal Space Program directory:")
-
-	inText := ""
-	if b.inputRequested {
-		inText = b.bubbles.textInput.View()
-	} else {
-		inText = b.bubbles.textInput.Value()
-		inText += "\n\nPress Esc to close"
-	}
-
-	inText = lipgloss.NewStyle().
-		Align(lipgloss.Left).
-		Width(b.width).
-		Padding(1).
-		Render(inText)
-
-	return connectVert(
-		question,
-		inText,
 	)
 }
 
@@ -702,93 +654,3 @@ func (b Bubble) commandView() string {
 
 	return buttonRow
 } */
-
-func (b Bubble) helpView() string {
-	/* titleStyle := lipgloss.NewStyle().
-	Bold(true).
-	Align(lipgloss.Left).
-	Width(b.bubbles.commandViewport.Width).
-	Padding(1, 2, 0) */
-
-	leftColumn := []string{
-		b.drawHelpKV("up", "Move up"),
-		b.drawHelpKV("down", "Move down"),
-		b.drawHelpKV("space", "Toggle mod info"),
-		b.drawHelpKV("enter", "Add to queue"),
-		b.drawHelpKV("tab", "Swap active windows"),
-	}
-
-	rightColumn := []string{
-		b.drawHelpKV("1", "Refresh"),
-		b.drawHelpKV("2", "Search"),
-		b.drawHelpKV("3", "Apply"),
-		b.drawHelpKV("0", "Settings"),
-		b.drawHelpKV("shift+o", "Logs"),
-	}
-
-	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
-
-	content = lipgloss.NewStyle().
-		Padding(1).
-		Margin(1, 0).
-		Render(content)
-
-	return lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width).
-		Render(content)
-}
-
-func (b Bubble) getBoolOptionsView() string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Width(b.bubbles.commandViewport.Width-4).
-		Padding(1, 2, 0)
-
-	optionStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		Align(lipgloss.Center).
-		BorderForeground(b.theme.InactiveBoxBorderColor).
-		Padding(0, 4).
-		Faint(true).
-		Margin(1, 1)
-
-	cancel := optionStyle.Render("Cancel")
-	confirm := optionStyle.Render("Confirm")
-
-	if b.nav.listCursorHide {
-		if b.nav.boolCursor {
-			confirm = optionStyle.Copy().
-				BorderForeground(b.theme.ActiveBoxBorderColor).
-				Border(lipgloss.RoundedBorder()).
-				Faint(false).
-				Render("Confirm")
-			cancel = optionStyle.Copy().
-				Render("Cancel")
-		} else {
-			cancel = optionStyle.Copy().
-				BorderForeground(b.theme.ActiveBoxBorderColor).
-				Border(lipgloss.RoundedBorder()).
-				Faint(false).
-				Render("Cancel")
-			confirm = optionStyle.Copy().
-				Render("Confirm")
-		}
-	}
-
-	options := connectHorz(cancel, "  ", confirm)
-	options = lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width - 4).
-		Align(lipgloss.Center).
-		Render(options)
-
-	content := connectVert(
-		titleStyle.Render("Apply?"),
-		options,
-	)
-
-	return lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width).
-		//Padding(3).
-		Render(content)
-}

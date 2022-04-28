@@ -58,7 +58,6 @@ func (b Bubble) View() string {
 		case internal.QueueView:
 			primaryTitle = b.styleTitle("Queue")
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
-			//queueLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
 			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}

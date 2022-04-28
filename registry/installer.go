@@ -18,8 +18,62 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+type Queue struct {
+	List map[string]map[string]Ckan
+}
+
+func (q *Queue) SetRemovals(n map[string]Ckan) {
+	q.List["remove"] = n
+}
+
+func (q *Queue) SetSelections(n map[string]Ckan) {
+	q.List["install"] = n
+}
+
+func (q *Queue) SetDependencies(n map[string]Ckan) {
+	q.List["dependency"] = n
+}
+
+func (q Queue) getRemovals() map[string]Ckan {
+	return q.List["remove"]
+}
+
+func (q Queue) getSelections() map[string]Ckan {
+	return q.List["install"]
+}
+
+func (q Queue) GetDependencies() map[string]Ckan {
+	return q.List["dependency"]
+}
+
+func (q Queue) getRemoval(id string) Ckan {
+	n := q.getRemovals()
+	return n[id]
+}
+
+func (q Queue) getSelection(id string) Ckan {
+	n := q.getSelections()
+	return n[id]
+}
+func (q Queue) getDependency(id string) Ckan {
+	n := q.GetDependencies()
+	return n[id]
+}
+
+func (q Queue) InstallLen() int {
+	return len(q.getSelections()) + len(q.GetDependencies())
+}
+
+func (q Queue) RemoveLen() int {
+	return len(q.getRemovals())
+}
+
+func (q Queue) Len() int {
+	return q.RemoveLen() + q.InstallLen()
+}
+
 func (r *Registry) RemoveMods() error {
-	for _, mod := range r.Queue["remove"] {
+	for _, mod := range r.Queue.getRemovals() {
 		err := r.removeMod(mod)
 		if err != nil {
 			return err
@@ -79,11 +133,11 @@ func (r *Registry) DownloadMods() error {
 	var mods []Ckan
 	var err error
 
-	for _, mod := range r.Queue["install"] {
+	for _, mod := range r.Queue.getSelections() {
 		mods = append(mods, mod)
 	}
 
-	for _, mod := range r.Queue["dependency"] {
+	for _, mod := range r.Queue.GetDependencies() {
 		mods = append(mods, mod)
 	}
 
@@ -159,12 +213,12 @@ func (r *Registry) downloadMod(mod Ckan) error {
 // todo: ensure mods are installed in order by dependency
 // todo: potentially ditch the goroutine. worried it might cause overlap errors.
 func (r *Registry) InstallMods() error {
-	if len(r.Queue) > 0 {
+	if r.Queue.InstallLen() > 0 {
 
 		// install dependencies
 		g := new(errgroup.Group)
-		for i := range r.Queue["dependency"] {
-			mod := r.Queue["dependency"][i]
+		for i := range r.Queue.GetDependencies() {
+			mod := r.Queue.getDependency(i)
 			g.Go(func() error {
 				err := r.installMod(&mod)
 				if err != nil {
@@ -179,8 +233,8 @@ func (r *Registry) InstallMods() error {
 		}
 
 		// install the rest
-		for i := range r.Queue["install"] {
-			mod := r.Queue["install"][i]
+		for i := range r.Queue.getSelections() {
+			mod := r.Queue.getSelection(i)
 			g.Go(func() error {
 				err := r.installMod(&mod)
 				if err != nil {
@@ -194,7 +248,7 @@ func (r *Registry) InstallMods() error {
 			return err
 		}
 
-		r.LogSuccessf("Installed %v mods", len(r.Queue["install"])+len(r.Queue["dependency"]))
+		r.LogSuccessf("Installed %v mods", r.Queue.InstallLen())
 		return nil
 	}
 	return errors.New("install queue empty")
@@ -280,7 +334,7 @@ func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Reg
 func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
 	mods := make(map[string]Ckan)
 	count := 0
-	for id, mod := range r.Queue["install"] {
+	for _, mod := range r.Queue.getSelections() {
 		if !mod.IsCompatible {
 			r.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
 		}
@@ -293,7 +347,7 @@ func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
 							r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 						}
 						if !dependent.Install.Installed {
-							mods[id] = dependent
+							mods[dependent.Identifier] = dependent
 						}
 						count++
 					}
@@ -306,6 +360,7 @@ func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
 	if count > 0 {
 		log.Printf("Found %d dependencies", count)
 	}
+
 	return mods, nil
 }
 
