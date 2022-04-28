@@ -33,7 +33,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.registry.SortModList()
 		b.nav.listCursorHide = true
 		b.ready = true
-		b.bubbles.primaryViewport.GotoTop()
+		b.bubbles.paginator.GoToStart()
 		if b.activeBox == internal.SearchView {
 			cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
 		}
@@ -81,9 +81,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.height = msg.Height
 
 		b.bubbles.paginator.PerPage = b.height - 11
-
-		b.bubbles.primaryViewport.Width = (msg.Width / 2) - b.bubbles.primaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.primaryViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.primaryViewport.Style.GetVerticalFrameSize() - 6
+		b.bubbles.paginator.Height = b.height - 11
+		b.bubbles.paginator.Width = (b.width / 2) - 4
 
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 4
@@ -137,13 +136,13 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 		b.bubbles.paginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.ModInfoView:
-		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.paginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
 		b.bubbles.splashViewport.SetContent(b.inputKspView())
 	case internal.SettingsView:
-		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.paginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())
 	case internal.LogView:
 		b.bubbles.splashViewport.SetContent(b.logView())
@@ -187,7 +186,6 @@ func (b *Bubble) checkActiveViewPortBounds() {
 }
 
 // Handles mouse scrolling in the viewport
-// TODO: fix scrolling beyond page and in big lists. breaks app.
 func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":

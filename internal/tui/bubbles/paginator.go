@@ -22,6 +22,8 @@ type Paginator struct {
 	Page        int
 	PerPage     int
 	TotalPages  int
+	Width       int
+	Height      int
 	ActiveDot   string
 	InactiveDot string
 	Content     string
@@ -75,6 +77,11 @@ func (m *Paginator) GetSliceStart() int {
 
 func (m *Paginator) GetCursorIndex() int {
 	return m.GetSliceStart() + m.Cursor
+}
+
+func (m *Paginator) GoToStart() {
+	m.Page = 0
+	m.Cursor = 0
 }
 
 func (m *Paginator) LineDown() {
@@ -137,6 +144,8 @@ func NewPaginator() Paginator {
 		Page:        0,
 		PerPage:     1,
 		TotalPages:  1,
+		Height:      0,
+		Width:       0,
 		ActiveDot:   "•",
 		InactiveDot: "○",
 		Content:     "",

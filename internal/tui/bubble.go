@@ -29,7 +29,7 @@ type Bubble struct {
 }
 
 type Bubbles struct {
-	primaryViewport   bubbles.Viewport
+	//primaryViewport   bubbles.Viewport
 	secondaryViewport bubbles.Viewport
 	splashViewport    bubbles.Viewport
 	commandViewport   bubbles.Viewport
@@ -114,7 +114,6 @@ func InitialModel() Bubble {
 	}
 
 	bubs := Bubbles{
-		primaryViewport:   primaryVP,
 		secondaryViewport: secondaryVP,
 		commandViewport:   commandVP,
 		splashViewport:    splashVP,

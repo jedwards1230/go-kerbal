@@ -116,7 +116,7 @@ func (b Bubble) styleTitle(s string) string {
 			Render(s)
 	default:
 		return titleStyle.
-			Width(b.bubbles.primaryViewport.Width + 2).
+			Width(b.bubbles.secondaryViewport.Width + 2).
 			Render(s)
 	}
 }

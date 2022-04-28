@@ -18,11 +18,11 @@ func (b Bubble) modListView() string {
 	modMap := b.registry.GetActiveModList()
 
 	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryViewport.Width).
+		Width(b.bubbles.paginator.Width).
 		Height(b.bubbles.paginator.PerPage + 1).Render
 
 	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryViewport.Width).
+		Width(b.bubbles.paginator.Width).
 		Align(lipgloss.Center).Render
 
 	page := ""
@@ -39,14 +39,14 @@ func (b Bubble) modListView() string {
 
 			line := truncate.StringWithTail(
 				fmt.Sprintf("[%s] %s", checked, mod.Name),
-				uint(b.bubbles.primaryViewport.Width-2),
+				uint(b.bubbles.paginator.Width-2),
 				internal.EllipsisStyle)
 
 			if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
 				page += lipgloss.NewStyle().
 					Background(b.theme.SelectedListItemColor).
 					Foreground(b.theme.UnselectedListItemColor).
-					Width(b.bubbles.primaryViewport.Width).
+					Width(b.bubbles.paginator.Width).
 					Render(line)
 			} else if mod.Install.Installed {
 				page += lipgloss.NewStyle().
@@ -70,8 +70,8 @@ func (b Bubble) modListView() string {
 	)
 
 	return lipgloss.NewStyle().
-		Width(b.bubbles.primaryViewport.Width).
-		Height(b.bubbles.primaryViewport.Height - 3).
+		Width(b.bubbles.paginator.Width).
+		Height(b.bubbles.paginator.Height - 3).
 		Render(page)
 }
 
@@ -221,11 +221,11 @@ func (b Bubble) queueView() string {
 		Width(b.bubbles.secondaryViewport.Width)
 
 	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryViewport.Width).
+		Width(b.bubbles.paginator.Width).
 		Height(b.bubbles.paginator.PerPage + 1).Render
 
 	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryViewport.Width).
+		Width(b.bubbles.paginator.Width).
 		Align(lipgloss.Center).Render
 
 	entryStyle := lipgloss.NewStyle().
@@ -249,7 +249,7 @@ func (b Bubble) queueView() string {
 		trimName := func(s string) string {
 			return truncate.StringWithTail(
 				s,
-				uint(b.bubbles.primaryViewport.Width-6),
+				uint(b.bubbles.paginator.Width-6),
 				internal.EllipsisStyle)
 		}
 
@@ -330,7 +330,7 @@ func (b Bubble) queueView() string {
 	return lipgloss.NewStyle().
 		Padding(2).
 		Align(lipgloss.Center).
-		Width(b.bubbles.primaryViewport.Width).
+		Width(b.bubbles.paginator.Width).
 		Height(b.bubbles.paginator.PerPage + 2).
 		Render("No mods in queue")
 }

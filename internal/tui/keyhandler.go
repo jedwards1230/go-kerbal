@@ -24,18 +24,28 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	// Down
 	case key.Matches(msg, b.keyMap.Down):
-		if b.nav.listCursorHide {
-			b.nav.listCursorHide = false
-		} else {
+		switch b.activeBox {
+		case internal.ModListView, internal.SearchView, internal.QueueView:
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.scrollView("down")
+			}
+		case internal.SettingsView:
 			b.scrollView("down")
 		}
 		b.inputRequested = false
 
 	// Up
 	case key.Matches(msg, b.keyMap.Up):
-		if b.nav.listCursorHide {
-			b.nav.listCursorHide = false
-		} else {
+		switch b.activeBox {
+		case internal.ModListView, internal.SearchView, internal.QueueView:
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.scrollView("up")
+			}
+		case internal.SettingsView:
 			b.scrollView("up")
 		}
 		b.inputRequested = false
@@ -248,6 +258,7 @@ func (b *Bubble) prepareSettingsView() tea.Cmd {
 		b.switchActiveView(internal.ModListView)
 	case internal.ModListView, internal.ModInfoView:
 		b.switchActiveView(internal.SettingsView)
+		b.nav.listCursorHide = true
 		b.bubbles.secondaryViewport.GotoTop()
 	}
 	return cmd
