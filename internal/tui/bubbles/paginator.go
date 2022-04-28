@@ -18,6 +18,7 @@ const Dots Type = iota
 type Paginator struct {
 	Type        Type
 	Cursor      int
+	Index       int
 	Page        int
 	PerPage     int
 	TotalPages  int
@@ -31,6 +32,7 @@ type Paginator struct {
 // used for other things beyond navigating sets. Note that it both returns the
 // number of total pages and alters the model.
 func (m *Paginator) SetTotalPages(items int) int {
+	m.Index = items - 1
 	if items < 1 {
 		return m.TotalPages
 	}
@@ -70,9 +72,13 @@ func (m *Paginator) GetSliceStart() int {
 	return m.Page * m.PerPage
 }
 
+func (m *Paginator) GetCursorIndex() int {
+	return m.GetSliceStart() + m.Cursor
+}
+
 func (m *Paginator) LineDown() {
 	m.Cursor++
-	if m.Cursor >= m.PerPage {
+	if m.Cursor > m.PerPage-1 || m.Cursor > m.Index-1 {
 		m.Cursor = 0
 	}
 }
@@ -80,7 +86,11 @@ func (m *Paginator) LineDown() {
 func (m *Paginator) LineUp() {
 	m.Cursor--
 	if m.Cursor < 0 {
-		m.Cursor = m.PerPage - 1
+		if m.Index < m.PerPage {
+			m.Cursor = m.Index
+		} else {
+			m.Cursor = m.PerPage - 1
+		}
 	}
 }
 

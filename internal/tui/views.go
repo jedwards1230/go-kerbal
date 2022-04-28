@@ -238,6 +238,14 @@ func (b Bubble) queueView() string {
 		Bold(true).
 		Width(b.bubbles.secondaryViewport.Width)
 
+	pageStyle := lipgloss.NewStyle().
+		Width(b.bubbles.primaryViewport.Width).
+		Height(b.bubbles.paginator.PerPage + 1).Render
+
+	pagerStyle := lipgloss.NewStyle().
+		Width(b.bubbles.primaryViewport.Width).
+		Align(lipgloss.Center).Render
+
 	entryStyle := lipgloss.NewStyle().
 		Width(b.bubbles.secondaryViewport.Width-1).
 		Padding(0, 0, 0, 4)
@@ -256,21 +264,53 @@ func (b Bubble) queueView() string {
 			Foreground(b.theme.UnselectedListItemColor).
 			Background(b.theme.SelectedListItemColor)
 
-		// Display mods to remove
-		if len(b.registry.Queue.RemoveQueue) > 0 {
-			var removeList []string
-			for i, mod := range b.registry.Queue.RemoveQueue {
-				name := truncate.StringWithTail(
-					mod.Name,
-					uint(b.bubbles.primaryViewport.Width-6),
-					internal.EllipsisStyle)
+		trimName := func(s string) string {
+			return truncate.StringWithTail(
+				s,
+				uint(b.bubbles.primaryViewport.Width-6),
+				internal.EllipsisStyle)
+		}
 
-				if b.bubbles.paginator.Cursor == i {
-					removeList = append(removeList, selectedStyle.Render(name))
+		var removeList, installList, dependencyList []string
+		start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
+		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
+		for i, entry := range b.registry.ModMapIndex[start:end] {
+			typeMap := b.registry.Queue[entry.SearchBy]
+			switch entry.SearchBy {
+			case "remove":
+				mod := typeMap[entry.Key]
+				if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
+					removeList = append(removeList, selectedStyle.Render(trimName(mod.Name)))
 				} else {
-					removeList = append(removeList, entryStyle.Render(name))
+					removeList = append(removeList, entryStyle.Render(trimName(mod.Name)))
+				}
+			case "install":
+				mod := typeMap[entry.Key]
+				if mod.Install.Installed {
+					installList = append(installList, installStyle.Render(trimName(mod.Name)))
+				} else if mod.Download.Downloaded {
+					installList = append(installList, downloadStyle.Render(trimName(mod.Name)))
+				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue["remove"]) == i && !b.nav.listCursorHide {
+					installList = append(installList, selectedStyle.Render(trimName(mod.Name)))
+				} else {
+					installList = append(installList, entryStyle.Render(trimName(mod.Name)))
+				}
+			case "dependency":
+				mod := typeMap[entry.Key]
+				if mod.Install.Installed {
+					dependencyList = append(dependencyList, installStyle.Render(trimName(mod.Name)))
+				} else if mod.Download.Downloaded {
+					dependencyList = append(dependencyList, downloadStyle.Render(trimName(mod.Name)))
+				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue["remove"])-len(b.registry.Queue["install"]) == i && !b.nav.listCursorHide {
+					dependencyList = append(dependencyList, selectedStyle.Render(trimName(mod.Name)))
+				} else {
+					dependencyList = append(dependencyList, entryStyle.Render(trimName(mod.Name)))
 				}
 			}
+		}
+
+		// Display mods to remove
+		if len(b.registry.Queue["remove"]) > 0 {
 			removeContent := connectVert(removeList...)
 			content = connectVert(
 				titleStyle.Foreground(b.theme.Red).Render("To Remove"),
@@ -279,24 +319,7 @@ func (b Bubble) queueView() string {
 		}
 
 		// Display mods to intall
-		if len(b.registry.Queue.InstallQueue) > 0 {
-			var installList []string
-			for i, mod := range b.registry.Queue.InstallQueue {
-				name := truncate.StringWithTail(
-					mod.Name,
-					uint(b.bubbles.primaryViewport.Width-6),
-					internal.EllipsisStyle)
-
-				if mod.Install.Installed {
-					installList = append(installList, installStyle.Render(name))
-				} else if mod.Download.Downloaded {
-					installList = append(installList, downloadStyle.Render(name))
-				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue.RemoveQueue) == i && b.nav.listCursorHide {
-					installList = append(installList, selectedStyle.Render(name))
-				} else {
-					installList = append(installList, entryStyle.Render(name))
-				}
-			}
+		if len(b.registry.Queue["install"]) > 0 {
 			installContent := connectVert(installList...)
 
 			content = connectVert(
@@ -307,25 +330,8 @@ func (b Bubble) queueView() string {
 		}
 
 		// Display mod dependencies to install
-		if len(b.registry.Queue.DependencyQueue) > 0 {
-			var installList []string
-			for i, mod := range b.registry.Queue.DependencyQueue {
-				name := truncate.StringWithTail(
-					mod.Name,
-					uint(b.bubbles.primaryViewport.Width-6),
-					internal.EllipsisStyle)
-
-				if mod.Install.Installed {
-					installList = append(installList, installStyle.Render(name))
-				} else if mod.Download.Downloaded {
-					installList = append(installList, downloadStyle.Render(name))
-				} else if b.bubbles.paginator.Cursor-len(b.registry.Queue.RemoveQueue)-len(b.registry.Queue.InstallQueue) == i && b.nav.listCursorHide {
-					installList = append(installList, selectedStyle.Render(name))
-				} else {
-					installList = append(installList, entryStyle.Render(name))
-				}
-			}
-			installContent := connectVert(installList...)
+		if len(b.registry.Queue["dependency"]) > 0 {
+			installContent := connectVert(dependencyList...)
 			content = connectVert(
 				content,
 				titleStyle.Foreground(b.theme.Green).Render("Dependencies"),
@@ -334,10 +340,10 @@ func (b Bubble) queueView() string {
 		}
 
 		if content != "" {
-			return lipgloss.NewStyle().
-				Width(b.bubbles.primaryViewport.Width - 1).
-				Height(b.bubbles.primaryViewport.Height - 3).
-				Render(content)
+			return connectVert(
+				pageStyle(content),
+				pagerStyle(b.bubbles.paginator.View()),
+			)
 		} else {
 			b.LogErrorf("Unable to parse queue: %v", b.nav.installSelected)
 		}
@@ -473,7 +479,7 @@ func (b Bubble) statusBarView() string {
 	statusBarStyle := lipgloss.NewStyle().
 		Height(internal.StatusBarHeight)
 
-	fileCount := fmt.Sprintf("Mod: %d/%d", b.nav.listCursor+1, len(b.registry.ModMapIndex))
+	fileCount := fmt.Sprintf("Mod: %d/%d", b.bubbles.paginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
 	fileCount = statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 6, 0, 2).

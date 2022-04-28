@@ -118,8 +118,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.textInput.Blur()
 	}
 
-	b.updateActiveMod()
-
 	cmds = append(cmds, b.updateActiveView(msg))
 
 	return b, tea.Batch(cmds...)
@@ -130,16 +128,17 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	b.bubbles.paginator.SetTotalPages(len(b.registry.ModMapIndex))
 	b.checkActiveViewPortBounds()
+	b.updateActiveMod()
 
 	b.bubbles.commandViewport.SetContent(b.commandView())
 
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 		b.bubbles.paginator.SetContent(b.modListView())
+		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.ModInfoView:
-		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.primaryViewport.SetContent(b.modListView())
+		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
 		b.bubbles.splashViewport.SetContent(b.inputKspView())
@@ -157,6 +156,8 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 }
 
 func (b *Bubble) switchActiveView(newView int) {
+	b.bubbles.paginator.Page = 0
+	b.bubbles.paginator.Cursor = 0
 	b.lastActiveBox = b.activeBox
 	b.activeBox = newView
 }
@@ -164,23 +165,6 @@ func (b *Bubble) switchActiveView(newView int) {
 // Handles wrapping and button scrolling in the viewport
 func (b *Bubble) checkActiveViewPortBounds() {
 	switch b.activeBox {
-	case internal.QueueView:
-		top := b.bubbles.primaryViewport.YOffset
-		bottom := b.bubbles.primaryViewport.Height + b.bubbles.primaryViewport.YOffset - 1
-
-		if b.nav.listCursor < top {
-			b.bubbles.primaryViewport.LineUp(1)
-		} else if b.nav.listCursor > bottom {
-			b.bubbles.primaryViewport.LineDown(1)
-		}
-
-		if b.nav.listCursor > len(b.registry.ModMapIndex)-1 {
-			b.nav.listCursor = 0
-			b.bubbles.primaryViewport.GotoTop()
-		} else if b.nav.listCursor < 0 {
-			b.nav.listCursor = len(b.registry.ModMapIndex) - 1
-			b.bubbles.primaryViewport.GotoBottom()
-		}
 	case internal.ModInfoView:
 		if b.bubbles.secondaryViewport.AtBottom() {
 			b.bubbles.secondaryViewport.GotoBottom()
@@ -208,10 +192,8 @@ func (b *Bubble) scrollView(dir string) {
 	switch dir {
 	case "up":
 		switch b.activeBox {
-		case internal.ModListView, internal.SearchView:
+		case internal.ModListView, internal.SearchView, internal.QueueView:
 			b.bubbles.paginator.LineUp()
-		case internal.QueueView:
-			b.nav.listCursor--
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.SettingsView:
@@ -221,10 +203,8 @@ func (b *Bubble) scrollView(dir string) {
 		}
 	case "down":
 		switch b.activeBox {
-		case internal.ModListView, internal.SearchView:
+		case internal.ModListView, internal.SearchView, internal.QueueView:
 			b.bubbles.paginator.LineDown()
-		case internal.QueueView:
-			b.nav.listCursor++
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:
@@ -239,13 +219,14 @@ func (b *Bubble) scrollView(dir string) {
 
 func (b *Bubble) updateActiveMod() {
 	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
+		cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+
 		if b.activeBox == internal.QueueView {
-			cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+			//log.Printf("idx: %v, cur: %v", b.registry.ModMapIndex, cursor)
 			id := b.registry.ModMapIndex[cursor]
 			b.nav.activeMod = b.registry.SortedNonCompatibleMap[id.Key]
 		} else {
 			modMap := b.registry.GetActiveModList()
-			cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
 			id := b.registry.ModMapIndex[cursor]
 			b.nav.activeMod = modMap[id.Key]
 		}

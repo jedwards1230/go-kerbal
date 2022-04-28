@@ -49,7 +49,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = false
-				b.nav.listCursorHide = true
+				b.bubbles.paginator.PrevPage()
 			}
 		case internal.ModListView, internal.SearchView:
 			b.bubbles.paginator.PrevPage()
@@ -63,7 +63,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = true
-				b.nav.listCursorHide = true
+				b.bubbles.paginator.NextPage()
 			}
 		case internal.ModListView, internal.SearchView:
 			b.bubbles.paginator.NextPage()
@@ -88,6 +88,8 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 			b.switchActiveView(internal.ModInfoView)
 		case internal.ModInfoView:
 			b.switchActiveView(internal.ModListView)
+		case internal.QueueView:
+			b.nav.listCursorHide = !b.nav.listCursorHide
 		default:
 			b.switchActiveView(internal.ModListView)
 		}
@@ -150,6 +152,7 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.nav.listCursor = 0
 	b.nav.listCursorHide = true
 	b.nav.installSelected = make(map[string]registry.Ckan, 0)
+	b.registry.Queue = make(map[string]map[string]registry.Ckan, 0)
 	b.bubbles.textInput.Reset()
 	b.inputRequested = false
 	b.searchInput = false
@@ -283,28 +286,33 @@ func (b *Bubble) handleSettingsInput() tea.Cmd {
 }
 
 func (b *Bubble) prepareQueueView() {
-	var removeQueue, installQueue []registry.Ckan
+	removeQueue := make(map[string]registry.Ckan, 0)
+	installQueue := make(map[string]registry.Ckan, 0)
 	b.nav.listCursor = -1
 
 	for _, mod := range b.nav.installSelected {
 		if mod.Install.Installed {
-			removeQueue = append(removeQueue, mod)
+			removeQueue[mod.Identifier] = mod
 		} else {
-			installQueue = append(installQueue, mod)
+			installQueue[mod.Identifier] = mod
 		}
 	}
 
-	b.registry.Queue.RemoveQueue = removeQueue
-	b.registry.Queue.InstallQueue = installQueue
+	if len(removeQueue) > 0 {
+		b.registry.Queue["remove"] = removeQueue
+	}
+	if len(installQueue) > 0 {
+		b.registry.Queue["install"] = installQueue
+	}
 
 	// collect all mods and dependencies
 	log.Print("Checking dependencies")
-	if len(b.registry.Queue.InstallQueue) > 0 {
-		mods, err := b.registry.CheckDependencies(b.registry.Queue.InstallQueue)
+	if len(b.registry.Queue["install"]) > 0 {
+		mods, err := b.registry.CheckDependencies()
 		if err != nil {
 			b.LogErrorf("%v", err)
 		}
-		b.registry.Queue.DependencyQueue = mods
+		b.registry.Queue["dependency"] = mods
 	} else {
 		b.LogError("no mods provided")
 	}

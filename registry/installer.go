@@ -19,8 +19,8 @@ import (
 )
 
 func (r *Registry) RemoveMods() error {
-	for i := range r.Queue.RemoveQueue {
-		err := r.removeMod(r.Queue.RemoveQueue[i])
+	for _, mod := range r.Queue["remove"] {
+		err := r.removeMod(mod)
 		if err != nil {
 			return err
 		}
@@ -79,9 +79,13 @@ func (r *Registry) DownloadMods() error {
 	var mods []Ckan
 	var err error
 
-	// collect all mods and dependencies
-	mods = append(mods, r.Queue.DependencyQueue...)
-	mods = append(mods, r.Queue.InstallQueue...)
+	for _, mod := range r.Queue["install"] {
+		mods = append(mods, mod)
+	}
+
+	for _, mod := range r.Queue["dependency"] {
+		mods = append(mods, mod)
+	}
 
 	// check for any conflicts
 	log.Print("Checking conflicts")
@@ -146,7 +150,6 @@ func (r *Registry) downloadMod(mod Ckan) error {
 	}
 
 	// Add mod to install queue if successfully downloaded
-	r.Queue.InstallQueue = append(r.Queue.InstallQueue, mod)
 	log.Printf("Downloaded: %v", mod.Name)
 
 	return nil
@@ -156,11 +159,12 @@ func (r *Registry) downloadMod(mod Ckan) error {
 // todo: ensure mods are installed in order by dependency
 // todo: potentially ditch the goroutine. worried it might cause overlap errors.
 func (r *Registry) InstallMods() error {
-	if len(r.Queue.InstallQueue) > 0 {
+	if len(r.Queue) > 0 {
 
+		// install dependencies
 		g := new(errgroup.Group)
-		for i := range r.Queue.InstallQueue {
-			mod := r.Queue.InstallQueue[i]
+		for i := range r.Queue["dependency"] {
+			mod := r.Queue["dependency"][i]
 			g.Go(func() error {
 				err := r.installMod(&mod)
 				if err != nil {
@@ -173,7 +177,24 @@ func (r *Registry) InstallMods() error {
 		if err := g.Wait(); err != nil {
 			return err
 		}
-		r.LogSuccessf("Installed %v mods", len(r.Queue.InstallQueue))
+
+		// install the rest
+		for i := range r.Queue["install"] {
+			mod := r.Queue["install"][i]
+			g.Go(func() error {
+				err := r.installMod(&mod)
+				if err != nil {
+					return fmt.Errorf("%s: %v", mod.Name, err)
+				}
+				mod.markInstalled()
+				return nil
+			})
+		}
+		if err := g.Wait(); err != nil {
+			return err
+		}
+
+		r.LogSuccessf("Installed %v mods", len(r.Queue["install"])+len(r.Queue["dependency"]))
 		return nil
 	}
 	return errors.New("install queue empty")
@@ -256,11 +277,10 @@ func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Reg
 }
 
 // Gather list of mods and dependencies for download
-func (r *Registry) CheckDependencies(toDownload []Ckan) ([]Ckan, error) {
-	var mods []Ckan
-	dependencies := make(map[string]bool)
+func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
+	mods := make(map[string]Ckan)
 	count := 0
-	for _, mod := range toDownload {
+	for id, mod := range r.Queue["install"] {
 		if !mod.IsCompatible {
 			r.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
 		}
@@ -268,14 +288,13 @@ func (r *Registry) CheckDependencies(toDownload []Ckan) ([]Ckan, error) {
 			for i := range mod.ModDepends {
 				dependent := r.SortedNonCompatibleMap[mod.ModDepends[i]]
 				if dependent.Identifier != "" {
-					if !dependencies[dependent.Identifier] {
+					if mods[dependent.Identifier].Identifier == "" {
 						if !dependent.IsCompatible {
 							r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 						}
 						if !dependent.Install.Installed {
-							mods = append(mods, dependent)
+							mods[id] = dependent
 						}
-						dependencies[dependent.Identifier] = true
 						count++
 					}
 				} else {
@@ -283,12 +302,6 @@ func (r *Registry) CheckDependencies(toDownload []Ckan) ([]Ckan, error) {
 				}
 			}
 		}
-		/* if !dependencies[mod.Identifier] {
-			if !mod.Install.Installed {
-				mods = append(mods, mod)
-			}
-			dependencies[mod.Identifier] = true
-		} */
 	}
 	if count > 0 {
 		log.Printf("Found %d dependencies", count)

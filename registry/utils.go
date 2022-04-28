@@ -35,12 +35,6 @@ type install struct {
 	InstallTo string
 }
 
-type queue struct {
-	RemoveQueue     []Ckan
-	DependencyQueue []Ckan
-	InstallQueue    []Ckan
-}
-
 type resource struct {
 	Homepage    string
 	Spacedock   string
