@@ -130,16 +130,18 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 }
 
 func (b *Bubble) toggleSelectedItem() {
-	cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
-	id := b.registry.ModMapIndex[cursor]
-	modMap := b.registry.GetActiveModList()
-	mod := modMap[id.Key]
+	if len(b.registry.ModMapIndex) > 0 {
+		cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+		id := b.registry.ModMapIndex[cursor]
+		modMap := b.registry.GetActiveModList()
+		mod := modMap[id.Key]
 
-	// toggle mod selection
-	if b.nav.installSelected[mod.Identifier].Identifier != "" {
-		delete(b.nav.installSelected, mod.Identifier)
-	} else {
-		b.nav.installSelected[mod.Identifier] = mod
+		// toggle mod selection
+		if b.nav.installSelected[mod.Identifier].Identifier != "" {
+			delete(b.nav.installSelected, mod.Identifier)
+		} else {
+			b.nav.installSelected[mod.Identifier] = mod
+		}
 	}
 }
 

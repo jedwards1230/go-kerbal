@@ -25,40 +25,42 @@ func (b Bubble) modListView() string {
 		Align(lipgloss.Center).Render
 
 	page := ""
-	start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
-	log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
-	for i, id := range b.registry.ModMapIndex[start:end] {
-		mod := modMap[id.Key]
+	if len(b.registry.ModMapIndex) > 0 {
+		start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
+		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
+		for i, id := range b.registry.ModMapIndex[start:end] {
+			mod := modMap[id.Key]
 
-		checked := " "
-		if b.nav.installSelected[mod.Identifier].Identifier != "" {
-			checked = "x"
+			checked := " "
+			if b.nav.installSelected[mod.Identifier].Identifier != "" {
+				checked = "x"
+			}
+
+			line := truncate.StringWithTail(
+				fmt.Sprintf("[%s] %s", checked, mod.Name),
+				uint(b.bubbles.primaryViewport.Width-2),
+				internal.EllipsisStyle)
+
+			if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
+				page += lipgloss.NewStyle().
+					Background(b.theme.SelectedListItemColor).
+					Foreground(b.theme.UnselectedListItemColor).
+					Width(b.bubbles.primaryViewport.Width).
+					Render(line)
+			} else if mod.Install.Installed {
+				page += lipgloss.NewStyle().
+					Foreground(b.theme.InstalledColor).
+					Render(line)
+			} else if !mod.IsCompatible {
+				page += lipgloss.NewStyle().
+					Foreground(b.theme.Orange).
+					Render(line)
+			} else {
+				page += lipgloss.NewStyle().
+					Render(line)
+			}
+			page += "\n"
 		}
-
-		line := truncate.StringWithTail(
-			fmt.Sprintf("[%s] %s", checked, mod.Name),
-			uint(b.bubbles.primaryViewport.Width-2),
-			internal.EllipsisStyle)
-
-		if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
-			page += lipgloss.NewStyle().
-				Background(b.theme.SelectedListItemColor).
-				Foreground(b.theme.UnselectedListItemColor).
-				Width(b.bubbles.primaryViewport.Width).
-				Render(line)
-		} else if mod.Install.Installed {
-			page += lipgloss.NewStyle().
-				Foreground(b.theme.InstalledColor).
-				Render(line)
-		} else if !mod.IsCompatible {
-			page += lipgloss.NewStyle().
-				Foreground(b.theme.Orange).
-				Render(line)
-		} else {
-			page += lipgloss.NewStyle().
-				Render(line)
-		}
-		page += "\n"
 	}
 
 	page = connectVert(

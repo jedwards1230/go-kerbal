@@ -238,7 +238,7 @@ func (b *Bubble) scrollView(dir string) {
 }
 
 func (b *Bubble) updateActiveMod() {
-	if !b.nav.listCursorHide {
+	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
 		if b.activeBox == internal.QueueView {
 			cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
 			id := b.registry.ModMapIndex[cursor]
