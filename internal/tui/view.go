@@ -60,7 +60,13 @@ func (b Bubble) View() string {
 			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
 			queueLen := len(b.registry.Queue.RemoveQueue) + len(b.registry.Queue.InstallQueue) + len(b.registry.Queue.DependencyQueue)
 			if b.nav.listSelected >= 0 && b.nav.listSelected < queueLen {
-				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+				if b.activeBox == internal.QueueView {
+					id := b.registry.ModMapIndex[b.nav.listSelected]
+					mod := b.registry.SortedNonCompatibleMap[id.Key]
+					secondaryTitle = b.styleTitle(mod.Name)
+				} else {
+					secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+				}
 			}
 		}
 

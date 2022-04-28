@@ -279,8 +279,7 @@ func (b *Bubble) prepareQueueView() {
 	var removeQueue, installQueue []registry.Ckan
 	b.nav.listCursor = -1
 
-	modMap := b.nav.installSelected
-	for _, mod := range modMap {
+	for _, mod := range b.nav.installSelected {
 		if mod.Install.Installed {
 			removeQueue = append(removeQueue, mod)
 		} else {

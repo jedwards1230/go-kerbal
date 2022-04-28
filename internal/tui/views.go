@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/registry"
 	"github.com/muesli/reflow/truncate"
 )
 
@@ -59,7 +60,13 @@ func (b Bubble) modListView() string {
 
 func (b Bubble) modInfoView() string {
 	if b.nav.listSelected >= 0 && b.nav.listSelected < len(b.registry.ModMapIndex) {
-		mod := b.nav.activeMod
+		var mod registry.Ckan
+		if b.activeBox == internal.QueueView {
+			id := b.registry.ModMapIndex[b.nav.listSelected]
+			mod = b.registry.SortedNonCompatibleMap[id.Key]
+		} else {
+			mod = b.nav.activeMod
+		}
 
 		keyStyle := lipgloss.NewStyle().
 			Align(lipgloss.Left).
@@ -156,12 +163,12 @@ func (b Bubble) homeView() string {
 		"- Display error messages\n " +
 		"- Make install queue editable\n " +
 		"- Window resizing on Windows\n " +
+		"- Better mod info formatting\n " +
 		"- Pagination\n " +
 		"- Ensure mods install/uninstall properly\n " +
 		"- Dynamic command view\n "
 
 	return contentStyle(content)
-
 }
 
 func (b Bubble) logView() string {
@@ -572,6 +579,18 @@ func (b Bubble) commandView() string {
 				Width(b.bubbles.commandViewport.Width).
 				Height(b.bubbles.commandViewport.Height).
 				Render(options)
+		} else {
+			loading := lipgloss.NewStyle().
+				Bold(true).
+				Align(lipgloss.Center).
+				Width(b.bubbles.commandViewport.Width-4).
+				Padding(1, 2, 0).
+				Render("Loading...")
+
+			return lipgloss.NewStyle().
+				Width(b.bubbles.commandViewport.Width).
+				Height(b.bubbles.commandViewport.Height).
+				Render(loading)
 		}
 	}
 
@@ -717,6 +736,7 @@ func (b Bubble) getBoolOptionsView() string {
 		Align(lipgloss.Center).
 		BorderForeground(b.theme.InactiveBoxBorderColor).
 		Padding(0, 4).
+		Faint(true).
 		Margin(1, 1)
 
 	cancel := optionStyle.Render("Cancel")
@@ -727,17 +747,17 @@ func (b Bubble) getBoolOptionsView() string {
 			confirm = optionStyle.Copy().
 				BorderForeground(b.theme.ActiveBoxBorderColor).
 				Border(lipgloss.RoundedBorder()).
+				Faint(false).
 				Render("Confirm")
 			cancel = optionStyle.Copy().
-				Faint(true).
 				Render("Cancel")
 		} else {
 			cancel = optionStyle.Copy().
 				BorderForeground(b.theme.ActiveBoxBorderColor).
 				Border(lipgloss.RoundedBorder()).
+				Faint(false).
 				Render("Cancel")
 			confirm = optionStyle.Copy().
-				Faint(true).
 				Render("Confirm")
 		}
 	}

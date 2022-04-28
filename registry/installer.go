@@ -80,15 +80,8 @@ func (r *Registry) DownloadMods() error {
 	var err error
 
 	// collect all mods and dependencies
-	log.Print("Checking dependencies")
-	if len(r.Queue.InstallQueue) > 0 {
-		mods, err = r.CheckDependencies(r.Queue.InstallQueue)
-		if err != nil {
-			return err
-		}
-	} else {
-		return errors.New("no mods provided")
-	}
+	mods = append(mods, r.Queue.DependencyQueue...)
+	mods = append(mods, r.Queue.InstallQueue...)
 
 	// check for any conflicts
 	log.Print("Checking conflicts")
@@ -290,12 +283,12 @@ func (r *Registry) CheckDependencies(toDownload []Ckan) ([]Ckan, error) {
 				}
 			}
 		}
-		if !dependencies[mod.Identifier] {
+		/* if !dependencies[mod.Identifier] {
 			if !mod.Install.Installed {
 				mods = append(mods, mod)
 			}
 			dependencies[mod.Identifier] = true
-		}
+		} */
 	}
 	if count > 0 {
 		log.Printf("Found %d dependencies", count)
