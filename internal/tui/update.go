@@ -219,7 +219,7 @@ func (b *Bubble) scrollView(dir string) {
 
 func (b *Bubble) updateActiveMod() {
 	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
-		cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+		cursor := b.bubbles.paginator.GetCursorIndex()
 
 		// todo: check if all incompat map can be used for all cases
 		if b.activeBox == internal.QueueView {
@@ -228,6 +228,7 @@ func (b *Bubble) updateActiveMod() {
 			b.nav.activeMod = b.registry.SortedNonCompatibleMap[id.Key]
 		} else {
 			modMap := b.registry.GetActiveModList()
+			//log.Printf("idx: %v, cur: %v, cur idx: %v", len(b.registry.ModMapIndex), cursor, b.bubbles.paginator.Index)
 			id := b.registry.ModMapIndex[cursor]
 			b.nav.activeMod = modMap[id.Key]
 		}

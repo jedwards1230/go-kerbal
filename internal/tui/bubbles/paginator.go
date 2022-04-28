@@ -46,11 +46,11 @@ func (m *Paginator) SetTotalPages(items int) int {
 
 // ItemsOnPage is a helper function for returning the numer of items on the
 // current page given the total numer of items passed as an argument.
-func (m Paginator) ItemsOnPage(totalItems int) int {
-	if totalItems < 1 {
+func (m Paginator) ItemsOnPage() int {
+	if m.Index < 0 {
 		return 0
 	}
-	start, end := m.GetSliceBounds(totalItems)
+	start, end := m.GetSliceBounds()
 	return end - start
 }
 
@@ -62,7 +62,8 @@ func (m Paginator) ItemsOnPage(totalItems int) int {
 //     start, end := model.GetSliceBounds(len(bunchOfStuff))
 //     sliceToRender := bunchOfStuff[start:end]
 //
-func (m *Paginator) GetSliceBounds(length int) (start int, end int) {
+func (m *Paginator) GetSliceBounds() (start int, end int) {
+	length := m.Index + 1
 	start = m.Page * m.PerPage
 	end = minPaginator(m.Page*m.PerPage+m.PerPage, length)
 	return start, end
@@ -78,7 +79,8 @@ func (m *Paginator) GetCursorIndex() int {
 
 func (m *Paginator) LineDown() {
 	m.Cursor++
-	if m.Cursor > m.PerPage-1 || m.Cursor > m.Index {
+
+	if m.Cursor > m.PerPage-1 || m.GetCursorIndex() > m.Index {
 		m.Cursor = 0
 	}
 }
@@ -86,8 +88,8 @@ func (m *Paginator) LineDown() {
 func (m *Paginator) LineUp() {
 	m.Cursor--
 	if m.Cursor < 0 {
-		if m.Index < m.PerPage {
-			m.Cursor = m.Index
+		if m.Cursor < m.ItemsOnPage() {
+			m.Cursor = m.ItemsOnPage() - 1
 		} else {
 			m.Cursor = m.PerPage - 1
 		}

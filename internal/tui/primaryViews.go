@@ -27,7 +27,7 @@ func (b Bubble) modListView() string {
 
 	page := ""
 	if len(b.registry.ModMapIndex) > 0 {
-		start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
+		start, end := b.bubbles.paginator.GetSliceBounds()
 		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
 		for i, id := range b.registry.ModMapIndex[start:end] {
 			mod := modMap[id.Key]
@@ -272,7 +272,7 @@ func (b Bubble) queueView() string {
 		}
 
 		var removeList, installList, dependencyList []string
-		start, end := b.bubbles.paginator.GetSliceBounds(len(b.registry.ModMapIndex))
+		start, end := b.bubbles.paginator.GetSliceBounds()
 		for i, entry := range b.registry.ModMapIndex[start:end] {
 			mod := b.registry.Queue.List[entry.SearchBy][entry.Key]
 			switch entry.SearchBy {
