@@ -17,16 +17,15 @@ import (
 )
 
 type Registry struct {
-	TotalModMap            map[string][]Ckan
-	CompatibleModMap       map[string][]Ckan
-	SortedCompatibleMap    map[string]Ckan
-	SortedNonCompatibleMap map[string]Ckan
-	ModMapIndex            ModIndex
-	InstalledModList       map[string]Ckan
-	DB                     *CkanDB
-	SortOptions            SortOptions
-	theme                  theme.Theme
-	Queue                  Queue
+	TotalModMap      map[string][]Ckan
+	CompatibleModMap map[string][]Ckan
+	SortedModMap     map[string]Ckan
+	ModMapIndex      ModIndex
+	InstalledModList map[string]Ckan
+	DB               *CkanDB
+	SortOptions      SortOptions
+	theme            theme.Theme
+	Queue            Queue
 }
 
 type ModIndex []Entry
@@ -56,24 +55,23 @@ func (r *Registry) SortModList() error {
 	r.LogCommandf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
 
-	// Get map with most compatible mod
-	compatMap, err := getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
-	if err != nil {
-		return err
-	}
-	incompatMap, err := getLatestVersionMap(r.TotalModMap)
+	var modMap map[string]Ckan
+	modMap, err := getLatestVersionMap(r.TotalModMap)
 	if err != nil {
 		return err
 	}
 
 	if cfg.Settings.HideIncompatibleMods {
-		r.buildModIndex(compatMap)
+		modMap, err = getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
+		if err != nil {
+			return err
+		}
+		r.buildModIndex(modMap)
 	} else {
-		r.buildModIndex(incompatMap)
+		r.buildModIndex(modMap)
 	}
 
-	r.SortedCompatibleMap = compatMap
-	r.SortedNonCompatibleMap = incompatMap
+	r.SortedModMap = modMap
 
 	r.LogSuccessf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
 	return nil
@@ -138,24 +136,12 @@ func (r *Registry) checkModInstalled(mod *Ckan, installedMap map[string]bool) {
 	}
 }
 
-func (r Registry) GetActiveModList() map[string]Ckan {
-	cfg := config.GetConfig()
-	var modMap map[string]Ckan
-	if cfg.Settings.HideIncompatibleMods {
-		modMap = r.SortedCompatibleMap
-	} else {
-		modMap = r.SortedNonCompatibleMap
-	}
-	return modMap
-}
-
 func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
-	modMap := r.GetActiveModList()
 	s = strings.ToLower(s)
 	re := regexp.MustCompile("(?i)" + s)
 
 	searchMapIndex := make(ModIndex, 0)
-	for id, mod := range modMap {
+	for id, mod := range r.SortedModMap {
 		if re.MatchString(mod.SearchSpace) {
 			searchMapIndex = append(searchMapIndex, Entry{id, mod.SearchableName})
 		}

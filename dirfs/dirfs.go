@@ -181,7 +181,7 @@ func CheckInstalledMods() (map[string]bool, error) {
 		return installedMods, fmt.Errorf("error getting KSP dir: %v", err)
 	}
 
-	log.Printf("Checking dir: %v", destination)
+	log.Print("Checking installed mods")
 	files, err := ioutil.ReadDir(destination)
 	if err != nil {
 		return installedMods, err

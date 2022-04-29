@@ -84,7 +84,12 @@ func CreateCkan(raw map[string]interface{}) Ckan {
 
 	valid, err = mod.checkValid(mod.cleanInstall(raw))
 	if !valid {
-		mod.Errors["cleanInstall"] = err
+		switch err.Error() {
+		case "no install path":
+			mod.Errors["ignored"] = true
+		default:
+			mod.Errors["cleanInstall"] = err
+		}
 		validMod = false
 	}
 

@@ -46,20 +46,6 @@ func (q Queue) GetDependencies() map[string]Ckan {
 	return q.List["dependency"]
 }
 
-func (q Queue) getRemoval(id string) Ckan {
-	n := q.getRemovals()
-	return n[id]
-}
-
-func (q Queue) getSelection(id string) Ckan {
-	n := q.getSelections()
-	return n[id]
-}
-func (q Queue) getDependency(id string) Ckan {
-	n := q.GetDependencies()
-	return n[id]
-}
-
 func (q Queue) InstallLen() int {
 	return len(q.getSelections()) + len(q.GetDependencies())
 }
@@ -210,42 +196,25 @@ func (r *Registry) downloadMod(mod Ckan) error {
 }
 
 // Install mods in the registry install queue
-// todo: ensure mods are installed in order by dependency
-// todo: potentially ditch the goroutine. worried it might cause overlap errors.
 func (r *Registry) InstallMods() error {
 	if r.Queue.InstallLen() > 0 {
 
 		// install dependencies
-		g := new(errgroup.Group)
-		for i := range r.Queue.GetDependencies() {
-			mod := r.Queue.getDependency(i)
-			g.Go(func() error {
-				err := r.installMod(&mod)
-				if err != nil {
-					return fmt.Errorf("%s: %v", mod.Name, err)
-				}
-				mod.markInstalled()
-				return nil
-			})
-		}
-		if err := g.Wait(); err != nil {
-			return err
+		for _, mod := range r.Queue.GetDependencies() {
+			err := r.installMod(&mod)
+			if err != nil {
+				return fmt.Errorf("%s: %v", mod.Name, err)
+			}
+			mod.markInstalled()
 		}
 
 		// install the rest
-		for i := range r.Queue.getSelections() {
-			mod := r.Queue.getSelection(i)
-			g.Go(func() error {
-				err := r.installMod(&mod)
-				if err != nil {
-					return fmt.Errorf("%s: %v", mod.Name, err)
-				}
-				mod.markInstalled()
-				return nil
-			})
-		}
-		if err := g.Wait(); err != nil {
-			return err
+		for _, mod := range r.Queue.getSelections() {
+			err := r.installMod(&mod)
+			if err != nil {
+				return fmt.Errorf("%s: %v", mod.Name, err)
+			}
+			mod.markInstalled()
 		}
 
 		r.LogSuccessf("Installed %v mods", r.Queue.InstallLen())
@@ -340,7 +309,7 @@ func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
 		}
 		if len(mod.ModDepends) > 0 {
 			for i := range mod.ModDepends {
-				dependent := r.SortedNonCompatibleMap[mod.ModDepends[i]]
+				dependent := r.SortedModMap[mod.ModDepends[i]]
 				if dependent.Identifier != "" {
 					if mods[dependent.Identifier].Identifier == "" {
 						if !dependent.IsCompatible {

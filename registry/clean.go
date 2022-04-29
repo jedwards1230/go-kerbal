@@ -73,8 +73,9 @@ func (c *Ckan) cleanInstall(raw map[string]interface{}) error {
 				return nil
 			}
 		}
+		return errors.New("empty install path")
 	}
-	return fmt.Errorf("no install path found: %v", raw["install"])
+	return errors.New("no install path")
 }
 
 func (c *Ckan) cleanDependencies(raw map[string]interface{}) error {

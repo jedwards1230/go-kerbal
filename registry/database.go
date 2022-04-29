@@ -64,9 +64,13 @@ func (r *Registry) UpdateDB(force_update bool) error {
 func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	var mods []Ckan
 
+	goodCount := 0
+	ignoredCount := 0
 	errCount := 0
 	log.Print("Cleaning mod files")
 	var wg sync.WaitGroup
+	mu := &sync.Mutex{}
+
 	wg.Add(len(filesToScan))
 	for i := range filesToScan {
 		// Parse .ckan from repo into JSON
@@ -74,19 +78,23 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 			defer wg.Done()
 
 			mod, err := parseCKAN(*fs, filesToScan[i])
-			if err != nil {
-				//r.viewParseErrors(mod)
-				errCount++
-			} else if mod.Valid {
-				mods = append(mods, *mod)
+			if err != nil || !mod.Valid {
+				if r.viewParseErrors(mod) {
+					ignoredCount++
+				} else {
+					errCount++
+				}
 			} else {
-				errCount++
+				mu.Lock()
+				mods = append(mods, mod)
+				mu.Unlock()
+				goodCount++
 			}
 		}(i)
 	}
 	wg.Wait()
+	log.Printf("Scanned mod files | %d good | %d errors | %d missing info", goodCount, errCount, ignoredCount)
 
-	log.Printf("Adding %d mods to database", len(mods))
 	err := r.DB.Update(func(tx *buntdb.Tx) error {
 		for i := range mods {
 			byteValue, err := json.Marshal(mods[i])
@@ -96,15 +104,19 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 			}
 			tx.Set("mod:"+strconv.Itoa(i), string(byteValue), nil)
 		}
-		log.Printf("Database updated with %d mod files | %d errors", len(mods), errCount)
+		log.Printf("Database updated with %d mods", len(mods))
 		return nil
 	})
 	return err
 }
 
-func (r *Registry) viewParseErrors(mod *Ckan) {
+// return true if errors but ignored
+func (r *Registry) viewParseErrors(mod Ckan) bool {
 	if len(mod.Errors) > 0 {
-		if mod.Errors["raw"] != nil {
+		if mod.Errors["ignored"] == true {
+			return true
+		}
+		if mod.Errors["raw"] != nil && false {
 			raw := mod.Errors["raw"].(map[string]interface{})
 			log.Print("***** RAW *****")
 			for k, v := range raw {
@@ -119,40 +131,41 @@ func (r *Registry) viewParseErrors(mod *Ckan) {
 			log.Print("\n")
 		}
 	}
+	return false
 }
 
 // Parse .ckan file into Ckan struct
-func parseCKAN(repo billy.Filesystem, filePath string) (*Ckan, error) {
-	mod := Ckan{}
+func parseCKAN(repo billy.Filesystem, filePath string) (Ckan, error) {
+	var mod Ckan
 
 	// Read .ckan from filesystem
 	file, err := repo.Open(filePath)
 	if err != nil {
-		return &mod, err
+		return mod, err
 	}
 	defer file.Close()
 
-	// parse ckan data
+	// read ckan data
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		return &mod, err
+		return mod, err
 	}
 
 	// Store .ckan in struct and interface
 	var raw map[string]interface{}
 	err = json.Unmarshal(byteValue, &raw)
 	if err != nil {
-		return &mod, err
+		return mod, err
 	}
 
 	// clean extra data into struct
 	mod = CreateCkan(raw)
 	if !mod.Valid {
 		//log.Printf("Initialization error: %v", err)
-		return &mod, errors.New("invalid mod file")
+		return mod, errors.New("invalid mod file")
 	}
 
-	return &mod, err
+	return mod, err
 }
 
 // Checks for changes to the repo by comparing commit hashes

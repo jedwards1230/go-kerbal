@@ -15,8 +15,6 @@ import (
 )
 
 func (b Bubble) modListView() string {
-	modMap := b.registry.GetActiveModList()
-
 	pageStyle := lipgloss.NewStyle().
 		Width(b.bubbles.paginator.Width).
 		Height(b.bubbles.paginator.PerPage + 1).Render
@@ -30,7 +28,7 @@ func (b Bubble) modListView() string {
 		start, end := b.bubbles.paginator.GetSliceBounds()
 		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
 		for i, id := range b.registry.ModMapIndex[start:end] {
-			mod := modMap[id.Key]
+			mod := b.registry.SortedModMap[id.Key]
 
 			checked := " "
 			if b.nav.installSelected[mod.Identifier].Identifier != "" {
