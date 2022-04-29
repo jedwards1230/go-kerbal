@@ -33,7 +33,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.registry.SortModList()
 		b.nav.listCursorHide = true
 		b.ready = true
-		b.bubbles.paginator.GoToStart()
+		b.bubbles.primaryPaginator.GoToStart()
 		if b.activeBox == internal.SearchView {
 			cmds = append(cmds, b.searchCmd(b.bubbles.textInput.Value()))
 		}
@@ -80,15 +80,19 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.width = msg.Width
 		b.height = msg.Height
 
-		b.bubbles.paginator.PerPage = b.height - 11
-		b.bubbles.paginator.Height = b.height - 11
-		b.bubbles.paginator.Width = (b.width / 2) - 4
+		b.bubbles.primaryPaginator.Width = (b.width / 2) - 4
+		b.bubbles.primaryPaginator.Height = b.height - 11
+		b.bubbles.primaryPaginator.PerPage = b.height - 11
 
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 4
 
 		b.bubbles.commandViewport.Width = (msg.Width / 2) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.commandViewport.Height = (msg.Height / 3) - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
+
+		b.bubbles.splashPaginator.Width = msg.Width - 4
+		b.bubbles.splashPaginator.Height = msg.Height - internal.StatusBarHeight - 9
+		b.bubbles.splashPaginator.PerPage = b.height - 11
 
 		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.splashViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 6
@@ -106,6 +110,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case MyTickMsg:
 		cmds = append(cmds, b.MyTickCmd())
+		//log.Print("tick")
 
 	default:
 		log.Printf("%T", msg)
@@ -125,29 +130,32 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Update content for active view
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
-	b.bubbles.paginator.SetTotalPages(len(b.registry.ModMapIndex))
+	b.bubbles.primaryPaginator.SetTotalPages(len(b.registry.ModMapIndex))
+
+	b.logs = b.checkLogs()
+	b.bubbles.splashPaginator.SetTotalPages(len(b.logs))
+
 	b.checkActiveViewPortBounds()
 	b.updateActiveMod()
 
+	b.bubbles.splashPaginator.SetContent(b.logView())
 	b.bubbles.commandViewport.SetContent(b.commandView())
 
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		b.bubbles.paginator.SetContent(b.modListView())
+		b.bubbles.primaryPaginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.ModInfoView:
-		b.bubbles.paginator.SetContent(b.modListView())
+		b.bubbles.primaryPaginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
 		b.bubbles.splashViewport.SetContent(b.inputKspView())
 	case internal.SettingsView:
-		b.bubbles.paginator.SetContent(b.modListView())
+		b.bubbles.primaryPaginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())
-	case internal.LogView:
-		b.bubbles.splashViewport.SetContent(b.logView())
 	case internal.QueueView:
-		b.bubbles.paginator.SetContent(b.queueView())
+		b.bubbles.primaryPaginator.SetContent(b.queueView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	}
 
@@ -155,8 +163,10 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 }
 
 func (b *Bubble) switchActiveView(newView int) {
-	b.bubbles.paginator.Page = 0
-	b.bubbles.paginator.Cursor = 0
+	b.bubbles.primaryPaginator.Page = 0
+	b.bubbles.primaryPaginator.Cursor = 0
+	b.bubbles.splashPaginator.Page = 0
+	b.bubbles.splashPaginator.Cursor = 0
 	b.lastActiveBox = b.activeBox
 	b.activeBox = newView
 }
@@ -176,12 +186,6 @@ func (b *Bubble) checkActiveViewPortBounds() {
 		} else if b.nav.menuCursor < 0 {
 			b.nav.menuCursor = internal.MenuInputs - 1
 		}
-	case internal.LogView:
-		if b.bubbles.splashViewport.AtBottom() {
-			b.bubbles.splashViewport.GotoBottom()
-		} else if b.bubbles.splashViewport.AtTop() {
-			b.bubbles.splashViewport.GotoTop()
-		}
 	}
 }
 
@@ -194,14 +198,18 @@ func (b *Bubble) scrollView(dir string) {
 			if b.nav.listCursorHide {
 				b.nav.listCursorHide = false
 			} else {
-				b.bubbles.paginator.LineUp()
+				b.bubbles.primaryPaginator.LineUp()
+			}
+		case internal.LogView:
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.bubbles.splashPaginator.LineUp()
 			}
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineUp(1)
 		case internal.SettingsView:
 			b.nav.menuCursor--
-		case internal.LogView:
-			b.bubbles.splashViewport.LineUp(1)
 		}
 	case "down":
 		switch b.activeBox {
@@ -209,14 +217,18 @@ func (b *Bubble) scrollView(dir string) {
 			if b.nav.listCursorHide {
 				b.nav.listCursorHide = false
 			} else {
-				b.bubbles.paginator.LineDown()
+				b.bubbles.primaryPaginator.LineDown()
+			}
+		case internal.LogView:
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.bubbles.splashPaginator.LineDown()
 			}
 		case internal.ModInfoView:
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:
 			b.nav.menuCursor++
-		case internal.LogView:
-			b.bubbles.splashViewport.LineDown(1)
 		}
 	default:
 		log.Panic("Invalid scroll direction: " + dir)
@@ -225,7 +237,7 @@ func (b *Bubble) scrollView(dir string) {
 
 func (b *Bubble) updateActiveMod() {
 	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
-		cursor := b.bubbles.paginator.GetCursorIndex()
+		cursor := b.bubbles.primaryPaginator.GetCursorIndex()
 
 		id := b.registry.ModMapIndex[cursor]
 		b.nav.activeMod = b.registry.SortedModMap[id.Key]

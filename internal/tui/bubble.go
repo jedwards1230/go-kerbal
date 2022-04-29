@@ -20,6 +20,7 @@ type Bubble struct {
 	searchInput    bool
 	registry       registry.Registry
 	keyMap         bubbles.KeyMap
+	logs           []string
 	nav            Nav
 	ready          bool
 	activeBox      int
@@ -35,7 +36,8 @@ type Bubbles struct {
 	commandViewport   bubbles.Viewport
 	spinner           spinner.Model
 	textInput         textinput.Model
-	paginator         bubbles.Paginator
+	primaryPaginator  bubbles.Paginator
+	splashPaginator   bubbles.Paginator
 }
 
 type Nav struct {
@@ -106,6 +108,13 @@ func InitialModel() Bubble {
 	pages.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
 	pages.SetTotalPages(1)
 
+	splashPages := bubbles.NewPaginator()
+	splashPages.Type = bubbles.Dots
+	splashPages.PerPage = 1
+	splashPages.ActiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render("•")
+	splashPages.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
+	splashPages.SetTotalPages(1)
+
 	nav := Nav{
 		listCursorHide:  true,
 		menuCursor:      0,
@@ -119,7 +128,8 @@ func InitialModel() Bubble {
 		splashViewport:    splashVP,
 		spinner:           spin,
 		textInput:         t,
-		paginator:         pages,
+		primaryPaginator:  pages,
+		splashPaginator:   splashPages,
 	}
 
 	return Bubble{

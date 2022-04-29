@@ -16,16 +16,16 @@ import (
 
 func (b Bubble) modListView() string {
 	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.paginator.Width).
-		Height(b.bubbles.paginator.PerPage + 1).Render
+		Width(b.bubbles.primaryPaginator.Width).
+		Height(b.bubbles.primaryPaginator.PerPage + 1).Render
 
 	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.paginator.Width).
+		Width(b.bubbles.primaryPaginator.Width).
 		Align(lipgloss.Center).Render
 
 	page := ""
 	if len(b.registry.ModMapIndex) > 0 {
-		start, end := b.bubbles.paginator.GetSliceBounds()
+		start, end := b.bubbles.primaryPaginator.GetSliceBounds()
 		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
 		for i, id := range b.registry.ModMapIndex[start:end] {
 			mod := b.registry.SortedModMap[id.Key]
@@ -37,14 +37,14 @@ func (b Bubble) modListView() string {
 
 			line := truncate.StringWithTail(
 				fmt.Sprintf("[%s] %s", checked, mod.Name),
-				uint(b.bubbles.paginator.Width-2),
+				uint(b.bubbles.primaryPaginator.Width-2),
 				internal.EllipsisStyle)
 
-			if b.bubbles.paginator.Cursor == i && !b.nav.listCursorHide {
+			if b.bubbles.primaryPaginator.Cursor == i && !b.nav.listCursorHide {
 				page += lipgloss.NewStyle().
 					Background(b.theme.SelectedListItemColor).
 					Foreground(b.theme.UnselectedListItemColor).
-					Width(b.bubbles.paginator.Width).
+					Width(b.bubbles.primaryPaginator.Width).
 					Render(line)
 			} else if mod.Install.Installed {
 				page += lipgloss.NewStyle().
@@ -64,12 +64,12 @@ func (b Bubble) modListView() string {
 
 	page = connectVert(
 		pageStyle(page),
-		pagerStyle(b.bubbles.paginator.View()),
+		pagerStyle(b.bubbles.primaryPaginator.View()),
 	)
 
 	return lipgloss.NewStyle().
-		Width(b.bubbles.paginator.Width).
-		Height(b.bubbles.paginator.Height - 3).
+		Width(b.bubbles.primaryPaginator.Width).
+		Height(b.bubbles.primaryPaginator.Height - 3).
 		Render(page)
 }
 
@@ -162,52 +162,64 @@ func (b Bubble) modInfoView() string {
 }
 
 func (b Bubble) logView() string {
-	file, err := os.Open("./logs/debug.log")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
+	pageStyle := lipgloss.NewStyle().
+		Width(b.bubbles.splashPaginator.Width).
+		Height(b.bubbles.splashPaginator.PerPage + 1).Render
 
-	bodyList := make([]string, 0)
-	scanner := bufio.NewScanner(file)
-	i := 1
-	for scanner.Scan() {
-		lineWords := strings.Fields(scanner.Text())
+	pagerStyle := lipgloss.NewStyle().
+		Width(b.bubbles.splashPaginator.Width).
+		Align(lipgloss.Center).Render
+
+	var bodyList []string
+	start, end := b.bubbles.splashPaginator.GetSliceBounds()
+	//log.Printf("start %d, end %d", start, end)
+	for i := range b.logs[start:end] {
+		lineWords := strings.Fields(b.logs[i+start])
 		if len(lineWords) > 2 {
 			idx := lipgloss.NewStyle().
 				Align(lipgloss.Left).
 				Width(5).
-				Padding(0, 1).
-				Render(fmt.Sprint(i) + " ")
+				Padding(0, 2, 0, 1).
+				Render(fmt.Sprint(i + 1))
 
 			// timestamp
-			lineWords[0] = lipgloss.NewStyle().
+			time := lipgloss.NewStyle().
 				Foreground(b.theme.Green).
+				MarginRight(1).
 				Render(lineWords[0])
 			// file info
-			lineWords[1] = lipgloss.NewStyle().
+			file := lipgloss.NewStyle().
 				Foreground(b.theme.Blue).
-				Width(17).
+				Width(18).
+				MarginRight(1).
 				Render(lineWords[1])
+			line := strings.Join(lineWords[2:], " ")
+			if b.bubbles.splashPaginator.Cursor == i {
+				line = lipgloss.NewStyle().
+					Background(b.theme.SelectedListItemColor).
+					Foreground(b.theme.UnselectedListItemColor).
+					Render(line)
+			}
 			// logs
-			line := truncate.StringWithTail(
-				connectHorz(idx, strings.Join(lineWords, " ")),
-				uint(b.bubbles.splashViewport.Width-2),
+			line = truncate.StringWithTail(
+				connectHorz(idx, time, file, line),
+				uint(b.bubbles.splashPaginator.Width-2),
 				internal.EllipsisStyle)
 
 			bodyList = append(bodyList, line)
-			i++
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
 	body := connectVert(bodyList...)
+
+	body = connectVert(
+		pageStyle(body),
+		pagerStyle(b.bubbles.splashPaginator.View()),
+	)
+
 	return lipgloss.NewStyle().
-		Width(b.bubbles.splashViewport.Width).
-		Height(b.bubbles.splashViewport.Height - 3).
+		Width(b.bubbles.splashPaginator.Width).
+		Height(b.bubbles.splashPaginator.Height).
 		Render(body)
 }
 
@@ -219,11 +231,11 @@ func (b Bubble) queueView() string {
 		Width(b.bubbles.secondaryViewport.Width)
 
 	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.paginator.Width).
-		Height(b.bubbles.paginator.PerPage + 1).Render
+		Width(b.bubbles.primaryPaginator.Width).
+		Height(b.bubbles.primaryPaginator.PerPage + 1).Render
 
 	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.paginator.Width).
+		Width(b.bubbles.primaryPaginator.Width).
 		Align(lipgloss.Center).Render
 
 	entryStyle := lipgloss.NewStyle().
@@ -247,7 +259,7 @@ func (b Bubble) queueView() string {
 		trimName := func(s string) string {
 			return truncate.StringWithTail(
 				s,
-				uint(b.bubbles.paginator.Width-6),
+				uint(b.bubbles.primaryPaginator.Width-6),
 				internal.EllipsisStyle)
 		}
 
@@ -262,7 +274,7 @@ func (b Bubble) queueView() string {
 				return entryStyle.Render(trimName(mod.Name))
 			} */
 
-			if b.bubbles.paginator.GetCursorIndex() == i && !b.nav.listCursorHide {
+			if b.bubbles.primaryPaginator.GetCursorIndex() == i && !b.nav.listCursorHide {
 				return selectedStyle.Render(trimName(mod.Name))
 			} else {
 				return entryStyle.Render(trimName(mod.Name))
@@ -270,7 +282,7 @@ func (b Bubble) queueView() string {
 		}
 
 		var removeList, installList, dependencyList []string
-		start, end := b.bubbles.paginator.GetSliceBounds()
+		start, end := b.bubbles.primaryPaginator.GetSliceBounds()
 		for i, entry := range b.registry.ModMapIndex[start:end] {
 			mod := b.registry.Queue.List[entry.SearchBy][entry.Key]
 			switch entry.SearchBy {
@@ -319,7 +331,7 @@ func (b Bubble) queueView() string {
 		if content != "" {
 			return connectVert(
 				pageStyle(content),
-				pagerStyle(b.bubbles.paginator.View()),
+				pagerStyle(b.bubbles.primaryPaginator.View()),
 			)
 		} else {
 			b.LogErrorf("Unable to parse queue: %v", b.nav.installSelected)
@@ -328,8 +340,8 @@ func (b Bubble) queueView() string {
 	return lipgloss.NewStyle().
 		Padding(2).
 		Align(lipgloss.Center).
-		Width(b.bubbles.paginator.Width).
-		Height(b.bubbles.paginator.PerPage + 2).
+		Width(b.bubbles.primaryPaginator.Width).
+		Height(b.bubbles.primaryPaginator.PerPage + 2).
 		Render("No mods in queue")
 }
 
@@ -429,7 +441,7 @@ func (b Bubble) statusBarView() string {
 	statusBarStyle := lipgloss.NewStyle().
 		Height(internal.StatusBarHeight)
 
-	fileCount := fmt.Sprintf("Mod: %d/%d", b.bubbles.paginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
+	fileCount := fmt.Sprintf("Mod: %d/%d", b.bubbles.primaryPaginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
 	fileCount = statusBarStyle.
 		Align(lipgloss.Right).
 		Padding(0, 6, 0, 2).

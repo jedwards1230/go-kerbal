@@ -40,8 +40,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = false
-				b.bubbles.paginator.PrevPage()
+				b.bubbles.primaryPaginator.PrevPage()
 			}
+		case internal.LogView:
+			b.bubbles.splashPaginator.PrevPage()
 		}
 
 	// Right
@@ -52,8 +54,10 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 				b.nav.boolCursor = !b.nav.boolCursor
 			} else {
 				b.nav.boolCursor = true
-				b.bubbles.paginator.NextPage()
+				b.bubbles.primaryPaginator.NextPage()
 			}
+		case internal.LogView:
+			b.bubbles.splashPaginator.NextPage()
 		}
 
 	// Space
@@ -120,7 +124,7 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 func (b *Bubble) toggleSelectedItem() {
 	if len(b.registry.ModMapIndex) > 0 {
-		cursor := b.bubbles.paginator.GetSliceStart() + b.bubbles.paginator.Cursor
+		cursor := b.bubbles.primaryPaginator.GetCursorIndex()
 		id := b.registry.ModMapIndex[cursor]
 		mod := b.registry.SortedModMap[id.Key]
 
@@ -181,10 +185,10 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 // Handle the log view
 func (b *Bubble) prepareLogsView() {
 	if b.activeBox == internal.LogView {
-		b.switchActiveView(internal.ModListView)
+		b.switchActiveView(b.lastActiveBox)
 	} else {
 		b.switchActiveView(internal.LogView)
-		b.bubbles.splashViewport.GotoBottom()
+		b.nav.listCursorHide = false
 	}
 }
 

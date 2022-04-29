@@ -130,6 +130,7 @@ func (m Paginator) OnLastPage() bool {
 	return m.Page == m.TotalPages-1
 }
 
+// SetContent set the pager's text content.
 func (m *Paginator) SetContent(s string) {
 	m.Content = s
 }

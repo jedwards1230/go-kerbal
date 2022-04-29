@@ -2,6 +2,8 @@ package internal
 
 import "github.com/charmbracelet/lipgloss"
 
+const LogPath = "./logs/debug.log"
+
 const (
 	CommandView     = 0
 	ModListView     = 1

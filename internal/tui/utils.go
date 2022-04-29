@@ -1,11 +1,14 @@
 package tui
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jedwards1230/go-kerbal/internal"
 )
 
 func (b *Bubble) LogCommand(msg string) {
@@ -38,4 +41,23 @@ func trimLastChar(s string) string {
 		size = 0
 	}
 	return s[:len(s)-size]
+}
+
+func (b *Bubble) checkLogs() []string {
+	file, err := os.Open(internal.LogPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	var fileList []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fileList = append(fileList, scanner.Text())
+
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return fileList
 }

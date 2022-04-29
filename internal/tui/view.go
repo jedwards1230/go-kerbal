@@ -8,19 +8,26 @@ import (
 func (b Bubble) View() string {
 	var body string
 
-	b.bubbles.splashViewport.Style = lipgloss.NewStyle().
-		PaddingLeft(internal.BoxPadding).
-		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(b.theme.ActiveBoxBorderColor)
-
 	switch b.activeBox {
 	case internal.LogView:
+		pageStyle := lipgloss.NewStyle().
+			PaddingLeft(internal.BoxPadding).
+			PaddingRight(internal.BoxPadding).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(b.theme.ActiveBoxBorderColor).
+			Align(lipgloss.Center).Render
+
 		body = connectVert(
 			b.styleTitle("Logs"),
-			b.bubbles.splashViewport.View(),
+			pageStyle(b.bubbles.splashPaginator.GetContent()),
 		)
 	case internal.EnterKspDirView:
+		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
+			PaddingLeft(internal.BoxPadding).
+			PaddingRight(internal.BoxPadding).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(b.theme.ActiveBoxBorderColor)
+
 		body = connectVert(
 			b.styleTitle("Enter Kerbal Space Program Directory"),
 			b.bubbles.splashViewport.View(),
@@ -72,7 +79,7 @@ func (b Bubble) View() string {
 
 		primaryBox = connectVert(
 			primaryTitle,
-			pageStyle(b.bubbles.paginator.GetContent()),
+			pageStyle(b.bubbles.primaryPaginator.GetContent()),
 		)
 
 		b.bubbles.secondaryViewport.Style = lipgloss.NewStyle().
@@ -110,9 +117,13 @@ func (b Bubble) styleTitle(s string) string {
 		//Margin(1, 0)
 
 	switch b.activeBox {
-	case internal.LogView, internal.EnterKspDirView:
+	case internal.EnterKspDirView:
 		return titleStyle.
 			Width(b.bubbles.splashViewport.Width + 2).
+			Render(s)
+	case internal.LogView:
+		return titleStyle.
+			Width(b.bubbles.splashPaginator.Width + 2).
 			Render(s)
 	default:
 		return titleStyle.

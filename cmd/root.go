@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/jedwards1230/go-kerbal/internal/tui"
 	"github.com/spf13/viper"
 )
@@ -18,7 +19,6 @@ func Execute() {
 
 	// If logging is enabled, logs will be output to debug.log.
 	if cfg.Settings.EnableLogging {
-		logPath := "./logs/debug.log"
 		// Create log dir
 		err := os.MkdirAll("./logs", os.ModePerm)
 		if err != nil {
@@ -26,13 +26,13 @@ func Execute() {
 		}
 
 		// clear previous logs
-		if _, err := os.Stat(logPath); err == nil {
-			if err := os.Truncate(logPath, 0); err != nil {
-				log.Printf("Failed to clear %s: %v", err, logPath)
+		if _, err := os.Stat(internal.LogPath); err == nil {
+			if err := os.Truncate(internal.LogPath, 0); err != nil {
+				log.Printf("Failed to clear %s: %v", err, internal.LogPath)
 			}
 		}
 
-		f, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+		f, err := os.OpenFile(internal.LogPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}

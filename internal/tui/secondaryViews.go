@@ -15,7 +15,6 @@ func (b Bubble) homeView() string {
 		"- Window resizing on Windows\n " +
 		"- Better mod info formatting\n " +
 		"- Remember last page when swapping views\n " +
-		"- Paginate logs view\n " +
 		"- Info screens per view\n " +
 		"- Mouse clicking\n " +
 		"- Ensure mods install/uninstall properly\n " +
