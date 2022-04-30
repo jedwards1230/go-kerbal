@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/muesli/reflow/truncate"
 )
 
 func (b Bubble) View() string {
@@ -118,14 +119,29 @@ func (b Bubble) styleTitle(s string) string {
 
 	switch b.activeBox {
 	case internal.EnterKspDirView:
+		s = truncate.StringWithTail(
+			s,
+			uint(b.bubbles.splashViewport.Width-2),
+			internal.EllipsisStyle)
+
 		return titleStyle.
 			Width(b.bubbles.splashViewport.Width + 2).
 			Render(s)
 	case internal.LogView:
+		s = truncate.StringWithTail(
+			s,
+			uint(b.bubbles.splashPaginator.Width-2),
+			internal.EllipsisStyle)
+
 		return titleStyle.
 			Width(b.bubbles.splashPaginator.Width + 2).
 			Render(s)
 	default:
+		s = truncate.StringWithTail(
+			s,
+			uint(b.bubbles.secondaryViewport.Width-2),
+			internal.EllipsisStyle)
+
 		return titleStyle.
 			Width(b.bubbles.secondaryViewport.Width + 2).
 			Render(s)

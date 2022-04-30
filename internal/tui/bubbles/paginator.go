@@ -46,6 +46,15 @@ func (m *Paginator) SetTotalPages(items int) int {
 	return n
 }
 
+func (m *Paginator) SetHeight(i int) {
+	m.Height = i
+	m.PerPage = i
+}
+
+func (m *Paginator) SetWidth(i int) {
+	m.Width = i
+}
+
 // ItemsOnPage is a helper function for returning the numer of items on the
 // current page given the total numer of items passed as an argument.
 func (m Paginator) ItemsOnPage() int {
@@ -166,7 +175,7 @@ func (m Paginator) Update(msg tea.Msg) (Paginator, tea.Cmd) {
 // View renders the pagination to a string.
 func (m Paginator) View() string {
 	if m.TotalPages <= 1 {
-		return " "
+		return ""
 	} else {
 		return m.dotsView()
 	}

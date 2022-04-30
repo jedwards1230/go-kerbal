@@ -442,9 +442,13 @@ func (b Bubble) statusBarView() string {
 		Height(internal.StatusBarHeight)
 
 	fileCount := fmt.Sprintf("Mod: %d/%d", b.bubbles.primaryPaginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
+	if b.activeBox == internal.LogView {
+		fileCount = fmt.Sprintf("Mod: %d/%d", b.bubbles.splashPaginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
+	}
 	fileCount = statusBarStyle.
 		Align(lipgloss.Right).
-		Padding(0, 6, 0, 2).
+		PaddingRight(6).
+		PaddingLeft(2).
 		Render(fileCount)
 
 	sortOptions := fmt.Sprintf("Sort: %s by %s", b.registry.SortOptions.SortOrder, b.registry.SortOptions.SortTag)
@@ -484,7 +488,7 @@ func (b Bubble) statusBarView() string {
 			Render(b.bubbles.textInput.View())
 	} else {
 		// open log file
-		file, err := os.Open("./logs/debug.log")
+		file, err := os.Open(internal.LogPath)
 		if err != nil {
 			log.Fatal(err)
 		}
