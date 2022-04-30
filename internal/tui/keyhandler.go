@@ -34,31 +34,11 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 	// Left
 	case key.Matches(msg, b.keyMap.Left):
-		switch b.activeBox {
-		case internal.ModListView, internal.SearchView, internal.QueueView:
-			if b.nav.listCursorHide {
-				b.nav.boolCursor = !b.nav.boolCursor
-			} else {
-				b.nav.boolCursor = false
-				b.bubbles.primaryPaginator.PrevPage()
-			}
-		case internal.LogView:
-			b.bubbles.splashPaginator.PrevPage()
-		}
+		b.scrollView("left")
 
 	// Right
 	case key.Matches(msg, b.keyMap.Right):
-		switch b.activeBox {
-		case internal.ModListView, internal.SearchView, internal.QueueView:
-			if b.nav.listCursorHide {
-				b.nav.boolCursor = !b.nav.boolCursor
-			} else {
-				b.nav.boolCursor = true
-				b.bubbles.primaryPaginator.NextPage()
-			}
-		case internal.LogView:
-			b.bubbles.splashPaginator.NextPage()
-		}
+		b.scrollView("right")
 
 	// Space
 	case key.Matches(msg, b.keyMap.Space):

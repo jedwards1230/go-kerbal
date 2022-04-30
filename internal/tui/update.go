@@ -81,7 +81,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.height = msg.Height
 
 		b.bubbles.secondaryViewport.Width = (msg.Width / 2) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 3
+		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 4
 
 		b.bubbles.commandViewport.Width = (msg.Width / 2) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.commandViewport.Height = (msg.Height / 3) - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
@@ -227,6 +227,42 @@ func (b *Bubble) scrollView(dir string) {
 			b.bubbles.secondaryViewport.LineDown(1)
 		case internal.SettingsView:
 			b.nav.menuCursor++
+		}
+	case "left":
+		switch b.activeBox {
+		case internal.QueueView:
+			if b.nav.listCursorHide {
+				b.nav.boolCursor = !b.nav.boolCursor
+			} else {
+				b.nav.boolCursor = false
+				b.bubbles.primaryPaginator.PrevPage()
+			}
+		case internal.ModListView, internal.SearchView:
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = false
+			} else {
+				b.bubbles.primaryPaginator.PrevPage()
+			}
+		case internal.LogView:
+			b.bubbles.splashPaginator.PrevPage()
+		}
+	case "right":
+		switch b.activeBox {
+		case internal.QueueView:
+			if b.nav.listCursorHide {
+				b.nav.boolCursor = !b.nav.boolCursor
+			} else {
+				b.nav.boolCursor = false
+				b.bubbles.primaryPaginator.NextPage()
+			}
+		case internal.ModListView, internal.SearchView:
+			if b.nav.listCursorHide {
+				b.nav.listCursorHide = !b.nav.listCursorHide
+			} else {
+				b.bubbles.primaryPaginator.NextPage()
+			}
+		case internal.LogView:
+			b.bubbles.splashPaginator.NextPage()
 		}
 	default:
 		log.Panic("Invalid scroll direction: " + dir)

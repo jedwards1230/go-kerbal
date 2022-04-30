@@ -26,7 +26,6 @@ func (b Bubble) modListView() string {
 	page := ""
 	if len(b.registry.ModMapIndex) > 0 {
 		start, end := b.bubbles.primaryPaginator.GetSliceBounds()
-		//log.Printf("cursor: %v hide: %v start: %v end: %v perpage: %v", b.bubbles.paginator.Cursor, b.nav.listCursorHide, start, end, b.bubbles.paginator.PerPage)
 		for i, id := range b.registry.ModMapIndex[start:end] {
 			mod := b.registry.SortedModMap[id.Key]
 
@@ -576,95 +575,3 @@ func (b Bubble) commandView() string {
 
 	return commandStyle.Render(b.helpView())
 }
-
-/* func (b Bubble) getMainButtonsView() string {
-	var buttonRow string
-
-	buttonStyle := lipgloss.NewStyle().
-		Underline(true).
-		Padding(0, 2).
-		Align(lipgloss.Right).
-		//Foreground(b.theme.LightGray).
-		Height(internal.StatusBarHeight)
-
-	escape := buttonStyle.
-		Align(lipgloss.Left).
-		Render("Esc. Home")
-
-	refresh := buttonStyle.Render("1. Refresh")
-	search := buttonStyle.Render("2. Search")
-	apply := buttonStyle.Render("3. Apply mods")
-	enter := buttonStyle.Render("Ent. Install mod")
-	settings := buttonStyle.Render("0. Options")
-
-	if b.nav.activeMod.Install.Installed {
-		enter = buttonStyle.Render("Ent. Remove mod")
-	}
-
-	switch b.activeBox {
-	case internal.ModInfoView, internal.ModListView:
-		leftColumn := connectHorz(
-			refresh,
-			search,
-			apply,
-			enter,
-		)
-
-		leftColumn = lipgloss.NewStyle().
-			Width(b.width - lipgloss.Width(settings)).
-			Render(leftColumn)
-
-		buttonRow = connectHorz(
-			leftColumn,
-			settings,
-		)
-	case internal.SearchView:
-		leftColumn := connectHorz(
-			escape,
-			apply,
-		)
-
-		enableInput := buttonStyle.
-			Align(lipgloss.Right).
-			Render("6. Enable text input")
-		if b.inputRequested {
-			enableInput = buttonStyle.
-				Align(lipgloss.Right).
-				Render("6. Disable text input")
-		}
-
-		leftColumn = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(leftColumn)
-
-		buttonRow = connectHorz(
-			leftColumn,
-			enableInput,
-		)
-	case internal.EnterKspDirView:
-		enableInput := buttonStyle.
-			Align(lipgloss.Right).
-			Render("6. Enable text input")
-		if b.inputRequested {
-			enableInput = buttonStyle.
-				Align(lipgloss.Right).
-				Render("6. Disable text input")
-		}
-
-		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(enableInput)).Render(escape)
-
-		buttonRow = connectHorz(
-			escape,
-			enableInput,
-		)
-	case internal.SettingsView:
-		escape = lipgloss.NewStyle().Width(b.width - lipgloss.Width(settings)).Render(escape)
-
-		buttonRow = connectHorz(
-			escape,
-			settings,
-		)
-	case internal.LogView:
-		buttonRow = lipgloss.NewStyle().Width(b.width - lipgloss.Width(settings)).Render(escape)
-	}
-
-	return buttonRow
-} */

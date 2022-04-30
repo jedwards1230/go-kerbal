@@ -102,7 +102,6 @@ func (b Bubble) View() string {
 	}
 
 	return connectVert(
-		//b.getMainButtonsView(),
 		body,
 		b.statusBarView(),
 	)
@@ -115,7 +114,6 @@ func (b Bubble) styleTitle(s string) string {
 		Height(3).
 		Border(lipgloss.RoundedBorder()).
 		Padding(1)
-		//Margin(1, 0)
 
 	switch b.activeBox {
 	case internal.EnterKspDirView:
