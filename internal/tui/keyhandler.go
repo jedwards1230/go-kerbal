@@ -265,7 +265,5 @@ func (b *Bubble) prepareQueueView() {
 	b.bubbles.primaryPaginator.GoToStart()
 	b.registry.BuildQueueIndex()
 
-	if len(b.registry.ModMapIndex) < 1 {
-		b.nav.listCursorHide = true
-	}
+	b.nav.listCursorHide = true
 }

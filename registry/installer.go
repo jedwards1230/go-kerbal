@@ -161,7 +161,18 @@ func (q Queue) GetDependencies() map[string]Ckan {
 }
 
 func (q Queue) InstallLen() int {
-	return len(q.getSelections()) + len(q.GetDependencies())
+	count := 0
+	for _, mod := range q.getSelections() {
+		if !mod.Installed() {
+			count += 1
+		}
+	}
+	for _, mod := range q.GetDependencies() {
+		if !mod.Installed() {
+			count += 1
+		}
+	}
+	return count
 }
 
 func (q Queue) RemoveLen() int {

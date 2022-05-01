@@ -37,9 +37,9 @@ type appColors struct {
 
 // Colors contains the different kinds of Colors and their values.
 var Colors = appColors{
-	white:                  "#f2faff",
-	black:                  "#000000",
-	lightGray:              "#bcbfc2",
+	white:                  "#fff",
+	black:                  "#202124",
+	lightGray:              "#ced3d9",
 	green:                  "#00bf0d",
 	orange:                 "#cf8611",
 	slightlyBrighterOrange: "#ffff00",
@@ -65,8 +65,9 @@ var themeMap = map[string]Theme{
 
 		SelectedListItemColor:   lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
 		UnselectedListItemColor: lipgloss.AdaptiveColor{Dark: Colors.black, Light: Colors.white},
-		ActiveBoxBorderColor:    lipgloss.AdaptiveColor{Dark: Colors.green, Light: Colors.green},
-		InactiveBoxBorderColor:  lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
+
+		ActiveBoxBorderColor:   lipgloss.AdaptiveColor{Dark: Colors.green, Light: Colors.green},
+		InactiveBoxBorderColor: lipgloss.AdaptiveColor{Dark: Colors.white, Light: Colors.black},
 	},
 }
 

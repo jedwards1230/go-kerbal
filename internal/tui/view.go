@@ -107,7 +107,7 @@ func (b Bubble) styleTitle(s string) string {
 		Align(lipgloss.Center).
 		Height(3).
 		Border(lipgloss.RoundedBorder()).
-		Padding(1)
+		Padding(1, 0)
 
 	switch b.activeBox {
 	case internal.EnterKspDirView:

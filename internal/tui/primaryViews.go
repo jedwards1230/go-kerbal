@@ -54,8 +54,7 @@ func (b Bubble) modListView() string {
 					Foreground(b.theme.Orange).
 					Render(line)
 			} else {
-				page += lipgloss.NewStyle().
-					Render(line)
+				page += line
 			}
 			page += "\n"
 		}
@@ -188,11 +187,12 @@ func (b Bubble) logView() string {
 				MarginRight(1).
 				Render(lineWords[0])
 			// file info
-			file := lipgloss.NewStyle().
+			file := strings.ReplaceAll(lineWords[1], ".go", "")
+			file = lipgloss.NewStyle().
 				Foreground(b.theme.Blue).
-				Width(20).
+				Width(17).
 				MarginRight(1).
-				Render(lineWords[1])
+				Render(file)
 			line := strings.Join(lineWords[2:], " ")
 			if b.bubbles.splashPaginator.Cursor == i {
 				line = lipgloss.NewStyle().

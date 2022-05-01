@@ -1,6 +1,11 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/jedwards1230/go-kerbal/internal"
+)
 
 func (b Bubble) homeView() string {
 	contentStyle := lipgloss.NewStyle().
@@ -8,17 +13,34 @@ func (b Bubble) homeView() string {
 		Padding(2).
 		Render
 
-	content := "" +
-		"To do:\n " +
-		"- Display error messages\n " +
-		"- Map dependencies for uninstalls\n " +
-		"- Window resizing on Windows\n " +
-		"- Better mod info formatting\n " +
-		"- Remember last page when swapping views\n " +
-		"- Info screens per view\n " +
-		"- Mouse clicking\n " +
-		"- Ensure mods install/uninstall properly\n " +
-		"- Dynamic command view\n "
+	var content string
+	switch b.activeBox {
+	case internal.QueueView:
+		content = "" +
+			fmt.Sprintf("Installing %d mods \n", b.registry.Queue.InstallLen()) +
+			fmt.Sprintf("Removing %d mods \n", b.registry.Queue.RemoveLen()) +
+			"\n" +
+			"Press up/down to scroll the list \n" +
+			"Press enter to remove the selected mod \n" +
+			"\n" +
+			"Press tab to get back to the confirmation window \n"
+		content = lipgloss.NewStyle().
+			Width(b.bubbles.secondaryViewport.Width).
+			Align(lipgloss.Center).
+			Render(content)
+	default:
+		content = "" +
+			"To do:\n " +
+			"- Display error messages\n " +
+			"- Map dependencies for uninstalls\n " +
+			"- Window resizing on Windows\n " +
+			"- Better mod info formatting\n " +
+			"- Remember last page when swapping views\n " +
+			"- Info screens per view\n " +
+			"- Mouse clicking\n " +
+			"- Ensure mods install/uninstall properly\n " +
+			"- Dynamic command view\n "
+	}
 
 	return contentStyle(content)
 }
@@ -55,6 +77,7 @@ func (b Bubble) inputKspView() string {
 		Render(content)
 }
 
+// todo: make this easier to use between different views with different inputs
 func (b Bubble) helpView() string {
 	leftColumn := []string{
 		b.drawHelpKV("up", "Move up"),
