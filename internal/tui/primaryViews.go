@@ -553,16 +553,16 @@ func (b Bubble) commandView() string {
 	switch b.activeBox {
 	case internal.QueueView:
 		if b.ready {
-			options := commandStyle.Render(b.getBoolOptionsView())
-			return lipgloss.NewStyle().
-				Width(b.bubbles.commandViewport.Width).
-				Height(b.bubbles.commandViewport.Height).
-				Render(options)
+			if b.nav.listCursorHide {
+				return commandStyle.Render(b.getBoolOptionsView())
+			} else {
+				return commandStyle.Render(b.helpView())
+			}
 		} else {
 			loading := lipgloss.NewStyle().
 				Bold(true).
 				Align(lipgloss.Center).
-				Width(b.bubbles.commandViewport.Width-4).
+				Width(b.bubbles.commandViewport.Width).
 				Padding(1, 2, 0).
 				Render("Loading...")
 
@@ -571,7 +571,7 @@ func (b Bubble) commandView() string {
 				Height(b.bubbles.commandViewport.Height).
 				Render(loading)
 		}
+	default:
+		return commandStyle.Render(b.helpView())
 	}
-
-	return commandStyle.Render(b.helpView())
 }

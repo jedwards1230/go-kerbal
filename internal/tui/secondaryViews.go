@@ -44,10 +44,15 @@ func (b Bubble) inputKspView() string {
 		Padding(1).
 		Render(inText)
 
-	return connectVert(
+	content := connectVert(
 		question,
 		inText,
 	)
+
+	return lipgloss.NewStyle().
+		Width(b.bubbles.splashPaginator.Width).
+		Height(b.bubbles.splashPaginator.Height + 1).
+		Render(content)
 }
 
 func (b Bubble) helpView() string {
@@ -70,11 +75,12 @@ func (b Bubble) helpView() string {
 	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
 
 	content = lipgloss.NewStyle().
-		Padding(1).
 		Margin(1, 0).
 		Render(content)
 
 	return lipgloss.NewStyle().
+		Align(lipgloss.Center).
+		Padding(1, 3).
 		Width(b.bubbles.commandViewport.Width).
 		Render(content)
 }
@@ -128,6 +134,6 @@ func (b Bubble) getBoolOptionsView() string {
 
 	return lipgloss.NewStyle().
 		Width(b.bubbles.commandViewport.Width).
-		//Padding(3).
+		Height(b.bubbles.commandViewport.Height).
 		Render(content)
 }

@@ -9,29 +9,23 @@ import (
 func (b Bubble) View() string {
 	var body string
 
+	splashStyle := lipgloss.NewStyle().
+		PaddingLeft(internal.BoxPadding).
+		PaddingRight(internal.BoxPadding).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(b.theme.ActiveBoxBorderColor).
+		Align(lipgloss.Center).Render
+
 	switch b.activeBox {
 	case internal.LogView:
-		pageStyle := lipgloss.NewStyle().
-			PaddingLeft(internal.BoxPadding).
-			PaddingRight(internal.BoxPadding).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(b.theme.ActiveBoxBorderColor).
-			Align(lipgloss.Center).Render
-
 		body = connectVert(
 			b.styleTitle("Logs"),
-			pageStyle(b.bubbles.splashPaginator.GetContent()),
+			splashStyle(b.bubbles.splashPaginator.GetContent()),
 		)
 	case internal.EnterKspDirView:
-		b.bubbles.splashViewport.Style = lipgloss.NewStyle().
-			PaddingLeft(internal.BoxPadding).
-			PaddingRight(internal.BoxPadding).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(b.theme.ActiveBoxBorderColor)
-
 		body = connectVert(
 			b.styleTitle("Enter Kerbal Space Program Directory"),
-			b.bubbles.splashViewport.View(),
+			splashStyle(b.bubbles.splashPaginator.GetContent()),
 		)
 	default:
 		var primaryBox string
@@ -119,11 +113,11 @@ func (b Bubble) styleTitle(s string) string {
 	case internal.EnterKspDirView:
 		s = truncate.StringWithTail(
 			s,
-			uint(b.bubbles.splashViewport.Width-2),
+			uint(b.bubbles.splashPaginator.Width-2),
 			internal.EllipsisStyle)
 
 		return titleStyle.
-			Width(b.bubbles.splashViewport.Width + 2).
+			Width(b.bubbles.splashPaginator.Width + 2).
 			Render(s)
 	case internal.LogView:
 		s = truncate.StringWithTail(
@@ -174,13 +168,13 @@ func (b Bubble) drawHelpKV(k, v string) string {
 	keyStyle := lipgloss.NewStyle().
 		Align(lipgloss.Left).
 		Bold(true).
-		Width(b.bubbles.secondaryViewport.Width/6).
-		Padding(0, 1, 0, 2)
+		Width(b.bubbles.commandViewport.Width / 5).
+		PaddingLeft(2)
 
 	valueStyle := lipgloss.NewStyle().
-		Align(lipgloss.Left).
+		Align(lipgloss.Center).
 		Faint(true).
-		PaddingRight(3)
+		PaddingRight(4)
 
 	return connectHorz(keyStyle.Render(k), valueStyle.Render(v))
 }

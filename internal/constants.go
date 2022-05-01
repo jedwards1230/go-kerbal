@@ -1,7 +1,5 @@
 package internal
 
-import "github.com/charmbracelet/lipgloss"
-
 const LogPath = "./logs/debug.log"
 
 const (
@@ -36,7 +34,3 @@ const (
 	MenuCompatible = 2
 	MenuKspDir     = 3
 )
-
-// todo: remove
-// BoldTextStyle is the style used for bold text.
-var BoldTextStyle = lipgloss.NewStyle().Bold(true)

@@ -92,9 +92,6 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.bubbles.splashPaginator.SetWidth(msg.Width - 4)
 		b.bubbles.splashPaginator.SetHeight(msg.Height - internal.StatusBarHeight - 9)
 
-		b.bubbles.splashViewport.Width = msg.Width - b.bubbles.splashViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.splashViewport.Height = msg.Height - internal.StatusBarHeight - b.bubbles.splashViewport.Style.GetVerticalFrameSize() - 6
-
 	case tea.KeyMsg:
 		cmds = append(cmds, b.handleKeys(msg))
 
@@ -130,13 +127,9 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	b.bubbles.primaryPaginator.SetTotalPages(len(b.registry.ModMapIndex))
 
-	b.logs = b.checkLogs()
-	b.bubbles.splashPaginator.SetTotalPages(len(b.logs))
-
 	b.checkActiveViewPortBounds()
 	b.updateActiveMod()
 
-	b.bubbles.splashPaginator.SetContent(b.logView())
 	b.bubbles.commandViewport.SetContent(b.commandView())
 
 	switch b.activeBox {
@@ -148,13 +141,18 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 		b.bubbles.secondaryViewport, cmd = b.bubbles.secondaryViewport.Update(msg)
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
 	case internal.EnterKspDirView:
-		b.bubbles.splashViewport.SetContent(b.inputKspView())
+		b.bubbles.splashPaginator.SetTotalPages(1)
+		b.bubbles.splashPaginator.SetContent(b.inputKspView())
 	case internal.SettingsView:
 		b.bubbles.primaryPaginator.SetContent(b.modListView())
 		b.bubbles.secondaryViewport.SetContent(b.settingsView())
 	case internal.QueueView:
 		b.bubbles.primaryPaginator.SetContent(b.queueView())
 		b.bubbles.secondaryViewport.SetContent(b.modInfoView())
+	case internal.LogView:
+		b.logs = b.checkLogs()
+		b.bubbles.splashPaginator.SetTotalPages(len(b.logs))
+		b.bubbles.splashPaginator.SetContent(b.logView())
 	}
 
 	return cmd

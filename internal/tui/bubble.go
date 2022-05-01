@@ -30,14 +30,12 @@ type Bubble struct {
 }
 
 type Bubbles struct {
-	//primaryViewport   bubbles.Viewport
+	primaryPaginator  bubbles.Paginator
+	splashPaginator   bubbles.Paginator
 	secondaryViewport bubbles.Viewport
-	splashViewport    bubbles.Viewport
 	commandViewport   bubbles.Viewport
 	spinner           spinner.Model
 	textInput         textinput.Model
-	primaryPaginator  bubbles.Paginator
-	splashPaginator   bubbles.Paginator
 }
 
 type Nav struct {
@@ -125,7 +123,6 @@ func InitialModel() Bubble {
 	bubs := Bubbles{
 		secondaryViewport: secondaryVP,
 		commandViewport:   commandVP,
-		splashViewport:    splashVP,
 		spinner:           spin,
 		textInput:         t,
 		primaryPaginator:  pages,
