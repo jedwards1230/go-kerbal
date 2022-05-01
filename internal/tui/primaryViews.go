@@ -30,7 +30,7 @@ func (b Bubble) modListView() string {
 			mod := b.registry.SortedModMap[id.Key]
 
 			checked := " "
-			if b.nav.installSelected[mod.Identifier].Identifier != "" {
+			if b.registry.Queue.CheckQueue(mod.Identifier) {
 				checked = "x"
 			}
 
@@ -172,6 +172,7 @@ func (b Bubble) logView() string {
 	var bodyList []string
 	start, end := b.bubbles.splashPaginator.GetSliceBounds()
 	//log.Printf("start %d, end %d", start, end)
+	// todo: not happy with this approach. maybe switch to structured logging.
 	for i := range b.logs[start:end] {
 		lineWords := strings.Fields(b.logs[i+start])
 		if len(lineWords) > 2 {
@@ -189,7 +190,7 @@ func (b Bubble) logView() string {
 			// file info
 			file := lipgloss.NewStyle().
 				Foreground(b.theme.Blue).
-				Width(18).
+				Width(20).
 				MarginRight(1).
 				Render(lineWords[1])
 			line := strings.Join(lineWords[2:], " ")
@@ -250,7 +251,7 @@ func (b Bubble) queueView() string {
 	installStyle := entryStyle.Copy().
 		Foreground(b.theme.Green) */
 
-	if len(b.nav.installSelected) > 0 {
+	if b.registry.Queue.Len() > 0 {
 		selectedStyle := entryStyle.Copy().
 			Foreground(b.theme.UnselectedListItemColor).
 			Background(b.theme.SelectedListItemColor)
@@ -333,7 +334,7 @@ func (b Bubble) queueView() string {
 				pagerStyle(b.bubbles.primaryPaginator.View()),
 			)
 		} else {
-			b.LogErrorf("Unable to parse queue: %v", b.nav.installSelected)
+			b.LogError("Unable to parse queue")
 		}
 	}
 	return lipgloss.NewStyle().

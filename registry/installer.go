@@ -22,16 +22,116 @@ type Queue struct {
 	List map[string]map[string]Ckan
 }
 
-func (q *Queue) SetRemovals(n map[string]Ckan) {
-	q.List["remove"] = n
+func NewQueue() Queue {
+	q := make(map[string]map[string]Ckan, 0)
+
+	q["remove"] = make(map[string]Ckan, 0)
+	q["install"] = make(map[string]Ckan, 0)
+	q["dependency"] = make(map[string]Ckan, 0)
+
+	return Queue{
+		List: q,
+	}
 }
 
-func (q *Queue) SetSelections(n map[string]Ckan) {
-	q.List["install"] = n
+func (r *Registry) AddToQueue(mod Ckan) error {
+	if mod.Install.Installed {
+		r.Queue.addRemoval(mod)
+	} else {
+		r.Queue.addSelection(mod)
+
+		mods, err := r.CheckDependencies()
+		if err != nil {
+			return err
+		}
+		if len(mods) > 0 {
+			for _, mod := range mods {
+				if r.Queue.checkRemovals(mod.Identifier) {
+					log.Print("dependent mod being removed!!!!")
+				} else {
+					r.Queue.addDependency(mod)
+				}
+			}
+		}
+	}
+	return nil
 }
 
-func (q *Queue) SetDependencies(n map[string]Ckan) {
-	q.List["dependency"] = n
+func (r *Registry) RemoveFromQueue(s string) error {
+	for _, mod := range r.Queue.getRemovals() {
+		if mod.Identifier == s {
+			delete(r.Queue.List["remove"], mod.Identifier)
+		}
+	}
+	for _, mod := range r.Queue.getSelections() {
+		if mod.Identifier == s {
+			delete(r.Queue.List["install"], mod.Identifier)
+		}
+	}
+	for _, mod := range r.Queue.GetDependencies() {
+		if mod.Identifier == s {
+			mods := r.Queue.findDependents(s)
+			for i := range mods {
+				delete(r.Queue.List["install"], mods[i].Identifier)
+			}
+			delete(r.Queue.List["dependency"], mod.Identifier)
+		}
+	}
+	return nil
+}
+
+func (q *Queue) findDependents(s string) []Ckan {
+	modList := make([]Ckan, 0)
+	for _, mod := range q.getSelections() {
+		if len(mod.ModDepends) > 0 {
+			for i := range mod.ModDepends {
+				if mod.ModDepends[i] == s {
+					modList = append(modList, mod)
+				}
+			}
+		}
+	}
+	return modList
+}
+
+func (q *Queue) CheckQueue(s string) bool {
+	for _, mod := range q.getRemovals() {
+		if mod.Identifier == s {
+			return true
+		}
+	}
+	for _, mod := range q.getSelections() {
+		if mod.Identifier == s {
+			return true
+		}
+	}
+	for _, mod := range q.GetDependencies() {
+		if mod.Identifier == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (q Queue) checkRemovals(s string) bool {
+	for _, mod := range q.getRemovals() {
+		if mod.Identifier == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (q *Queue) addRemoval(mod Ckan) {
+	q.List["remove"][mod.Identifier] = mod
+}
+
+func (q *Queue) addSelection(mod Ckan) {
+	q.List["install"][mod.Identifier] = mod
+}
+
+func (q *Queue) addDependency(mod Ckan) {
+	q.List["dependency"][mod.Identifier] = mod
 }
 
 func (q Queue) getRemovals() map[string]Ckan {
@@ -55,7 +155,7 @@ func (q Queue) RemoveLen() int {
 }
 
 func (q Queue) Len() int {
-	return q.RemoveLen() + q.InstallLen()
+	return len(q.getRemovals()) + len(q.getSelections()) + len(q.GetDependencies())
 }
 
 func (r *Registry) RemoveMods() error {
@@ -309,7 +409,7 @@ func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
 		}
 		if len(mod.ModDepends) > 0 {
 			for i := range mod.ModDepends {
-				dependent := r.SortedModMap[mod.ModDepends[i]]
+				dependent := r.UnsortedModMap[mod.ModDepends[i]]
 				if dependent.Identifier != "" {
 					if mods[dependent.Identifier].Identifier == "" {
 						if !dependent.IsCompatible {

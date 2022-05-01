@@ -271,7 +271,8 @@ func (b *Bubble) updateActiveMod() {
 	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
 		cursor := b.bubbles.primaryPaginator.GetCursorIndex()
 
+		// todo: causing out of bounds in queue view
 		id := b.registry.ModMapIndex[cursor]
-		b.nav.activeMod = b.registry.SortedModMap[id.Key]
+		b.nav.activeMod = b.registry.UnsortedModMap[id.Key]
 	}
 }

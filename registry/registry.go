@@ -19,6 +19,7 @@ import (
 type Registry struct {
 	TotalModMap      map[string][]Ckan
 	CompatibleModMap map[string][]Ckan
+	UnsortedModMap   map[string]Ckan
 	SortedModMap     map[string]Ckan
 	ModMapIndex      ModIndex
 	InstalledModList map[string]Ckan
@@ -39,9 +40,7 @@ func GetRegistry() Registry {
 		SortOrder: "ascend",
 	}
 
-	que := Queue{
-		List: make(map[string]map[string]Ckan),
-	}
+	que := NewQueue()
 
 	return Registry{
 		DB:               db,
@@ -61,16 +60,16 @@ func (r *Registry) SortModList() error {
 		return err
 	}
 
+	r.UnsortedModMap = modMap
+
 	if cfg.Settings.HideIncompatibleMods {
 		modMap, err = getLatestVersionMap(getCompatibleModMap(r.TotalModMap))
 		if err != nil {
 			return err
 		}
-		r.buildModIndex(modMap)
-	} else {
-		r.buildModIndex(modMap)
 	}
 
+	r.buildModIndex(modMap)
 	r.SortedModMap = modMap
 
 	r.LogSuccessf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))

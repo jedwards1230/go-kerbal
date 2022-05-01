@@ -39,12 +39,11 @@ type Bubbles struct {
 }
 
 type Nav struct {
-	activeMod       registry.Ckan
-	installSelected map[string]registry.Ckan
-	listCursorHide  bool
-	listCursor      int
-	menuCursor      int
-	boolCursor      bool
+	activeMod      registry.Ckan
+	listCursorHide bool
+	listCursor     int
+	menuCursor     int
+	boolCursor     bool
 }
 
 func InitialModel() Bubble {
@@ -114,10 +113,9 @@ func InitialModel() Bubble {
 	splashPages.SetTotalPages(1)
 
 	nav := Nav{
-		listCursorHide:  true,
-		menuCursor:      0,
-		boolCursor:      false,
-		installSelected: make(map[string]registry.Ckan),
+		listCursorHide: true,
+		menuCursor:     0,
+		boolCursor:     false,
 	}
 
 	bubs := Bubbles{

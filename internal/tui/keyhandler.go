@@ -104,15 +104,16 @@ func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 
 func (b *Bubble) toggleSelectedItem() {
 	if len(b.registry.ModMapIndex) > 0 {
-		cursor := b.bubbles.primaryPaginator.GetCursorIndex()
-		id := b.registry.ModMapIndex[cursor]
-		mod := b.registry.SortedModMap[id.Key]
+		mod := b.nav.activeMod
 
-		// toggle mod selection
-		if b.nav.installSelected[mod.Identifier].Identifier != "" {
-			delete(b.nav.installSelected, mod.Identifier)
+		// toggle mod in queue
+		if b.registry.Queue.CheckQueue(mod.Identifier) {
+			b.registry.RemoveFromQueue(mod.Identifier)
 		} else {
-			b.nav.installSelected[mod.Identifier] = mod
+			err := b.registry.AddToQueue(mod)
+			if err != nil {
+				b.LogErrorf("adding to queue: %v", err)
+			}
 		}
 	}
 }
@@ -121,8 +122,7 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.nav.boolCursor = false
 	b.nav.listCursor = 0
 	b.nav.listCursorHide = true
-	b.nav.installSelected = make(map[string]registry.Ckan, 0)
-	b.registry.Queue.List = make(map[string]map[string]registry.Ckan, 0)
+	b.registry.Queue = registry.NewQueue()
 	b.bubbles.textInput.Reset()
 	b.inputRequested = false
 	b.searchInput = false
@@ -155,6 +155,10 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 				b.ready = false
 				cmds = append(cmds, b.sortModMapCmd())
 			}
+		} else {
+			b.toggleSelectedItem()
+
+			b.prepareQueueView()
 		}
 	}
 
@@ -258,37 +262,15 @@ func (b *Bubble) handleSettingsInput() tea.Cmd {
 }
 
 func (b *Bubble) prepareQueueView() {
-	removeQueue := make(map[string]registry.Ckan, 0)
-	installQueue := make(map[string]registry.Ckan, 0)
 	b.nav.listCursor = -1
 
-	for _, mod := range b.nav.installSelected {
-		if mod.Install.Installed {
-			removeQueue[mod.Identifier] = mod
-		} else {
-			installQueue[mod.Identifier] = mod
-		}
-	}
-
-	if len(removeQueue) > 0 {
-		b.registry.Queue.SetRemovals(removeQueue)
-	}
-	if len(installQueue) > 0 {
-		b.registry.Queue.SetSelections(installQueue)
-	}
-
-	// collect all mods and dependencies
-	log.Print("Checking dependencies")
-	if b.registry.Queue.InstallLen() > 0 {
-		mods, err := b.registry.CheckDependencies()
-		if err != nil {
-			b.LogErrorf("%v", err)
-		}
-		b.registry.Queue.SetDependencies(mods)
-	}
 	idx, err := b.registry.BuildQueueIndex()
 	if err != nil {
 		b.LogErrorf("Cannot build queue index: %v", err)
 	}
 	b.registry.ModMapIndex = idx
+
+	if len(b.registry.ModMapIndex) < 1 {
+		b.nav.listCursorHide = true
+	}
 }

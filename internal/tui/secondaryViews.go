@@ -11,7 +11,7 @@ func (b Bubble) homeView() string {
 	content := "" +
 		"To do:\n " +
 		"- Display error messages\n " +
-		"- Make install queue editable\n " +
+		"- Map dependencies for uninstalls\n " +
 		"- Window resizing on Windows\n " +
 		"- Better mod info formatting\n " +
 		"- Remember last page when swapping views\n " +
