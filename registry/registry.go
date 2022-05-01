@@ -118,19 +118,19 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 func (r *Registry) checkModInstalled(mod *Ckan, installedMap map[string]bool) {
 	if len(installedMap) > 0 {
 		if installedMap[mod.Install.Find] || installedMap[mod.Install.File] {
-			mod.Install.Installed = true
+			mod.setInstalled(true)
 			r.InstalledModList[mod.Identifier] = *mod
 		} else if mod.Install.FindRegex != "" {
 			re := regexp.MustCompile(mod.Install.FindRegex)
 			for k, v := range installedMap {
 				if v && re.MatchString(k) {
-					mod.Install.Installed = true
+					mod.setInstalled(true)
 					r.InstalledModList[mod.Identifier] = *mod
 					break
 				}
 			}
 		} else {
-			mod.Install.Installed = false
+			mod.setInstalled(false)
 		}
 	}
 }
@@ -249,6 +249,5 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) (map[string]Ckan, erro
 }
 
 func (r *Registry) SetModIndex(modMap ModIndex) {
-	log.Print("updating mod index")
 	r.ModMapIndex = modMap
 }

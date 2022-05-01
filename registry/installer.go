@@ -35,7 +35,7 @@ func NewQueue() Queue {
 }
 
 func (r *Registry) AddToQueue(mod Ckan) error {
-	if mod.Install.Installed {
+	if mod.Installed() {
 		r.Queue.addRemoval(mod)
 	} else {
 		r.Queue.addSelection(mod)
@@ -48,9 +48,9 @@ func (r *Registry) AddToQueue(mod Ckan) error {
 			for _, mod := range mods {
 				if r.Queue.checkRemovals(mod.Identifier) {
 					log.Print("dependent mod being removed!!!!")
-				} else {
-					r.Queue.addDependency(mod)
 				}
+				log.Printf("adding %v", mod.Name)
+				r.Queue.addDependency(mod)
 			}
 		}
 	}
@@ -315,20 +315,24 @@ func (r *Registry) InstallMods() error {
 
 		// install dependencies
 		for _, mod := range r.Queue.GetDependencies() {
-			err := r.installMod(&mod)
-			if err != nil {
-				return fmt.Errorf("%s: %v", mod.Name, err)
+			if !mod.Installed() {
+				err := r.installMod(&mod)
+				if err != nil {
+					return fmt.Errorf("%s: %v", mod.Name, err)
+				}
+				mod.setInstalled(true)
 			}
-			mod.markInstalled()
 		}
 
 		// install the rest
 		for _, mod := range r.Queue.getSelections() {
-			err := r.installMod(&mod)
-			if err != nil {
-				return fmt.Errorf("%s: %v", mod.Name, err)
+			if !mod.Installed() {
+				err := r.installMod(&mod)
+				if err != nil {
+					return fmt.Errorf("%s: %v", mod.Name, err)
+				}
+				mod.setInstalled(true)
 			}
-			mod.markInstalled()
 		}
 
 		r.LogSuccessf("Installed %v mods", r.Queue.InstallLen())
@@ -433,9 +437,7 @@ func (r *Registry) CheckDependencies(mod Ckan) (map[string]Ckan, error) {
 					if !dependent.IsCompatible {
 						r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 					}
-					if !dependent.Install.Installed {
-						mods[dependent.Identifier] = dependent
-					}
+					mods[dependent.Identifier] = dependent
 					count++
 				}
 			} else {

@@ -159,10 +159,8 @@ func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 }
 
 func (b *Bubble) switchActiveView(newView int) {
-	b.bubbles.primaryPaginator.Page = 0
-	b.bubbles.primaryPaginator.Cursor = 0
-	b.bubbles.splashPaginator.Page = 0
-	b.bubbles.splashPaginator.Cursor = 0
+	b.bubbles.primaryPaginator.GoToStart()
+	b.bubbles.splashPaginator.GoToStart()
 	b.lastActiveBox = b.activeBox
 	b.activeBox = newView
 }

@@ -170,6 +170,10 @@ func (c *Ckan) markDownloaded() {
 	c.Download.Downloaded = true
 }
 
-func (c *Ckan) markInstalled() {
-	c.Install.Installed = true
+func (c *Ckan) setInstalled(n bool) {
+	c.Install.Installed = n
+}
+
+func (c Ckan) Installed() bool {
+	return c.Install.Installed
 }

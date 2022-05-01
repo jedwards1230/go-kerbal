@@ -45,7 +45,7 @@ func (b Bubble) modListView() string {
 					Foreground(b.theme.UnselectedListItemColor).
 					Width(b.bubbles.primaryPaginator.Width).
 					Render(line)
-			} else if mod.Install.Installed {
+			} else if mod.Installed() {
 				page += lipgloss.NewStyle().
 					Foreground(b.theme.InstalledColor).
 					Render(line)
@@ -121,7 +121,7 @@ func (b Bubble) modInfoView() string {
 		version := drawKV("Mod Version", mod.Versions.Mod)
 		versionKsp := drawKV("KSP Versions", fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax))
 		installed := drawKV("Installed", "Not Installed")
-		if mod.Install.Installed {
+		if mod.Installed() {
 			installed = drawKVColor("Installed", "Installed", b.theme.InstalledColor)
 		}
 		installDir := drawKV("Install dir", mod.Install.InstallTo)
@@ -246,10 +246,10 @@ func (b Bubble) queueView() string {
 	Foreground(b.theme.UnselectedListItemColor)
 
 	downloadStyle := entryStyle.Copy().
-		Foreground(b.theme.Blue)
+		Foreground(b.theme.Blue) */
 
 	installStyle := entryStyle.Copy().
-		Foreground(b.theme.Green) */
+		Foreground(b.theme.Green)
 
 	if b.registry.Queue.Len() > 0 {
 		selectedStyle := entryStyle.Copy().
@@ -264,7 +264,17 @@ func (b Bubble) queueView() string {
 		}
 
 		applyLineStyle := func(i int, mod registry.Ckan) string {
-			/* if mod.Install.Installed {
+			if b.bubbles.primaryPaginator.GetCursorIndex() == i && !b.nav.listCursorHide {
+				return selectedStyle.Render(trimName(mod.Name))
+			} else if mod.Installed() {
+				return installStyle.Render(trimName(mod.Name))
+			} else {
+				return entryStyle.Render(trimName(mod.Name))
+			}
+		}
+
+		removeLineStyle := func(i int, mod registry.Ckan) string {
+			/* if mod.Installed() {
 				return installStyle.Render(trimName(mod.Name))
 			} else if mod.Download.Downloaded {
 				return downloadStyle.Render(trimName(mod.Name))
@@ -287,7 +297,7 @@ func (b Bubble) queueView() string {
 			mod := b.registry.Queue.List[entry.SearchBy][entry.Key]
 			switch entry.SearchBy {
 			case "remove":
-				removeList = append(removeList, applyLineStyle(i, mod))
+				removeList = append(removeList, removeLineStyle(i, mod))
 
 			case "install":
 				installList = append(installList, applyLineStyle(i, mod))

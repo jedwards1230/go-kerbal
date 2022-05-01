@@ -86,8 +86,6 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 			if err != nil {
 				return fmt.Errorf("error installing: %v", err)
 			}
-		} else {
-			log.Printf("Nothing to install: %v", b.registry.Queue)
 		}
 		return InstalledModListMsg{}
 	}
