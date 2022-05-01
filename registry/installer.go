@@ -40,7 +40,7 @@ func (r *Registry) AddToQueue(mod Ckan) error {
 	} else {
 		r.Queue.addSelection(mod)
 
-		mods, err := r.CheckDependencies()
+		mods, err := r.CheckDependencies(mod)
 		if err != nil {
 			return err
 		}
@@ -58,16 +58,30 @@ func (r *Registry) AddToQueue(mod Ckan) error {
 }
 
 func (r *Registry) RemoveFromQueue(s string) error {
+	// check removal queue
 	for _, mod := range r.Queue.getRemovals() {
 		if mod.Identifier == s {
 			delete(r.Queue.List["remove"], mod.Identifier)
 		}
 	}
+	// check install queue
 	for _, mod := range r.Queue.getSelections() {
 		if mod.Identifier == s {
 			delete(r.Queue.List["install"], mod.Identifier)
+			// remove any dependencies
+			// todo: only remove if no other mods depend on it
+			if len(mod.ModDepends) > 0 {
+				for i := range mod.ModDepends {
+					for _, dependent := range r.Queue.GetDependencies() {
+						if dependent.Identifier == mod.ModDepends[i] {
+							delete(r.Queue.List["dependency"], dependent.Identifier)
+						}
+					}
+				}
+			}
 		}
 	}
+	// check dependency queue
 	for _, mod := range r.Queue.GetDependencies() {
 		if mod.Identifier == s {
 			mods := r.Queue.findDependents(s)
@@ -400,29 +414,32 @@ func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Reg
 }
 
 // Gather list of mods and dependencies for download
-func (r *Registry) CheckDependencies() (map[string]Ckan, error) {
+func (r *Registry) CheckDependencies(mod Ckan) (map[string]Ckan, error) {
 	mods := make(map[string]Ckan)
 	count := 0
-	for _, mod := range r.Queue.getSelections() {
-		if !mod.IsCompatible {
-			r.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
-		}
-		if len(mod.ModDepends) > 0 {
-			for i := range mod.ModDepends {
-				dependent := r.UnsortedModMap[mod.ModDepends[i]]
-				if dependent.Identifier != "" {
-					if mods[dependent.Identifier].Identifier == "" {
-						if !dependent.IsCompatible {
-							r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
-						}
-						if !dependent.Install.Installed {
-							mods[dependent.Identifier] = dependent
-						}
-						count++
+	if mod.Identifier == "" {
+		return mods, errors.New("empty mod provided")
+	}
+
+	if !mod.IsCompatible {
+		r.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
+	}
+
+	if len(mod.ModDepends) > 0 {
+		for i := range mod.ModDepends {
+			dependent := r.UnsortedModMap[mod.ModDepends[i]]
+			if dependent.Identifier != "" {
+				if mods[dependent.Identifier].Identifier == "" {
+					if !dependent.IsCompatible {
+						r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 					}
-				} else {
-					return mods, fmt.Errorf("could not find dependency: %v for %v", mod.ModDepends[i], mod.Name)
+					if !dependent.Install.Installed {
+						mods[dependent.Identifier] = dependent
+					}
+					count++
 				}
+			} else {
+				return mods, fmt.Errorf("could not find dependency: %v for %v", mod.ModDepends[i], mod.Name)
 			}
 		}
 	}

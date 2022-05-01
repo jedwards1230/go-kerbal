@@ -125,10 +125,10 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Update content for active view
 func (b *Bubble) updateActiveView(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
-	b.bubbles.primaryPaginator.SetTotalPages(len(b.registry.ModMapIndex))
-
-	b.checkActiveViewPortBounds()
 	b.updateActiveMod()
+
+	b.bubbles.primaryPaginator.SetTotalPages(len(b.registry.ModMapIndex))
+	b.checkActiveViewPortBounds()
 
 	b.bubbles.commandViewport.SetContent(b.commandView())
 
@@ -270,8 +270,6 @@ func (b *Bubble) scrollView(dir string) {
 func (b *Bubble) updateActiveMod() {
 	if !b.nav.listCursorHide && len(b.registry.ModMapIndex) > 0 {
 		cursor := b.bubbles.primaryPaginator.GetCursorIndex()
-
-		// todo: causing out of bounds in queue view
 		id := b.registry.ModMapIndex[cursor]
 		b.nav.activeMod = b.registry.UnsortedModMap[id.Key]
 	}

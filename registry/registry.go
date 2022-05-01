@@ -157,7 +157,7 @@ func (r *Registry) BuildSearchIndex(s string) (ModIndex, error) {
 	return searchMapIndex, nil
 }
 
-func (r *Registry) BuildQueueIndex() (ModIndex, error) {
+func (r *Registry) BuildQueueIndex() {
 	idx := make(ModIndex, 0)
 
 	for applyType := range r.Queue.List {
@@ -168,24 +168,25 @@ func (r *Registry) BuildQueueIndex() (ModIndex, error) {
 		}
 	}
 
-	return idx, nil
+	r.SetModIndex(idx)
 }
 
-// Create r.ModMapIndex from given modMap
+// Create ModMapIndex from given modMap
 //
 // Sorts by order and tags saved to registry
 func (r *Registry) buildModIndex(modMap map[string]Ckan) {
-	r.ModMapIndex = make(ModIndex, 0)
+	idx := make(ModIndex, 0)
 	for k, v := range modMap {
-		r.ModMapIndex = append(r.ModMapIndex, Entry{k, v.SearchableName})
+		idx = append(idx, Entry{k, v.SearchableName})
 	}
 
 	switch r.SortOptions.SortOrder {
 	case "ascend":
-		sort.Sort(r.ModMapIndex)
+		sort.Sort(idx)
 	case "descend":
-		sort.Sort(sort.Reverse(r.ModMapIndex))
+		sort.Sort(sort.Reverse(idx))
 	}
+	r.SetModIndex(idx)
 }
 
 // Filter out incompatible mods
@@ -245,4 +246,9 @@ func getLatestVersionMap(modMapBuckets map[string][]Ckan) (map[string]Ckan, erro
 
 	//log.Printf("Total filtered by identifier: Unique: %d | Extra: %d", countGood, countBad)
 	return modMap, nil
+}
+
+func (r *Registry) SetModIndex(modMap ModIndex) {
+	log.Print("updating mod index")
+	r.ModMapIndex = modMap
 }

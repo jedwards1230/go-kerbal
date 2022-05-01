@@ -262,13 +262,8 @@ func (b *Bubble) handleSettingsInput() tea.Cmd {
 }
 
 func (b *Bubble) prepareQueueView() {
-	b.nav.listCursor = -1
-
-	idx, err := b.registry.BuildQueueIndex()
-	if err != nil {
-		b.LogErrorf("Cannot build queue index: %v", err)
-	}
-	b.registry.ModMapIndex = idx
+	b.bubbles.primaryPaginator.GoToStart()
+	b.registry.BuildQueueIndex()
 
 	if len(b.registry.ModMapIndex) < 1 {
 		b.nav.listCursorHide = true
