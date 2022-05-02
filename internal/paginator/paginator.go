@@ -1,8 +1,5 @@
-// Package paginator provides a Bubble Tea package for calulating pagination
-// and rendering pagination info. Note that this package does not render actual
-// pages: it's purely for handling keystrokes related to pagination, and
-// rendering pagination status.
-package bubbles
+// Modified from github.com/charmbracelet/bubbles/paginator
+package paginator
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
@@ -149,7 +146,7 @@ func (m Paginator) GetContent() string {
 }
 
 // NewPaginator creates a new model with defaults.
-func NewPaginator() Paginator {
+func New() Paginator {
 	return Paginator{
 		Page:        0,
 		PerPage:     1,
@@ -161,11 +158,6 @@ func NewPaginator() Paginator {
 		Content:     "",
 	}
 }
-
-// NewModel creates a new model with defaults.
-//
-// Deprecated. Use New instead.
-var NewModel = NewPaginator
 
 // Update is the Tea update function which binds keystrokes to pagination.
 func (m Paginator) Update(msg tea.Msg) (Paginator, tea.Cmd) {

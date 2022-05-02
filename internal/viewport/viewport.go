@@ -1,4 +1,4 @@
-package bubbles
+package viewport
 
 import (
 	"math"
@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jedwards1230/go-kerbal/internal/keymap"
 )
 
 // New returns a new model with the given width and height as well as default
@@ -22,7 +23,7 @@ func NewViewport(width, height int) (m Viewport) {
 type Viewport struct {
 	Width  int
 	Height int
-	KeyMap KeyMap
+	KeyMap keymap.KeyMap
 
 	// Whether or not to respond to the mouse. The mouse must be enabled in
 	// Bubble Tea for this to work. For details, see the Bubble Tea docs.
@@ -47,7 +48,7 @@ type Viewport struct {
 }
 
 func (m *Viewport) setInitialValues() {
-	m.KeyMap = GetKeyMap()
+	m.KeyMap = keymap.GetKeyMap()
 	m.MouseWheelEnabled = true
 	m.MouseWheelDelta = 3
 	m.initialized = true

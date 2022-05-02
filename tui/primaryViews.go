@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/internal"
-	"github.com/jedwards1230/go-kerbal/registry"
+	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/muesli/reflow/truncate"
 )
 
@@ -263,7 +263,7 @@ func (b Bubble) queueView() string {
 				internal.EllipsisStyle)
 		}
 
-		applyLineStyle := func(i int, mod registry.Ckan) string {
+		applyLineStyle := func(i int, mod ckan.Ckan) string {
 			if b.bubbles.primaryPaginator.GetCursorIndex() == i && !b.nav.listCursorHide {
 				return selectedStyle.Render(trimName(mod.Name))
 			} else if mod.Installed() {
@@ -273,7 +273,7 @@ func (b Bubble) queueView() string {
 			}
 		}
 
-		removeLineStyle := func(i int, mod registry.Ckan) string {
+		removeLineStyle := func(i int, mod ckan.Ckan) string {
 			/* if mod.Installed() {
 				return installStyle.Render(trimName(mod.Name))
 			} else if mod.Download.Downloaded {

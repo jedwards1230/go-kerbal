@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jedwards1230/go-kerbal/cmd/config"
+	"github.com/jedwards1230/go-kerbal/internal/config"
 )
 
 func TestMain(m *testing.M) {

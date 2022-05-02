@@ -6,10 +6,10 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
 	"github.com/jedwards1230/go-kerbal/internal"
-	"github.com/jedwards1230/go-kerbal/internal/tui"
+	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/dirfs"
+	"github.com/jedwards1230/go-kerbal/tui"
 	"github.com/spf13/viper"
 )
 

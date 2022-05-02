@@ -6,9 +6,9 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
 	"github.com/jedwards1230/go-kerbal/internal"
-	"github.com/jedwards1230/go-kerbal/registry"
+	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/queue"
 	"github.com/spf13/viper"
 )
 
@@ -122,7 +122,7 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.nav.boolCursor = false
 	b.nav.listCursor = 0
 	b.nav.listCursorHide = true
-	b.registry.Queue = registry.NewQueue()
+	b.registry.Queue = queue.NewQueue()
 	b.bubbles.textInput.Reset()
 	b.inputRequested = false
 	b.searchInput = false

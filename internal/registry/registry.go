@@ -10,23 +10,25 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/segmentio/encoding/json"
 
-	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/queue"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/tidwall/buntdb"
 )
 
 type Registry struct {
-	TotalModMap      map[string][]Ckan
-	CompatibleModMap map[string][]Ckan
-	UnsortedModMap   map[string]Ckan
-	SortedModMap     map[string]Ckan
+	TotalModMap      map[string][]ckan.Ckan
+	CompatibleModMap map[string][]ckan.Ckan
+	UnsortedModMap   map[string]ckan.Ckan
+	SortedModMap     map[string]ckan.Ckan
 	ModMapIndex      ModIndex
-	InstalledModList map[string]Ckan
+	InstalledModList map[string]ckan.Ckan
 	DB               *CkanDB
 	SortOptions      SortOptions
 	theme            theme.Theme
-	Queue            Queue
+	Queue            queue.Queue
 }
 
 type ModIndex []Entry
@@ -40,11 +42,11 @@ func GetRegistry() Registry {
 		SortOrder: "ascend",
 	}
 
-	que := NewQueue()
+	que := queue.NewQueue()
 
 	return Registry{
 		DB:               db,
-		InstalledModList: make(map[string]Ckan, 0),
+		InstalledModList: make(map[string]ckan.Ckan, 0),
 		SortOptions:      sortOpts,
 		Queue:            que,
 	}
@@ -54,7 +56,7 @@ func (r *Registry) SortModList() error {
 	r.LogCommandf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
 
-	var modMap map[string]Ckan
+	var modMap map[string]ckan.Ckan
 	modMap, err := getLatestVersionMap(r.TotalModMap)
 	if err != nil {
 		return err
@@ -77,7 +79,7 @@ func (r *Registry) SortModList() error {
 }
 
 // Get list of Ckan objects from database
-func (r *Registry) GetEntireModList() map[string][]Ckan {
+func (r *Registry) GetEntireModList() map[string][]ckan.Ckan {
 	log.Println("Gathering mod list from database")
 
 	installedMap, err := dirfs.CheckInstalledMods()
@@ -85,8 +87,8 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 		r.LogErrorf("Error checking installed mods: %v", err)
 	}
 
-	var mod Ckan
-	newMap := make(map[string][]Ckan)
+	var mod ckan.Ckan
+	newMap := make(map[string][]ckan.Ckan)
 	total := 0
 	err = r.DB.View(func(tx *buntdb.Tx) error {
 		tx.Ascend("", func(_, value string) bool {
@@ -115,22 +117,22 @@ func (r *Registry) GetEntireModList() map[string][]Ckan {
 	return newMap
 }
 
-func (r *Registry) checkModInstalled(mod *Ckan, installedMap map[string]bool) {
+func (r *Registry) checkModInstalled(mod *ckan.Ckan, installedMap map[string]bool) {
 	if len(installedMap) > 0 {
 		if installedMap[mod.Install.Find] || installedMap[mod.Install.File] {
-			mod.setInstalled(true)
+			mod.SetInstalled(true)
 			r.InstalledModList[mod.Identifier] = *mod
 		} else if mod.Install.FindRegex != "" {
 			re := regexp.MustCompile(mod.Install.FindRegex)
 			for k, v := range installedMap {
 				if v && re.MatchString(k) {
-					mod.setInstalled(true)
+					mod.SetInstalled(true)
 					r.InstalledModList[mod.Identifier] = *mod
 					break
 				}
 			}
 		} else {
-			mod.setInstalled(false)
+			mod.SetInstalled(false)
 		}
 	}
 }
@@ -174,7 +176,7 @@ func (r *Registry) BuildQueueIndex() {
 // Create ModMapIndex from given modMap
 //
 // Sorts by order and tags saved to registry
-func (r *Registry) buildModIndex(modMap map[string]Ckan) {
+func (r *Registry) buildModIndex(modMap map[string]ckan.Ckan) {
 	idx := make(ModIndex, 0)
 	for k, v := range modMap {
 		idx = append(idx, Entry{k, v.SearchableName})
@@ -190,10 +192,10 @@ func (r *Registry) buildModIndex(modMap map[string]Ckan) {
 }
 
 // Filter out incompatible mods
-func getCompatibleModMap(incompatibleModMap map[string][]Ckan) map[string][]Ckan {
+func getCompatibleModMap(incompatibleModMap map[string][]ckan.Ckan) map[string][]ckan.Ckan {
 	countGood := 0
 	countBad := 0
-	compatibleModMap := make(map[string][]Ckan, len(incompatibleModMap))
+	compatibleModMap := make(map[string][]ckan.Ckan, len(incompatibleModMap))
 	for id, modList := range incompatibleModMap {
 		for i := range modList {
 			if modList[i].IsCompatible {
@@ -210,8 +212,8 @@ func getCompatibleModMap(incompatibleModMap map[string][]Ckan) map[string][]Ckan
 }
 
 // Filters list by unique identifiers to ensure duplicate mods are not displayed
-func getLatestVersionMap(modMapBuckets map[string][]Ckan) (map[string]Ckan, error) {
-	modMap := make(map[string]Ckan)
+func getLatestVersionMap(modMapBuckets map[string][]ckan.Ckan) (map[string]ckan.Ckan, error) {
+	modMap := make(map[string]ckan.Ckan)
 	countGood := 0
 	countBad := 0
 	for id, modList := range modMapBuckets {

@@ -13,32 +13,17 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"golang.org/x/sync/errgroup"
 )
 
-type Queue struct {
-	List map[string]map[string]Ckan
-}
-
-func NewQueue() Queue {
-	q := make(map[string]map[string]Ckan, 0)
-
-	q["remove"] = make(map[string]Ckan, 0)
-	q["install"] = make(map[string]Ckan, 0)
-	q["dependency"] = make(map[string]Ckan, 0)
-
-	return Queue{
-		List: q,
-	}
-}
-
-func (r *Registry) AddToQueue(mod Ckan) error {
+func (r *Registry) AddToQueue(mod ckan.Ckan) error {
 	if mod.Installed() {
-		r.Queue.addRemoval(mod)
+		r.Queue.AddRemoval(mod)
 	} else {
-		r.Queue.addSelection(mod)
+		r.Queue.AddSelection(mod)
 
 		mods, err := r.CheckDependencies(mod)
 		if err != nil {
@@ -46,11 +31,11 @@ func (r *Registry) AddToQueue(mod Ckan) error {
 		}
 		if len(mods) > 0 {
 			for _, mod := range mods {
-				if r.Queue.checkRemovals(mod.Identifier) {
+				if r.Queue.CheckRemovals(mod.Identifier) {
 					log.Print("dependent mod being removed!!!!")
 				}
 				log.Printf("adding %v", mod.Name)
-				r.Queue.addDependency(mod)
+				r.Queue.AddDependency(mod)
 			}
 		}
 	}
@@ -59,13 +44,13 @@ func (r *Registry) AddToQueue(mod Ckan) error {
 
 func (r *Registry) RemoveFromQueue(s string) error {
 	// check removal queue
-	for _, mod := range r.Queue.getRemovals() {
+	for _, mod := range r.Queue.GetRemovals() {
 		if mod.Identifier == s {
 			delete(r.Queue.List["remove"], mod.Identifier)
 		}
 	}
 	// check install queue
-	for _, mod := range r.Queue.getSelections() {
+	for _, mod := range r.Queue.GetSelections() {
 		if mod.Identifier == s {
 			delete(r.Queue.List["install"], mod.Identifier)
 			// remove any dependencies
@@ -84,7 +69,7 @@ func (r *Registry) RemoveFromQueue(s string) error {
 	// check dependency queue
 	for _, mod := range r.Queue.GetDependencies() {
 		if mod.Identifier == s {
-			mods := r.Queue.findDependents(s)
+			mods := r.Queue.FindDependents(s)
 			for i := range mods {
 				delete(r.Queue.List["install"], mods[i].Identifier)
 			}
@@ -94,97 +79,8 @@ func (r *Registry) RemoveFromQueue(s string) error {
 	return nil
 }
 
-func (q *Queue) findDependents(s string) []Ckan {
-	modList := make([]Ckan, 0)
-	for _, mod := range q.getSelections() {
-		if len(mod.ModDepends) > 0 {
-			for i := range mod.ModDepends {
-				if mod.ModDepends[i] == s {
-					modList = append(modList, mod)
-				}
-			}
-		}
-	}
-	return modList
-}
-
-func (q *Queue) CheckQueue(s string) bool {
-	for _, mod := range q.getRemovals() {
-		if mod.Identifier == s {
-			return true
-		}
-	}
-	for _, mod := range q.getSelections() {
-		if mod.Identifier == s {
-			return true
-		}
-	}
-	for _, mod := range q.GetDependencies() {
-		if mod.Identifier == s {
-			return true
-		}
-	}
-	return false
-}
-
-func (q Queue) checkRemovals(s string) bool {
-	for _, mod := range q.getRemovals() {
-		if mod.Identifier == s {
-			return true
-		}
-	}
-	return false
-}
-
-func (q *Queue) addRemoval(mod Ckan) {
-	q.List["remove"][mod.Identifier] = mod
-}
-
-func (q *Queue) addSelection(mod Ckan) {
-	q.List["install"][mod.Identifier] = mod
-}
-
-func (q *Queue) addDependency(mod Ckan) {
-	q.List["dependency"][mod.Identifier] = mod
-}
-
-func (q Queue) getRemovals() map[string]Ckan {
-	return q.List["remove"]
-}
-
-func (q Queue) getSelections() map[string]Ckan {
-	return q.List["install"]
-}
-
-func (q Queue) GetDependencies() map[string]Ckan {
-	return q.List["dependency"]
-}
-
-func (q Queue) InstallLen() int {
-	count := 0
-	for _, mod := range q.getSelections() {
-		if !mod.Installed() {
-			count += 1
-		}
-	}
-	for _, mod := range q.GetDependencies() {
-		if !mod.Installed() {
-			count += 1
-		}
-	}
-	return count
-}
-
-func (q Queue) RemoveLen() int {
-	return len(q.getRemovals())
-}
-
-func (q Queue) Len() int {
-	return len(q.getRemovals()) + len(q.getSelections()) + len(q.GetDependencies())
-}
-
 func (r *Registry) RemoveMods() error {
-	for _, mod := range r.Queue.getRemovals() {
+	for _, mod := range r.Queue.GetRemovals() {
 		err := r.removeMod(mod)
 		if err != nil {
 			return err
@@ -193,7 +89,7 @@ func (r *Registry) RemoveMods() error {
 	return nil
 }
 
-func (r *Registry) removeMod(mod Ckan) error {
+func (r *Registry) removeMod(mod ckan.Ckan) error {
 	r.LogErrorf("Removing %v", mod.Name)
 
 	// find path
@@ -241,10 +137,10 @@ func (r *Registry) removeMod(mod Ckan) error {
 
 // Download selected mods
 func (r *Registry) DownloadMods() error {
-	var mods []Ckan
+	var mods []ckan.Ckan
 	var err error
 
-	for _, mod := range r.Queue.getSelections() {
+	for _, mod := range r.Queue.GetSelections() {
 		mods = append(mods, mod)
 	}
 
@@ -277,7 +173,7 @@ func (r *Registry) DownloadMods() error {
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
-				mod.markDownloaded()
+				mod.MarkDownloaded()
 				return nil
 			})
 		}
@@ -290,7 +186,7 @@ func (r *Registry) DownloadMods() error {
 }
 
 // Download a mod
-func (r *Registry) downloadMod(mod Ckan) error {
+func (r *Registry) downloadMod(mod ckan.Ckan) error {
 	resp, err := http.Get(mod.Download.URL)
 	if err != nil {
 		return err
@@ -331,18 +227,18 @@ func (r *Registry) InstallMods() error {
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
-				mod.setInstalled(true)
+				mod.SetInstalled(true)
 			}
 		}
 
 		// install the rest
-		for _, mod := range r.Queue.getSelections() {
+		for _, mod := range r.Queue.GetSelections() {
 			if !mod.Installed() {
 				err := r.installMod(&mod)
 				if err != nil {
 					return fmt.Errorf("%s: %v", mod.Name, err)
 				}
-				mod.setInstalled(true)
+				mod.SetInstalled(true)
 			}
 		}
 
@@ -353,7 +249,7 @@ func (r *Registry) InstallMods() error {
 }
 
 // Install a mod
-func (r *Registry) installMod(mod *Ckan) error {
+func (r *Registry) installMod(mod *ckan.Ckan) error {
 	// open zip
 	zipReader, err := zip.OpenReader(mod.Download.Path)
 	if err != nil {
@@ -429,8 +325,8 @@ func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Reg
 }
 
 // Gather list of mods and dependencies for download
-func (r *Registry) CheckDependencies(mod Ckan) (map[string]Ckan, error) {
-	mods := make(map[string]Ckan)
+func (r *Registry) CheckDependencies(mod ckan.Ckan) (map[string]ckan.Ckan, error) {
+	mods := make(map[string]ckan.Ckan)
 	count := 0
 	if mod.Identifier == "" {
 		return mods, errors.New("empty mod provided")
@@ -464,7 +360,7 @@ func (r *Registry) CheckDependencies(mod Ckan) (map[string]Ckan, error) {
 }
 
 // check for conflicts
-func (r *Registry) checkConflicts(mods []Ckan) error {
+func (r *Registry) checkConflicts(mods []ckan.Ckan) error {
 	// find conflicts for each queued mod
 	for i := range mods {
 		if len(mods[i].ModConflicts) > 0 {

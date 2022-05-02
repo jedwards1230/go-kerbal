@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/go-git/go-billy/v5"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/tidwall/buntdb"
 )
 

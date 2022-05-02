@@ -14,8 +14,9 @@ import (
 	"github.com/go-git/go-git/v5"
 	gitConfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
-	"github.com/jedwards1230/go-kerbal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/spf13/viper"
 	"github.com/tidwall/buntdb"
 )
@@ -62,7 +63,7 @@ func (r *Registry) UpdateDB(force_update bool) error {
 }
 
 func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
-	var mods []Ckan
+	var mods []ckan.Ckan
 
 	goodCount := 0
 	ignoredCount := 0
@@ -111,7 +112,7 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 }
 
 // return true if errors but ignored
-func (r *Registry) viewParseErrors(mod Ckan) bool {
+func (r *Registry) viewParseErrors(mod ckan.Ckan) bool {
 	if len(mod.Errors) > 0 {
 		if mod.Errors["ignored"] == true {
 			return true
@@ -135,8 +136,8 @@ func (r *Registry) viewParseErrors(mod Ckan) bool {
 }
 
 // Parse .ckan file into Ckan struct
-func parseCKAN(repo billy.Filesystem, filePath string) (Ckan, error) {
-	var mod Ckan
+func parseCKAN(repo billy.Filesystem, filePath string) (ckan.Ckan, error) {
+	var mod ckan.Ckan
 
 	// Read .ckan from filesystem
 	file, err := repo.Open(filePath)
@@ -159,7 +160,7 @@ func parseCKAN(repo billy.Filesystem, filePath string) (Ckan, error) {
 	}
 
 	// clean extra data into struct
-	mod = CreateCkan(raw)
+	mod = ckan.CreateCkan(raw)
 	if !mod.Valid {
 		//log.Printf("Initialization error: %v", err)
 		return mod, errors.New("invalid mod file")

@@ -1,10 +1,10 @@
-package registry
+package ckan
 
 import (
 	"log"
 
 	"github.com/hashicorp/go-version"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
+	"github.com/jedwards1230/go-kerbal/internal/config"
 )
 
 // CKAN Spec: https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md
@@ -166,11 +166,11 @@ func (c Ckan) checkCompatible() bool {
 	return true
 }
 
-func (c *Ckan) markDownloaded() {
+func (c *Ckan) MarkDownloaded() {
 	c.Download.Downloaded = true
 }
 
-func (c *Ckan) setInstalled(n bool) {
+func (c *Ckan) SetInstalled(n bool) {
 	c.Install.Installed = n
 }
 

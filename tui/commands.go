@@ -6,13 +6,14 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/jedwards1230/go-kerbal/dirfs"
-	"github.com/jedwards1230/go-kerbal/registry"
+	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/registry"
 	"github.com/spf13/viper"
 )
 
 type (
-	UpdatedModMapMsg    map[string][]registry.Ckan
+	UpdatedModMapMsg    map[string][]ckan.Ckan
 	InstalledModListMsg map[string]interface{}
 	UpdateKspDirMsg     bool
 	ErrorMsg            error

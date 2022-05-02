@@ -1,4 +1,4 @@
-package registry
+package ckan
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
+	"github.com/jedwards1230/go-kerbal/internal/config"
 )
 
 func (c *Ckan) cleanSearchSpace(raw map[string]interface{}) error {

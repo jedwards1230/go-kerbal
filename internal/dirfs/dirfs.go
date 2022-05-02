@@ -17,7 +17,7 @@ import (
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/hashicorp/go-version"
-	"github.com/jedwards1230/go-kerbal/cmd/config"
+	"github.com/jedwards1230/go-kerbal/internal/config"
 )
 
 // CreateDirectory creates a new directory given a name.
