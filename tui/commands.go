@@ -86,7 +86,6 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 			defer os.RemoveAll(f)
 
 			b.registry.SetTempDir(f)
-			log.Printf("dir %s", f)
 
 			common.LogCommandf("Downloading %d mods", b.registry.Queue.InstallLen())
 			err = b.registry.DownloadMods()

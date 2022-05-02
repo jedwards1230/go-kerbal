@@ -103,7 +103,7 @@ func (r *Registry) GetEntireModList() map[string][]ckan.Ckan {
 			}
 
 			// check if mod is installed
-			r.checkModInstalled(&mod, installedMap)
+			r.checkModInstalled(mod, installedMap)
 
 			// add to list
 			newMap[mod.Identifier] = append(newMap[mod.Identifier], mod)
@@ -122,17 +122,17 @@ func (r *Registry) GetEntireModList() map[string][]ckan.Ckan {
 	return newMap
 }
 
-func (r *Registry) checkModInstalled(mod *ckan.Ckan, installedMap map[string]bool) {
+func (r *Registry) checkModInstalled(mod ckan.Ckan, installedMap map[string]bool) {
 	if len(installedMap) > 0 {
 		if installedMap[mod.Install.Find] || installedMap[mod.Install.File] {
 			mod.SetInstalled(true)
-			r.InstalledModList[mod.Identifier] = *mod
+			r.InstalledModList[mod.Identifier] = mod
 		} else if mod.Install.FindRegex != "" {
 			re := regexp.MustCompile(mod.Install.FindRegex)
 			for k, v := range installedMap {
 				if v && re.MatchString(k) {
 					mod.SetInstalled(true)
-					r.InstalledModList[mod.Identifier] = *mod
+					r.InstalledModList[mod.Identifier] = mod
 					break
 				}
 			}

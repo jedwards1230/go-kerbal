@@ -33,47 +33,10 @@ func (r *Registry) AddToQueue(mod ckan.Ckan) error {
 		if len(mods) > 0 {
 			for _, mod := range mods {
 				if r.Queue.CheckRemovals(mod.Identifier) {
-					log.Print("dependent mod being removed!!!!")
+					common.LogError("dependent mod being removed!!!!")
 				}
 				r.Queue.AddDependency(mod)
 			}
-		}
-	}
-	return nil
-}
-
-func (r *Registry) RemoveFromQueue(s string) error {
-	// check removal queue
-	for _, mod := range r.Queue.GetRemovals() {
-		if mod.Identifier == s {
-			delete(r.Queue.List["remove"], mod.Identifier)
-		}
-	}
-	// check install queue
-	for _, mod := range r.Queue.GetSelections() {
-		if mod.Identifier == s {
-			delete(r.Queue.List["install"], mod.Identifier)
-			// remove any dependencies
-			// todo: only remove if no other mods depend on it
-			if len(mod.ModDepends) > 0 {
-				for i := range mod.ModDepends {
-					for _, dependent := range r.Queue.GetDependencies() {
-						if dependent.Identifier == mod.ModDepends[i] {
-							delete(r.Queue.List["dependency"], dependent.Identifier)
-						}
-					}
-				}
-			}
-		}
-	}
-	// check dependency queue
-	for _, mod := range r.Queue.GetDependencies() {
-		if mod.Identifier == s {
-			mods := r.Queue.FindDependents(s)
-			for i := range mods {
-				delete(r.Queue.List["install"], mods[i].Identifier)
-			}
-			delete(r.Queue.List["dependency"], mod.Identifier)
 		}
 	}
 	return nil

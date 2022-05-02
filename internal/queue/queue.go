@@ -64,20 +64,32 @@ func (q *Queue) AddRemoval(mod mod.Ckan) {
 	q.List["remove"][mod.Identifier] = mod
 }
 
-func (q *Queue) AddSelection(mod mod.Ckan) {
-	q.List["install"][mod.Identifier] = mod
-}
-
-func (q *Queue) AddDependency(mod mod.Ckan) {
-	q.List["dependency"][mod.Identifier] = mod
+func (q *Queue) RemoveRemoval(s string) {
+	delete(q.List["remove"], s)
 }
 
 func (q Queue) GetRemovals() map[string]mod.Ckan {
 	return q.List["remove"]
 }
 
+func (q *Queue) AddSelection(mod mod.Ckan) {
+	q.List["install"][mod.Identifier] = mod
+}
+
+func (q *Queue) RemoveSelection(s string) {
+	delete(q.List["install"], s)
+}
+
 func (q Queue) GetSelections() map[string]mod.Ckan {
 	return q.List["install"]
+}
+
+func (q *Queue) AddDependency(mod mod.Ckan) {
+	q.List["dependency"][mod.Identifier] = mod
+}
+
+func (q *Queue) RemoveDependency(s string) {
+	delete(q.List["dependency"], s)
 }
 
 func (q Queue) GetDependencies() map[string]mod.Ckan {
@@ -105,4 +117,41 @@ func (q Queue) RemoveLen() int {
 
 func (q Queue) Len() int {
 	return len(q.GetRemovals()) + len(q.GetSelections()) + len(q.GetDependencies())
+}
+
+func (q *Queue) RemoveFromQueue(s string) error {
+	// check removal queue
+	for _, mod := range q.GetRemovals() {
+		if mod.Identifier == s {
+			q.RemoveRemoval(mod.Identifier)
+		}
+	}
+	// check install queue
+	for _, mod := range q.GetSelections() {
+		if mod.Identifier == s {
+			q.RemoveSelection(mod.Identifier)
+			// remove any dependencies
+			// todo: only remove if no other mods depend on it
+			if len(mod.ModDepends) > 0 {
+				for i := range mod.ModDepends {
+					for _, dependent := range q.GetDependencies() {
+						if dependent.Identifier == mod.ModDepends[i] {
+							q.RemoveDependency(dependent.Identifier)
+						}
+					}
+				}
+			}
+		}
+	}
+	// check dependency queue
+	for _, mod := range q.GetDependencies() {
+		if mod.Identifier == s {
+			mods := q.FindDependents(s)
+			for i := range mods {
+				q.RemoveSelection(mods[i].Identifier)
+			}
+			q.RemoveDependency(mod.Identifier)
+		}
+	}
+	return nil
 }

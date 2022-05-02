@@ -109,7 +109,7 @@ func (b *Bubble) toggleSelectedItem() {
 
 		// toggle mod in queue
 		if b.registry.Queue.CheckQueue(mod.Identifier) {
-			b.registry.RemoveFromQueue(mod.Identifier)
+			b.registry.Queue.RemoveFromQueue(mod.Identifier)
 		} else {
 			err := b.registry.AddToQueue(mod)
 			if err != nil {
