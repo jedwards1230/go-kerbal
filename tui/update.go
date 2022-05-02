@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/registry"
 )
@@ -46,12 +47,12 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.ready = true
 		if msg {
 			cfg := config.GetConfig()
-			b.LogSuccess("Kerbal directory updated")
+			common.LogSuccess("Kerbal directory updated")
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.SetValue(fmt.Sprintf("Success!: %v", cfg.Settings.KerbalDir))
 			b.inputRequested = false
 		} else {
-			b.LogErrorf("Error updating ksp dir: %v", msg)
+			common.LogErrorf("Error updating ksp dir: %v", msg)
 			b.bubbles.textInput.Reset()
 			b.bubbles.textInput.Placeholder = "Try again..."
 		}
@@ -61,12 +62,12 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.nav.listCursorHide = true
 			b.registry.ModMapIndex = registry.ModIndex(msg)
 		} else {
-			b.LogError("Error searching")
+			common.LogError("Error searching")
 		}
 
 	case ErrorMsg:
 		b.ready = true
-		b.LogErrorf("ErrorMsg: %v", msg)
+		common.LogErrorf("ErrorMsg: %v", msg)
 
 	case spinner.TickMsg:
 		if !b.ready {

@@ -21,10 +21,6 @@ type (
 		Debug                bool   `mapstructure:"debug"`
 	}
 
-	ThemeConfig struct {
-		AppTheme string `mapstructure:"app_theme"`
-	}
-
 	Config struct {
 		Settings SettingsConfig `mapstructure:"settings"`
 		AppTheme string         `mapstructure:"app_theme"`
@@ -66,7 +62,7 @@ func LoadConfig(dir string) {
 	viper.SetDefault("settings.enable_mousewheel", true)
 	viper.SetDefault("settings.hide_incompatible", true)
 	viper.SetDefault("settings.debug", true)
-	viper.SetDefault("theme.app_theme", "default")
+	viper.SetDefault("app_theme", "default")
 
 	if err := viper.SafeWriteConfig(); err != nil {
 		if os.IsNotExist(err) {

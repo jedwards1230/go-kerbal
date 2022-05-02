@@ -17,7 +17,6 @@ import (
 
 type Bubble struct {
 	appConfig      config.Config
-	theme          theme.Theme
 	bubbles        Bubbles
 	inputRequested bool
 	searchInput    bool
@@ -51,9 +50,8 @@ type Nav struct {
 
 func InitialModel() Bubble {
 	cfg := config.GetConfig()
-	theme := theme.GetTheme(cfg.AppTheme)
+	theme.SetTheme(cfg.AppTheme)
 	reg := registry.GetRegistry()
-	reg.SetTheme(theme)
 
 	iRequested := false
 	if cfg.Settings.KerbalDir == "" {
@@ -64,8 +62,8 @@ func InitialModel() Bubble {
 	spin.Spinner = spinner.Dot
 	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
 
-	primaryBoxBorderColor := theme.ActiveBoxBorderColor
-	secondaryBoxBorderColor := theme.InactiveBoxBorderColor
+	primaryBoxBorderColor := theme.AppTheme.ActiveBoxBorderColor
+	secondaryBoxBorderColor := theme.AppTheme.InactiveBoxBorderColor
 
 	t := textinput.New()
 	t.Prompt = "❯ "
@@ -124,7 +122,6 @@ func InitialModel() Bubble {
 
 	return Bubble{
 		appConfig:      cfg,
-		theme:          theme,
 		bubbles:        bubs,
 		inputRequested: iRequested,
 		searchInput:    false,
@@ -132,7 +129,7 @@ func InitialModel() Bubble {
 		registry:       reg,
 		nav:            nav,
 		activeBox:      internal.ModListView,
-		keyMap:         keymap.GetKeyMap(),
+		keyMap:         keymap.New(),
 	}
 }
 

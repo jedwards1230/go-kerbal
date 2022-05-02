@@ -71,7 +71,10 @@ var themeMap = map[string]Theme{
 	},
 }
 
-// GetTheme returns a theme based on the given name.
-func GetTheme(theme string) Theme {
-	return themeMap["default"]
+var AppTheme = themeMap["default"]
+
+func SetTheme(theme string) {
+	if val, ok := themeMap[theme]; ok {
+		AppTheme = val
+	}
 }

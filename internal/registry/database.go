@@ -15,6 +15,7 @@ import (
 	gitConfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/spf13/viper"
@@ -111,7 +112,9 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	return err
 }
 
-// return true if errors but ignored
+// Return true if errors but ignored
+//
+// Errors would be ignored if they don't satisfy the required fields
 func (r *Registry) viewParseErrors(mod ckan.Ckan) bool {
 	if len(mod.Errors) > 0 {
 		if mod.Errors["ignored"] == true {
@@ -126,7 +129,7 @@ func (r *Registry) viewParseErrors(mod ckan.Ckan) bool {
 			log.Print("\n")
 			for k, v := range mod.Errors {
 				if k != "raw" {
-					r.LogErrorf("%v: %v", k, v)
+					common.LogErrorf("%v: %v", k, v)
 				}
 			}
 			log.Print("\n")
@@ -160,7 +163,7 @@ func parseCKAN(repo billy.Filesystem, filePath string) (ckan.Ckan, error) {
 	}
 
 	// clean extra data into struct
-	mod = ckan.CreateCkan(raw)
+	mod = ckan.New(raw)
 	if !mod.Valid {
 		//log.Printf("Initialization error: %v", err)
 		return mod, errors.New("invalid mod file")

@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/queue"
 	"github.com/spf13/viper"
@@ -112,7 +113,7 @@ func (b *Bubble) toggleSelectedItem() {
 		} else {
 			err := b.registry.AddToQueue(mod)
 			if err != nil {
-				b.LogErrorf("adding to queue: %v", err)
+				common.LogErrorf("adding to queue: %v", err)
 			}
 		}
 	}
@@ -122,7 +123,7 @@ func (b *Bubble) resetView() tea.Cmd {
 	b.nav.boolCursor = false
 	b.nav.listCursor = 0
 	b.nav.listCursorHide = true
-	b.registry.Queue = queue.NewQueue()
+	b.registry.Queue = queue.New()
 	b.bubbles.textInput.Reset()
 	b.inputRequested = false
 	b.searchInput = false

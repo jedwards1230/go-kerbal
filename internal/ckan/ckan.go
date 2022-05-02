@@ -31,7 +31,7 @@ type Ckan struct {
 }
 
 // Initialize struct values
-func CreateCkan(raw map[string]interface{}) Ckan {
+func New(raw map[string]interface{}) Ckan {
 	var mod Ckan
 	var validMod = true
 	/* for k, v := range raw {

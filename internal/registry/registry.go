@@ -11,10 +11,10 @@ import (
 	"github.com/segmentio/encoding/json"
 
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/jedwards1230/go-kerbal/internal/queue"
-	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/tidwall/buntdb"
 )
 
@@ -27,8 +27,12 @@ type Registry struct {
 	InstalledModList map[string]ckan.Ckan
 	DB               *CkanDB
 	SortOptions      SortOptions
-	theme            theme.Theme
 	Queue            queue.Queue
+}
+
+type SortOptions struct {
+	SortTag   string
+	SortOrder string
 }
 
 type ModIndex []Entry
@@ -42,7 +46,7 @@ func GetRegistry() Registry {
 		SortOrder: "ascend",
 	}
 
-	que := queue.NewQueue()
+	que := queue.New()
 
 	return Registry{
 		DB:               db,
@@ -53,7 +57,7 @@ func GetRegistry() Registry {
 }
 
 func (r *Registry) SortModList() error {
-	r.LogCommandf("Sorting %d mods. Order: %s by %s", len(r.TotalModMap), r.SortOptions.SortOrder, r.SortOptions.SortTag)
+	common.LogCommandf("Sorting mods. Order: %s by %s", r.SortOptions.SortOrder, r.SortOptions.SortTag)
 	cfg := config.GetConfig()
 
 	var modMap map[string]ckan.Ckan
@@ -74,7 +78,7 @@ func (r *Registry) SortModList() error {
 	r.buildModIndex(modMap)
 	r.SortedModMap = modMap
 
-	r.LogSuccessf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
+	common.LogSuccessf("Sort result: %d/%d", len(r.ModMapIndex), len(r.TotalModMap))
 	return nil
 }
 
@@ -84,7 +88,7 @@ func (r *Registry) GetEntireModList() map[string][]ckan.Ckan {
 
 	installedMap, err := dirfs.CheckInstalledMods()
 	if err != nil {
-		r.LogErrorf("Error checking installed mods: %v", err)
+		common.LogErrorf("Error checking installed mods: %v", err)
 	}
 
 	var mod ckan.Ckan
@@ -94,7 +98,7 @@ func (r *Registry) GetEntireModList() map[string][]ckan.Ckan {
 		tx.Ascend("", func(_, value string) bool {
 			err := json.Unmarshal([]byte(value), &mod)
 			if err != nil {
-				r.LogErrorf("Error loading into Ckan struct: %v", err)
+				common.LogErrorf("Error loading into Ckan struct: %v", err)
 			}
 
 			// check if mod is installed
@@ -111,7 +115,7 @@ func (r *Registry) GetEntireModList() map[string][]ckan.Ckan {
 		log.Fatalf("Error viewing db: %v", err)
 	}
 
-	r.LogSuccessf("Loaded %v mod files from database", total)
+	common.LogSuccessf("Loaded %v mod files from database", total)
 	log.Printf("Found %d mods installed", len(r.InstalledModList))
 
 	return newMap

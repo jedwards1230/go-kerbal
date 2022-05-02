@@ -10,7 +10,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/muesli/reflow/truncate"
 )
 
@@ -41,17 +43,17 @@ func (b Bubble) modListView() string {
 
 			if b.bubbles.primaryPaginator.Cursor == i && !b.nav.listCursorHide {
 				page += lipgloss.NewStyle().
-					Background(b.theme.SelectedListItemColor).
-					Foreground(b.theme.UnselectedListItemColor).
+					Background(theme.AppTheme.SelectedListItemColor).
+					Foreground(theme.AppTheme.UnselectedListItemColor).
 					Width(b.bubbles.primaryPaginator.Width).
 					Render(line)
 			} else if mod.Installed() {
 				page += lipgloss.NewStyle().
-					Foreground(b.theme.InstalledColor).
+					Foreground(theme.AppTheme.InstalledColor).
 					Render(line)
 			} else if !mod.IsCompatible {
 				page += lipgloss.NewStyle().
-					Foreground(b.theme.Orange).
+					Foreground(theme.AppTheme.Orange).
 					Render(line)
 			} else {
 				page += line
@@ -121,17 +123,17 @@ func (b Bubble) modInfoView() string {
 		versionKsp := drawKV("KSP Versions", fmt.Sprintf("%v - %v", mod.Versions.KspMin, mod.Versions.KspMax))
 		installed := drawKV("Installed", "Not Installed")
 		if mod.Installed() {
-			installed = drawKVColor("Installed", "Installed", b.theme.InstalledColor)
+			installed = drawKVColor("Installed", "Installed", theme.AppTheme.InstalledColor)
 		}
 		installDir := drawKV("Install dir", mod.Install.InstallTo)
 		download := drawKV("Download", mod.Download.URL)
-		dependencies := drawKVColor("Dependencies", "None", b.theme.Green)
+		dependencies := drawKVColor("Dependencies", "None", theme.AppTheme.Green)
 		if len(mod.ModDepends) > 0 {
-			dependencies = drawKVColor("Dependencies", strings.Join(mod.ModDepends, ", "), b.theme.Orange)
+			dependencies = drawKVColor("Dependencies", strings.Join(mod.ModDepends, ", "), theme.AppTheme.Orange)
 		}
-		conflicts := drawKVColor("Conflicts", "None", b.theme.Green)
+		conflicts := drawKVColor("Conflicts", "None", theme.AppTheme.Green)
 		if len(mod.ModConflicts) > 0 {
-			conflicts = drawKVColor("Conflicts", strings.Join(mod.ModConflicts, ", "), b.theme.Red)
+			conflicts = drawKVColor("Conflicts", strings.Join(mod.ModConflicts, ", "), theme.AppTheme.Red)
 		}
 
 		return connectVert(
@@ -183,21 +185,21 @@ func (b Bubble) logView() string {
 
 			// timestamp
 			time := lipgloss.NewStyle().
-				Foreground(b.theme.Green).
+				Foreground(theme.AppTheme.Green).
 				MarginRight(1).
 				Render(lineWords[0])
 			// file info
 			file := strings.ReplaceAll(lineWords[1], ".go", "")
 			file = lipgloss.NewStyle().
-				Foreground(b.theme.Blue).
+				Foreground(theme.AppTheme.Blue).
 				Width(17).
 				MarginRight(1).
 				Render(file)
 			line := strings.Join(lineWords[2:], " ")
 			if b.bubbles.splashPaginator.Cursor == i {
 				line = lipgloss.NewStyle().
-					Background(b.theme.SelectedListItemColor).
-					Foreground(b.theme.UnselectedListItemColor).
+					Background(theme.AppTheme.SelectedListItemColor).
+					Foreground(theme.AppTheme.UnselectedListItemColor).
 					Render(line)
 			}
 			// logs
@@ -243,18 +245,18 @@ func (b Bubble) queueView() string {
 		Padding(0, 0, 0, 4)
 
 	/* removeStyle := entryStyle.Copy().
-	Foreground(b.theme.UnselectedListItemColor)
+	Foreground(theme.AppTheme.UnselectedListItemColor)
 
 	downloadStyle := entryStyle.Copy().
-		Foreground(b.theme.Blue) */
+		Foreground(theme.AppTheme.Blue) */
 
 	installStyle := entryStyle.Copy().
-		Foreground(b.theme.Green)
+		Foreground(theme.AppTheme.Green)
 
 	if b.registry.Queue.Len() > 0 {
 		selectedStyle := entryStyle.Copy().
-			Foreground(b.theme.UnselectedListItemColor).
-			Background(b.theme.SelectedListItemColor)
+			Foreground(theme.AppTheme.UnselectedListItemColor).
+			Background(theme.AppTheme.SelectedListItemColor)
 
 		trimName := func(s string) string {
 			return truncate.StringWithTail(
@@ -312,7 +314,7 @@ func (b Bubble) queueView() string {
 			removeContent := connectVert(removeList...)
 
 			content = connectVert(
-				titleStyle.Foreground(b.theme.Red).Render("To Remove"),
+				titleStyle.Foreground(theme.AppTheme.Red).Render("To Remove"),
 				removeContent,
 			)
 		}
@@ -323,7 +325,7 @@ func (b Bubble) queueView() string {
 
 			content = connectVert(
 				content,
-				titleStyle.Foreground(b.theme.Green).Render("To Install"),
+				titleStyle.Foreground(theme.AppTheme.Green).Render("To Install"),
 				installContent,
 			)
 		}
@@ -333,7 +335,7 @@ func (b Bubble) queueView() string {
 			deoendencyContent := connectVert(dependencyList...)
 			content = connectVert(
 				content,
-				titleStyle.Foreground(b.theme.Green).Render("Dependencies"),
+				titleStyle.Foreground(theme.AppTheme.Green).Render("Dependencies"),
 				deoendencyContent,
 			)
 		}
@@ -344,7 +346,7 @@ func (b Bubble) queueView() string {
 				pagerStyle(b.bubbles.primaryPaginator.View()),
 			)
 		} else {
-			b.LogError("Unable to parse queue")
+			common.LogError("Unable to parse queue")
 		}
 	}
 	return lipgloss.NewStyle().
@@ -468,11 +470,11 @@ func (b Bubble) statusBarView() string {
 		Render(sortOptions)
 
 	installedLegend := lipgloss.NewStyle().
-		Foreground(b.theme.InstalledColor).
+		Foreground(theme.AppTheme.InstalledColor).
 		Padding(0, 1).
 		Render("Installed")
 	incompatibleLegend := lipgloss.NewStyle().
-		Foreground(b.theme.IncompatibleColor).
+		Foreground(theme.AppTheme.IncompatibleColor).
 		Padding(0, 1).
 		Render("Incompatible")
 

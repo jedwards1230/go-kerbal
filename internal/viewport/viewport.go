@@ -48,7 +48,7 @@ type Viewport struct {
 }
 
 func (m *Viewport) setInitialValues() {
-	m.KeyMap = keymap.GetKeyMap()
+	m.KeyMap = keymap.New()
 	m.MouseWheelEnabled = true
 	m.MouseWheelDelta = 3
 	m.initialized = true

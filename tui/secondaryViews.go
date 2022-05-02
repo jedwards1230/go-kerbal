@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/internal/theme"
 )
 
 func (b Bubble) homeView() string {
@@ -31,6 +32,7 @@ func (b Bubble) homeView() string {
 	default:
 		content = "" +
 			"To do:\n " +
+			"- New layout, probably\n " +
 			"- Display error messages\n " +
 			"- Map dependencies for uninstalls\n " +
 			"- Window resizing on Windows\n " +
@@ -118,7 +120,7 @@ func (b Bubble) getBoolOptionsView() string {
 	optionStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Align(lipgloss.Center).
-		BorderForeground(b.theme.InactiveBoxBorderColor).
+		BorderForeground(theme.AppTheme.InactiveBoxBorderColor).
 		Padding(0, 4).
 		Faint(true).
 		Margin(1, 1)

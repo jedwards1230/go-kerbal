@@ -6,7 +6,7 @@ type Queue struct {
 	List map[string]map[string]mod.Ckan
 }
 
-func NewQueue() Queue {
+func New() Queue {
 	q := make(map[string]map[string]mod.Ckan, 0)
 
 	q["remove"] = make(map[string]mod.Ckan, 0)

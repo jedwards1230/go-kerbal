@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"golang.org/x/sync/errgroup"
@@ -90,7 +91,7 @@ func (r *Registry) RemoveMods() error {
 }
 
 func (r *Registry) removeMod(mod ckan.Ckan) error {
-	r.LogErrorf("Removing %v", mod.Name)
+	common.LogErrorf("Removing %v", mod.Name)
 
 	// find path
 	cfg := config.GetConfig()
@@ -123,7 +124,7 @@ func (r *Registry) removeMod(mod ckan.Ckan) error {
 				removePath = modName
 			}
 		} else {
-			r.LogErrorf("Cannot find for %v", mod.Name)
+			common.LogErrorf("Cannot find for %v", mod.Name)
 		}
 	}
 	removePath = destination + "/" + removePath
@@ -156,7 +157,7 @@ func (r *Registry) DownloadMods() error {
 	}
 
 	if len(mods) > 0 {
-		r.LogCommandf("Downloading %d mods", len(mods))
+		common.LogCommandf("Downloading %d mods", len(mods))
 
 		// Create tmp dir
 		err := os.MkdirAll("./tmp", os.ModePerm)
@@ -242,7 +243,7 @@ func (r *Registry) InstallMods() error {
 			}
 		}
 
-		r.LogSuccessf("Installed %v mods", r.Queue.InstallLen())
+		common.LogSuccessf("Installed %v mods", r.Queue.InstallLen())
 		return nil
 	}
 	return errors.New("install queue empty")
@@ -316,7 +317,7 @@ func (r *Registry) getInstallDir(file, gameDataDir string, installTo *regexp.Reg
 
 		// warn if overwriting vanilla game data
 		if strings.Contains(filePath, "GameData/Squad/") || strings.Contains(filePath, "GameData/SquadExpansion/") {
-			r.LogWarningf("Warning: attempting to overwrite KSP data: %s", filePath)
+			common.LogWarningf("Warning: attempting to overwrite KSP data: %s", filePath)
 		}
 
 		return filePath, nil
@@ -333,7 +334,7 @@ func (r *Registry) CheckDependencies(mod ckan.Ckan) (map[string]ckan.Ckan, error
 	}
 
 	if !mod.IsCompatible {
-		r.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
+		common.LogWarningf("Warning: %v is not compatible with your current configuration", mod.Name)
 	}
 
 	if len(mod.ModDepends) > 0 {
@@ -342,7 +343,7 @@ func (r *Registry) CheckDependencies(mod ckan.Ckan) (map[string]ckan.Ckan, error
 			if dependent.Identifier != "" {
 				if mods[dependent.Identifier].Identifier == "" {
 					if !dependent.IsCompatible {
-						r.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
+						common.LogWarningf("Warning: %v depends on %s (incompatible with current configuration)", mod.Name, dependent.Name)
 					}
 					mods[dependent.Identifier] = dependent
 					count++

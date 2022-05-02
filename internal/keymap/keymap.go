@@ -31,8 +31,8 @@ type KeyMap struct {
 	HalfPageDown key.Binding
 }
 
-// GetKeyMap returns a set of default keybindings.
-func GetKeyMap() KeyMap {
+// New returns a set of default keybindings.
+func New() KeyMap {
 	return KeyMap{
 		Quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),

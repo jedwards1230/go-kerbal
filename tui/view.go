@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/muesli/reflow/truncate"
 )
 
@@ -13,7 +14,7 @@ func (b Bubble) View() string {
 		PaddingLeft(internal.BoxPadding).
 		PaddingRight(internal.BoxPadding).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(b.theme.ActiveBoxBorderColor).
+		BorderForeground(theme.AppTheme.ActiveBoxBorderColor).
 		Align(lipgloss.Center).Render
 
 	switch b.activeBox {
@@ -32,34 +33,34 @@ func (b Bubble) View() string {
 		var secondaryBox string
 
 		// set colors
-		primaryBoxBorderColor := b.theme.InactiveBoxBorderColor
-		secondaryBoxBorderColor := b.theme.InactiveBoxBorderColor
+		primaryBoxBorderColor := theme.AppTheme.InactiveBoxBorderColor
+		secondaryBoxBorderColor := theme.AppTheme.InactiveBoxBorderColor
 
 		primaryTitle := b.styleTitle("Mod List")
 		secondaryTitle := b.styleTitle("Go-Kerbal")
 		switch b.activeBox {
 		case internal.ModListView:
-			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+			primaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.ModInfoView:
-			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+			secondaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.SettingsView:
 			secondaryTitle = b.styleTitle("Options")
-			secondaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+			secondaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 		case internal.SearchView:
 			primaryTitle = b.styleTitle("Search Mods")
-			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+			primaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
 		case internal.QueueView:
 			primaryTitle = b.styleTitle("Queue")
-			primaryBoxBorderColor = b.theme.ActiveBoxBorderColor
+			primaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
 				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
 			}
@@ -156,8 +157,8 @@ func (b Bubble) drawKV(k, v string, color bool) string {
 			keyStyle.Copy().
 				Render(k),
 			valueStyle.Copy().
-				Foreground(b.theme.UnselectedListItemColor).
-				Background(b.theme.SelectedListItemColor).
+				Foreground(theme.AppTheme.UnselectedListItemColor).
+				Background(theme.AppTheme.SelectedListItemColor).
 				Render(v))
 	} else {
 		return connectHorz(keyStyle.Render(k), valueStyle.Render(v))

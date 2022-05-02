@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/jedwards1230/go-kerbal/internal/registry"
 	"github.com/spf13/viper"
@@ -25,7 +26,7 @@ type (
 // Request the mod list from the database
 func (b Bubble) getAvailableModsCmd() tea.Cmd {
 	return func() tea.Msg {
-		b.LogCommand("Checking available mods")
+		common.LogCommand("Checking available mods")
 		b.registry.UpdateDB(false)
 		updatedModMap := b.registry.GetEntireModList()
 		if len(updatedModMap) == 0 {
@@ -45,10 +46,10 @@ func (b *Bubble) sortModMapCmd() tea.Cmd {
 // Manually input KSP directory
 func (b Bubble) updateKspDirCmd(s string) tea.Cmd {
 	return func() tea.Msg {
-		b.LogCommandf("Checking dir: %s", s)
+		common.LogCommandf("Checking dir: %s", s)
 		kerbalDir, err := dirfs.FindKspPath(s)
 		if err != nil || kerbalDir == "" {
-			b.LogErrorf("Error finding KSP directory: %v, %s", err, s)
+			common.LogErrorf("Error finding KSP directory: %v, %s", err, s)
 			return UpdateKspDirMsg(false)
 		}
 		kerbalVer := dirfs.FindKspVersion(kerbalDir)
@@ -67,7 +68,7 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 
 		// Remove Mods
 		if b.registry.Queue.RemoveLen() > 0 {
-			b.LogCommandf("Removing %d mods", b.registry.Queue.RemoveLen())
+			common.LogCommandf("Removing %d mods", b.registry.Queue.RemoveLen())
 			err := b.registry.RemoveMods()
 			if err != nil {
 				return fmt.Errorf("error removing: %v", err)
@@ -76,13 +77,13 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 
 		// Install Mods
 		if b.registry.Queue.InstallLen() > 0 {
-			b.LogCommandf("Downloading %d mods", b.registry.Queue.InstallLen())
+			common.LogCommandf("Downloading %d mods", b.registry.Queue.InstallLen())
 			err := b.registry.DownloadMods()
 			if err != nil {
 				return fmt.Errorf("error downloading: %v", err)
 			}
 
-			b.LogCommandf("Installing %d mods", b.registry.Queue.InstallLen())
+			common.LogCommandf("Installing %d mods", b.registry.Queue.InstallLen())
 			err = b.registry.InstallMods()
 			if err != nil {
 				return fmt.Errorf("error installing: %v", err)
@@ -97,7 +98,7 @@ func (b Bubble) searchCmd(s string) tea.Cmd {
 	return func() tea.Msg {
 		searchMapIndex, err := b.registry.BuildSearchIndex(s)
 		if err != nil {
-			b.LogErrorf("Error building search index: %v", err)
+			common.LogErrorf("Error building search index: %v", err)
 			return SearchMsg(searchMapIndex)
 		}
 		return SearchMsg(searchMapIndex)
