@@ -38,21 +38,20 @@ type SortOptions struct {
 type ModIndex []Entry
 
 // Initializes database and registry
-func GetRegistry() Registry {
+func New() Registry {
 	db := GetDB()
+	q := queue.New()
 
 	sortOpts := SortOptions{
 		SortTag:   "name",
 		SortOrder: "ascend",
 	}
 
-	que := queue.New()
-
 	return Registry{
 		DB:               db,
 		InstalledModList: make(map[string]ckan.Ckan, 0),
 		SortOptions:      sortOpts,
-		Queue:            que,
+		Queue:            q,
 	}
 }
 

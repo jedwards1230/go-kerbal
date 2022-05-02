@@ -51,7 +51,7 @@ type Nav struct {
 func InitialModel() Bubble {
 	cfg := config.GetConfig()
 	theme.SetTheme(cfg.AppTheme)
-	reg := registry.GetRegistry()
+	reg := registry.New()
 
 	iRequested := false
 	if cfg.Settings.KerbalDir == "" {
