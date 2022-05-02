@@ -28,6 +28,8 @@ type Registry struct {
 	DB               *CkanDB
 	SortOptions      SortOptions
 	Queue            queue.Queue
+
+	tmpDir string
 }
 
 type SortOptions struct {
@@ -255,4 +257,12 @@ func getLatestVersionMap(modMapBuckets map[string][]ckan.Ckan) (map[string]ckan.
 
 func (r *Registry) SetModIndex(modMap ModIndex) {
 	r.ModMapIndex = modMap
+}
+
+func (r *Registry) GetTempDir() string {
+	return r.tmpDir
+}
+
+func (r *Registry) SetTempDir(s string) {
+	r.tmpDir = s
 }

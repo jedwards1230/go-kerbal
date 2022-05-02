@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -77,8 +78,18 @@ func (b *Bubble) applyModsCmd() tea.Cmd {
 
 		// Install Mods
 		if b.registry.Queue.InstallLen() > 0 {
+			// Create tmp dir
+			f, err := os.MkdirTemp("", "tmp")
+			if err != nil {
+				return fmt.Errorf("error creating tmp dir: %v", err)
+			}
+			defer os.RemoveAll(f)
+
+			b.registry.SetTempDir(f)
+			log.Printf("dir %s", f)
+
 			common.LogCommandf("Downloading %d mods", b.registry.Queue.InstallLen())
-			err := b.registry.DownloadMods()
+			err = b.registry.DownloadMods()
 			if err != nil {
 				return fmt.Errorf("error downloading: %v", err)
 			}

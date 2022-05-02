@@ -35,7 +35,6 @@ func (r *Registry) AddToQueue(mod ckan.Ckan) error {
 				if r.Queue.CheckRemovals(mod.Identifier) {
 					log.Print("dependent mod being removed!!!!")
 				}
-				log.Printf("adding %v", mod.Name)
 				r.Queue.AddDependency(mod)
 			}
 		}
@@ -159,12 +158,6 @@ func (r *Registry) DownloadMods() error {
 	if len(mods) > 0 {
 		common.LogCommandf("Downloading %d mods", len(mods))
 
-		// Create tmp dir
-		err := os.MkdirAll("./tmp", os.ModePerm)
-		if err != nil {
-			return fmt.Errorf("error creating tmp dir: %v", err)
-		}
-
 		// download mods
 		g := new(errgroup.Group)
 		for i := range mods {
@@ -199,7 +192,7 @@ func (r *Registry) downloadMod(mod ckan.Ckan) error {
 	}
 
 	// Create zip file
-	out, err := os.Create(mod.Download.Path)
+	out, err := os.Create(r.GetTempDir() + mod.Download.Path)
 	if err != nil {
 		return fmt.Errorf("creating file: %v", err)
 	}
@@ -252,7 +245,7 @@ func (r *Registry) InstallMods() error {
 // Install a mod
 func (r *Registry) installMod(mod *ckan.Ckan) error {
 	// open zip
-	zipReader, err := zip.OpenReader(mod.Download.Path)
+	zipReader, err := zip.OpenReader(r.GetTempDir() + mod.Download.Path)
 	if err != nil {
 		return fmt.Errorf("opening zip file: %v", mod.Download.Path)
 	}

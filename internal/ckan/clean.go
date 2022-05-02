@@ -260,7 +260,7 @@ func (c *Ckan) cleanDownload(raw map[string]interface{}) error {
 		return fmt.Errorf("invalid download path: %v", raw["download"])
 	}
 
-	c.Download.Path = "./tmp/" + c.Identifier + ".zip"
+	c.Download.Path = "/" + c.Identifier + ".zip"
 	c.Download.Downloaded = false
 
 	return nil
