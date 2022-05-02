@@ -10,27 +10,27 @@ import (
 
 func TestMain(m *testing.M) {
 	// Create log dir
-	err := os.MkdirAll("../logs", os.ModePerm)
+	err := os.MkdirAll("../../logs", os.ModePerm)
 	if err != nil {
 		log.Fatalf("error creating tmp dir: %v", err)
 	}
 
 	// clear previous logs
-	if _, err := os.Stat("../logs/dirfs_test.log"); err == nil {
-		if err := os.Truncate("../logs/dirfs_test.log", 0); err != nil {
-			log.Printf("Failed to clear ../logs/dirfs_test.log: %v", err)
+	if _, err := os.Stat("../../logs/dirfs_test.log"); err == nil {
+		if err := os.Truncate("../../logs/dirfs_test.log", 0); err != nil {
+			log.Printf("Failed to clear ../../logs/dirfs_test.log: %v", err)
 		}
 	}
 
 	// write new logs to file
-	f, err := os.OpenFile("../logs/dirfs_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile("../../logs/dirfs_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Print(err)
 	}
 	defer f.Close()
 	log.SetOutput(f)
 
-	config.LoadConfig("../")
+	config.LoadConfig("../../")
 
 	log.Println("*****************")
 	log.Println("Testing DirFS")

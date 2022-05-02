@@ -6,19 +6,21 @@ import (
 	"testing"
 
 	"github.com/go-git/go-billy/v5"
+	"github.com/jedwards1230/go-kerbal/internal/ckan"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/queue"
 	"github.com/tidwall/buntdb"
 )
 
-var reg Registry
+var reg *Registry
 var db *CkanDB
 var fs billy.Filesystem
-var logPath = "../logs/registry_test.log"
+var logPath = "../../logs/registry_test.log"
 
 func TestMain(m *testing.M) {
 	// Create log dir
-	err := os.MkdirAll("../logs", os.ModePerm)
+	err := os.MkdirAll("../../logs", os.ModePerm)
 	if err != nil {
 		log.Fatalf("Failed creating tmp dir: %v", err)
 	}
@@ -46,7 +48,7 @@ func TestMain(m *testing.M) {
 	log.Println("Testing Registry")
 	log.Println("*****************")
 
-	config.LoadConfig("../")
+	config.LoadConfig("../../")
 	log.Printf("Initializing test-db")
 	db, err = GetTestDB()
 	if err != nil {
@@ -58,9 +60,11 @@ func TestMain(m *testing.M) {
 		SortOrder: "ascend",
 	}
 
-	reg = Registry{
-		DB:          db,
-		SortOptions: sortOpts,
+	reg = &Registry{
+		DB:               db,
+		SortOptions:      sortOpts,
+		Queue:            queue.New(),
+		InstalledModList: make(map[string]ckan.Ckan, 0),
 	}
 
 	code := m.Run()
@@ -72,7 +76,7 @@ func TestMain(m *testing.M) {
 // Open database file
 func GetTestDB() (*CkanDB, error) {
 	var db *CkanDB
-	data, err := buntdb.Open("../test-data.db")
+	data, err := buntdb.Open("../../test-data.db")
 	if err != nil {
 		return db, err
 	}
@@ -87,20 +91,20 @@ func GetTestDB() (*CkanDB, error) {
 }
 
 func DeleteTestDB() {
-	err := os.Remove("../test-data.db")
+	err := os.Remove("../../test-data.db")
 	if err != nil {
 		log.Print(err)
 	}
 }
 
-/* func TestUpdateDB(t *testing.T) {
-	err := db.UpdateDB(true)
+func TestUpdateDB(t *testing.T) {
+	err := reg.UpdateDB(true)
 	if err != nil {
 		t.Errorf("Error updating database %v", err)
 	}
 }
 
-func BenchmarkUpdateDB(b *testing.B) {
+/* func BenchmarkUpdateDB(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		err := db.UpdateDB(true)
 		if err != nil {
@@ -109,9 +113,9 @@ func BenchmarkUpdateDB(b *testing.B) {
 	}
 } */
 
-func TestCheckRepoChanges(t *testing.T) {
+/* func TestCheckRepoChanges(t *testing.T) {
 	_ = checkRepoChanges()
-}
+} */
 
 func BenchmarkCheckRepoChanges(b *testing.B) {
 	for n := 0; n < b.N; n++ {
@@ -119,14 +123,14 @@ func BenchmarkCheckRepoChanges(b *testing.B) {
 	}
 }
 
-func TestCloneRepo(t *testing.T) {
+/* func TestCloneRepo(t *testing.T) {
 	var err error
 	repo, err := cloneRepo()
 	if err != nil {
 		t.Error(err)
 	}
 	fs = repo
-}
+} */
 
 func BenchmarkCloneRepo(b *testing.B) {
 	var err error
@@ -138,14 +142,16 @@ func BenchmarkCloneRepo(b *testing.B) {
 	}
 }
 
-func TestUpdateDBDirect(t *testing.T) {
+/* func TestUpdateDBDirect(t *testing.T) {
 	var filesToScan []string
+	testReg := reg
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
-	err := reg.updateDB(&fs, filesToScan)
+	err := testReg.updateDB(&fs, filesToScan)
 	if err != nil {
 		t.Error(err)
 	}
-}
+	reg = testReg
+} */
 
 func BenchmarkUpdateDBDirect(b *testing.B) {
 	var filesToScan []string
@@ -158,14 +164,14 @@ func BenchmarkUpdateDBDirect(b *testing.B) {
 	}
 }
 
-func TestGetTotalModMap(t *testing.T) {
+func TestGetEntireModList(t *testing.T) {
 	modMap := reg.GetEntireModList()
 	if modMap == nil && len(modMap) > 0 {
 		t.Errorf("Mod list came back nil. Length: %v | Type: %T", len(modMap), modMap)
 	}
 	reg.TotalModMap = modMap
 }
-func BenchmarkGetTotalModMap(b *testing.B) {
+func BenchmarkGetEntireModList(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		modMap := reg.GetEntireModList()
 		if modMap == nil && len(modMap) > 0 {
