@@ -37,32 +37,32 @@ func (b Bubble) View() string {
 		secondaryBoxBorderColor := theme.AppTheme.InactiveBoxBorderColor
 
 		primaryTitle := b.styleTitle("Mod List")
-		secondaryTitle := b.styleTitle("Go-Kerbal")
+		secondaryTitle := b.styleSecondaryTitle("Go-Kerbal")
 		switch b.activeBox {
 		case internal.ModListView:
 			primaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
-				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+				secondaryTitle = b.styleSecondaryTitle(b.nav.activeMod.Name)
 			}
 		case internal.ModInfoView:
 			secondaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
-				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+				secondaryTitle = b.styleSecondaryTitle(b.nav.activeMod.Name)
 			}
 		case internal.SettingsView:
-			secondaryTitle = b.styleTitle("Options")
+			secondaryTitle = b.styleSecondaryTitle("Options")
 			secondaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 		case internal.SearchView:
 			primaryTitle = b.styleTitle("Search Mods")
 			primaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
-				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+				secondaryTitle = b.styleSecondaryTitle(b.nav.activeMod.Name)
 			}
 		case internal.QueueView:
 			primaryTitle = b.styleTitle("Queue")
 			primaryBoxBorderColor = theme.AppTheme.ActiveBoxBorderColor
 			if !b.nav.listCursorHide {
-				secondaryTitle = b.styleTitle(b.nav.activeMod.Name)
+				secondaryTitle = b.styleSecondaryTitle(b.nav.activeMod.Name)
 			}
 		}
 
@@ -132,13 +132,31 @@ func (b Bubble) styleTitle(s string) string {
 	default:
 		s = truncate.StringWithTail(
 			s,
-			uint(b.bubbles.secondaryViewport.Width-2),
+			uint(b.bubbles.primaryPaginator.Width-2),
 			internal.EllipsisStyle)
 
 		return titleStyle.
-			Width(b.bubbles.secondaryViewport.Width + 2).
+			Width(b.bubbles.primaryPaginator.Width + 2).
 			Render(s)
 	}
+}
+
+func (b Bubble) styleSecondaryTitle(s string) string {
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Align(lipgloss.Center).
+		Height(3).
+		Border(lipgloss.RoundedBorder()).
+		Padding(1, 0)
+
+	s = truncate.StringWithTail(
+		s,
+		uint(b.bubbles.secondaryViewport.Width-2),
+		internal.EllipsisStyle)
+
+	return titleStyle.
+		Width(b.bubbles.secondaryViewport.Width + 2).
+		Render(s)
 }
 
 func (b Bubble) drawKV(k, v string, color bool) string {
