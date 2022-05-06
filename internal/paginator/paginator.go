@@ -3,6 +3,7 @@ package paginator
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jedwards1230/go-kerbal/internal/style"
 )
 
 // Type specifies the way we render pagination.
@@ -153,9 +154,10 @@ func New() Paginator {
 		TotalPages:  1,
 		Height:      0,
 		Width:       0,
-		ActiveDot:   "•",
-		InactiveDot: "○",
+		ActiveDot:   style.PaginatorActiveDot,
+		InactiveDot: style.PaginatorInactiveDot,
 		Content:     "",
+		Type:        Dots,
 	}
 }
 

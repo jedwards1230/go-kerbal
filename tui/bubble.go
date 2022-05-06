@@ -4,13 +4,13 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/keymap"
 	"github.com/jedwards1230/go-kerbal/internal/paginator"
 	"github.com/jedwards1230/go-kerbal/internal/registry"
+	"github.com/jedwards1230/go-kerbal/internal/style"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/jedwards1230/go-kerbal/internal/viewport"
 )
@@ -60,49 +60,23 @@ func InitialModel() Bubble {
 
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
-	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
-
-	primaryBoxBorderColor := theme.AppTheme.ActiveBoxBorderColor
-	secondaryBoxBorderColor := theme.AppTheme.InactiveBoxBorderColor
+	spin.Style = style.Spinner
 
 	t := textinput.New()
 	t.Prompt = "❯ "
 	t.CharLimit = -1
-	t.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-
-	primaryVP := viewport.NewViewport(0, 0)
-	primaryVP.Style = lipgloss.NewStyle().
-		PaddingLeft(internal.BoxPadding).
-		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryBoxBorderColor)
+	t.PlaceholderStyle = style.TextInput
 
 	secondaryVP := viewport.NewViewport(0, 0)
-	secondaryVP.Style = lipgloss.NewStyle().
-		PaddingLeft(internal.BoxPadding).
-		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(secondaryBoxBorderColor)
+	secondaryVP.Style = style.SecondaryVP
 
 	commandVP := viewport.NewViewport(0, 0)
-	commandVP.Style = lipgloss.NewStyle().
-		PaddingLeft(internal.BoxPadding).
-		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(secondaryBoxBorderColor)
+	commandVP.Style = style.CommandVP
 
 	pages := paginator.New()
-	pages.Type = paginator.Dots
-	pages.PerPage = 1
-	pages.ActiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render("•")
-	pages.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
 	pages.SetTotalPages(1)
 
 	splashPages := paginator.New()
-	splashPages.Type = paginator.Dots
-	splashPages.PerPage = 1
-	splashPages.ActiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render("•")
-	splashPages.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
 	splashPages.SetTotalPages(1)
 
 	nav := Nav{

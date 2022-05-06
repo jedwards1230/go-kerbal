@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedwards1230/go-kerbal/internal"
+	"github.com/jedwards1230/go-kerbal/internal/style"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
 	"github.com/muesli/reflow/truncate"
 )
@@ -10,12 +11,7 @@ import (
 func (b Bubble) View() string {
 	var body string
 
-	splashStyle := lipgloss.NewStyle().
-		PaddingLeft(internal.BoxPadding).
-		PaddingRight(internal.BoxPadding).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.AppTheme.ActiveBoxBorderColor).
-		Align(lipgloss.Center).Render
+	splashStyle := style.SplashVP.Render
 
 	switch b.activeBox {
 	case internal.LogView:
@@ -103,78 +99,58 @@ func (b Bubble) View() string {
 }
 
 func (b Bubble) styleTitle(s string) string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Height(3).
-		Border(lipgloss.RoundedBorder()).
-		Padding(1, 0)
-
 	switch b.activeBox {
 	case internal.EnterKspDirView:
-		s = truncate.StringWithTail(
+		s = trunc(
 			s,
-			uint(b.bubbles.splashPaginator.Width-2),
-			internal.EllipsisStyle)
+			b.bubbles.splashPaginator.Width-2,
+		)
 
-		return titleStyle.
+		return style.PrimaryTitle.
 			Width(b.bubbles.splashPaginator.Width + 2).
 			Render(s)
 	case internal.LogView:
-		s = truncate.StringWithTail(
+		s = trunc(
 			s,
-			uint(b.bubbles.splashPaginator.Width-2),
-			internal.EllipsisStyle)
+			b.bubbles.splashPaginator.Width-2,
+		)
 
-		return titleStyle.
+		return style.PrimaryTitle.
 			Width(b.bubbles.splashPaginator.Width + 2).
 			Render(s)
 	default:
-		s = truncate.StringWithTail(
+		s = trunc(
 			s,
-			uint(b.bubbles.primaryPaginator.Width-2),
-			internal.EllipsisStyle)
+			b.bubbles.primaryPaginator.Width-2,
+		)
 
-		return titleStyle.
+		return style.PrimaryTitle.
 			Width(b.bubbles.primaryPaginator.Width + 2).
 			Render(s)
 	}
 }
 
 func (b Bubble) styleSecondaryTitle(s string) string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Align(lipgloss.Center).
-		Height(3).
-		Border(lipgloss.RoundedBorder()).
-		Padding(1, 0)
-
-	s = truncate.StringWithTail(
+	s = trunc(
 		s,
-		uint(b.bubbles.secondaryViewport.Width-2),
-		internal.EllipsisStyle)
+		b.bubbles.secondaryViewport.Width-2,
+	)
 
-	return titleStyle.
+	return style.SecondaryTitle.
 		Width(b.bubbles.secondaryViewport.Width + 2).
 		Render(s)
 }
 
 func (b Bubble) drawKV(k, v string, color bool) string {
-	keyStyle := lipgloss.NewStyle().
-		Align(lipgloss.Left).
-		Bold(true).
-		Width((b.bubbles.secondaryViewport.Width/4)+3).
-		Padding(0, 2)
+	keyStyle := style.KeyStyle.Width((b.bubbles.secondaryViewport.Width / 4) + 3)
 
-	valueStyle := lipgloss.NewStyle().
-		Align(lipgloss.Left).
-		Padding(0, 2)
+	valueStyle := style.ValueStyle
 
 	if color {
 		return connectHorz(
 			keyStyle.Copy().
 				Render(k),
-			valueStyle.Copy().
+			style.ValueStyle.Copy().
 				Foreground(theme.AppTheme.UnselectedListItemColor).
 				Background(theme.AppTheme.SelectedListItemColor).
 				Render(v))
@@ -184,11 +160,7 @@ func (b Bubble) drawKV(k, v string, color bool) string {
 }
 
 func (b Bubble) drawHelpKV(k, v string) string {
-	keyStyle := lipgloss.NewStyle().
-		Align(lipgloss.Left).
-		Bold(true).
-		Width(b.bubbles.commandViewport.Width / 5).
-		PaddingLeft(2)
+	keyStyle := style.KeyStyle.Width(b.bubbles.commandViewport.Width / 5)
 
 	valueStyle := lipgloss.NewStyle().
 		Align(lipgloss.Center).
@@ -204,4 +176,15 @@ func connectHorz(strs ...string) string {
 
 func connectVert(strs ...string) string {
 	return lipgloss.JoinVertical(lipgloss.Top, strs...)
+}
+
+func trunc(s string, i int) string {
+	return truncate.StringWithTail(
+		s,
+		uint(i),
+		internal.EllipsisStyle)
+}
+
+func styleWidth(i int) lipgloss.Style {
+	return lipgloss.NewStyle().Width(i)
 }

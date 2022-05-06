@@ -9,8 +9,7 @@ import (
 )
 
 func (b Bubble) homeView() string {
-	contentStyle := lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width - 5).
+	contentStyle := styleWidth(b.bubbles.commandViewport.Width - 5).
 		Padding(2).
 		Render
 
@@ -25,8 +24,7 @@ func (b Bubble) homeView() string {
 			"Press enter to remove the selected mod \n" +
 			"\n" +
 			"Press tab to get back to the confirmation window \n"
-		content = lipgloss.NewStyle().
-			Width(b.bubbles.secondaryViewport.Width).
+		content = styleWidth(b.bubbles.secondaryViewport.Width).
 			Align(lipgloss.Center).
 			Render(content)
 	default:
@@ -48,9 +46,8 @@ func (b Bubble) homeView() string {
 }
 
 func (b Bubble) inputKspView() string {
-	question := lipgloss.NewStyle().
+	question := styleWidth(b.width).
 		Align(lipgloss.Left).
-		Width(b.width).
 		Padding(1).
 		Render("Please enter the path to your Kerbal Space Program directory:")
 
@@ -62,9 +59,8 @@ func (b Bubble) inputKspView() string {
 		inText += "\n\nPress Esc to close"
 	}
 
-	inText = lipgloss.NewStyle().
+	inText = styleWidth(b.width).
 		Align(lipgloss.Left).
-		Width(b.width).
 		Padding(1).
 		Render(inText)
 
@@ -73,8 +69,7 @@ func (b Bubble) inputKspView() string {
 		inText,
 	)
 
-	return lipgloss.NewStyle().
-		Width(b.bubbles.splashPaginator.Width).
+	return styleWidth(b.bubbles.splashPaginator.Width).
 		Height(b.bubbles.splashPaginator.Height + 1).
 		Render(content)
 }
@@ -103,18 +98,16 @@ func (b Bubble) helpView() string {
 		Margin(1, 0).
 		Render(content)
 
-	return lipgloss.NewStyle().
+	return styleWidth(b.bubbles.commandViewport.Width).
 		Align(lipgloss.Center).
 		Padding(1, 3).
-		Width(b.bubbles.commandViewport.Width).
 		Render(content)
 }
 
 func (b Bubble) getBoolOptionsView() string {
-	titleStyle := lipgloss.NewStyle().
+	titleStyle := styleWidth(b.bubbles.commandViewport.Width-4).
 		Bold(true).
 		Align(lipgloss.Center).
-		Width(b.bubbles.commandViewport.Width-4).
 		Padding(1, 2, 0)
 
 	optionStyle := lipgloss.NewStyle().
@@ -147,8 +140,7 @@ func (b Bubble) getBoolOptionsView() string {
 	}
 
 	options := connectHorz(cancel, "  ", confirm)
-	options = lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width - 4).
+	options = styleWidth(b.bubbles.commandViewport.Width - 4).
 		Align(lipgloss.Center).
 		Render(options)
 
@@ -157,8 +149,7 @@ func (b Bubble) getBoolOptionsView() string {
 		options,
 	)
 
-	return lipgloss.NewStyle().
-		Width(b.bubbles.commandViewport.Width).
+	return styleWidth(b.bubbles.commandViewport.Width).
 		Height(b.bubbles.commandViewport.Height).
 		Render(content)
 }

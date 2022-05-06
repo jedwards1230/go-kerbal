@@ -12,17 +12,15 @@ import (
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
 	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/style"
 	"github.com/jedwards1230/go-kerbal/internal/theme"
-	"github.com/muesli/reflow/truncate"
 )
 
 func (b Bubble) modListView() string {
-	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryPaginator.Width).
+	pageStyle := styleWidth(b.bubbles.primaryPaginator.Width).
 		Height(b.bubbles.primaryPaginator.PerPage + 1).Render
 
-	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryPaginator.Width).
+	pagerStyle := styleWidth(b.bubbles.primaryPaginator.Width).
 		Align(lipgloss.Center).Render
 
 	page := ""
@@ -36,25 +34,16 @@ func (b Bubble) modListView() string {
 				checked = "x"
 			}
 
-			line := truncate.StringWithTail(
-				fmt.Sprintf("[%s] %s", checked, mod.Name),
-				uint(b.bubbles.primaryPaginator.Width-2),
-				internal.EllipsisStyle)
+			line := trunc(fmt.Sprintf("[%s] %s", checked, mod.Name), b.bubbles.primaryPaginator.Width-2)
 
 			if b.bubbles.primaryPaginator.Cursor == i && !b.nav.listCursorHide {
-				page += lipgloss.NewStyle().
-					Background(theme.AppTheme.SelectedListItemColor).
-					Foreground(theme.AppTheme.UnselectedListItemColor).
+				page += style.ListSelected.
 					Width(b.bubbles.primaryPaginator.Width).
 					Render(line)
 			} else if mod.Installed() {
-				page += lipgloss.NewStyle().
-					Foreground(theme.AppTheme.InstalledColor).
-					Render(line)
+				page += style.Installed.Render(line)
 			} else if !mod.IsCompatible {
-				page += lipgloss.NewStyle().
-					Foreground(theme.AppTheme.Orange).
-					Render(line)
+				page += style.Incompatible.Render(line)
 			} else {
 				page += line
 			}
@@ -67,8 +56,7 @@ func (b Bubble) modListView() string {
 		pagerStyle(b.bubbles.primaryPaginator.View()),
 	)
 
-	return lipgloss.NewStyle().
-		Width(b.bubbles.primaryPaginator.Width).
+	return styleWidth(b.bubbles.primaryPaginator.Width).
 		Height(b.bubbles.primaryPaginator.Height - 3).
 		Render(page)
 }
@@ -77,30 +65,16 @@ func (b Bubble) modInfoView() string {
 	if !b.nav.listCursorHide {
 		mod := b.nav.activeMod
 
-		keyStyle := lipgloss.NewStyle().
-			Align(lipgloss.Left).
-			Bold(true).
-			Width(b.bubbles.secondaryViewport.Width/4).
-			Padding(0, 2)
+		keyStyle := style.KeyStyle.Width(b.bubbles.secondaryViewport.Width / 4)
 
-		valueStyle := lipgloss.NewStyle().
-			Align(lipgloss.Left).
-			Width(b.bubbles.secondaryViewport.Width*3/4).
-			Padding(0, 2)
+		valueStyle := style.ValueStyle.Width(b.bubbles.secondaryViewport.Width * 3 / 4)
 
-		abstractStyle := lipgloss.NewStyle().
-			Bold(false).
-			Align(lipgloss.Center).
-			Width(b.bubbles.secondaryViewport.Width).
-			Height(3).
-			Padding(1, 2)
+		abstractStyle := style.AbstractInfo.Width(b.bubbles.secondaryViewport.Width)
 
-		abstract := abstractStyle.
-			Render(mod.Abstract)
+		abstract := abstractStyle.Render(mod.Abstract)
 
 		if mod.Description != "" {
-			abstract = abstractStyle.
-				Render(mod.Description)
+			abstract = abstractStyle.Render(mod.Description)
 		}
 
 		drawKV := func(k, v string) string {
@@ -109,8 +83,7 @@ func (b Bubble) modInfoView() string {
 
 		drawKVColor := func(k, v string, color lipgloss.AdaptiveColor) string {
 			return connectHorz(
-				keyStyle.
-					Render(k),
+				keyStyle.Render(k),
 				valueStyle.Copy().
 					Foreground(color).
 					Render(v))
@@ -155,19 +128,16 @@ func (b Bubble) modInfoView() string {
 		)
 	}
 	// default to home view
-	return lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width).
+	return styleWidth(b.bubbles.secondaryViewport.Width).
 		Height(b.bubbles.secondaryViewport.Height - 3).
 		Render(b.homeView())
 }
 
 func (b Bubble) logView() string {
-	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.splashPaginator.Width).
+	pageStyle := styleWidth(b.bubbles.splashPaginator.Width).
 		Height(b.bubbles.splashPaginator.PerPage + 1).Render
 
-	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.splashPaginator.Width).
+	pagerStyle := styleWidth(b.bubbles.splashPaginator.Width).
 		Align(lipgloss.Center).Render
 
 	var bodyList []string
@@ -177,36 +147,24 @@ func (b Bubble) logView() string {
 	for i := range b.logs[start:end] {
 		lineWords := strings.Fields(b.logs[i+start])
 		if len(lineWords) > 2 {
-			idx := lipgloss.NewStyle().
-				Align(lipgloss.Left).
-				Width(5).
-				Padding(0, 2, 0, 1).
-				Render(fmt.Sprint(i + 1))
+			idx := style.LogLineNumber.Render(fmt.Sprint(i + 1))
 
 			// timestamp
-			time := lipgloss.NewStyle().
-				Foreground(theme.AppTheme.Green).
-				MarginRight(1).
-				Render(lineWords[0])
+			time := style.LogTimestamp.Render(lineWords[0])
+
 			// file info
 			file := strings.ReplaceAll(lineWords[1], ".go", "")
-			file = lipgloss.NewStyle().
-				Foreground(theme.AppTheme.Blue).
-				Width(17).
-				MarginRight(1).
-				Render(file)
+			file = style.LogFile.Render(file)
 			line := strings.Join(lineWords[2:], " ")
 			if b.bubbles.splashPaginator.Cursor == i {
-				line = lipgloss.NewStyle().
-					Background(theme.AppTheme.SelectedListItemColor).
-					Foreground(theme.AppTheme.UnselectedListItemColor).
+				line = style.ListSelected.
 					Render(line)
 			}
 			// logs
-			line = truncate.StringWithTail(
+			line = trunc(
 				connectHorz(idx, time, file, line),
-				uint(b.bubbles.splashPaginator.Width-2),
-				internal.EllipsisStyle)
+				b.bubbles.splashPaginator.Width-2,
+			)
 
 			bodyList = append(bodyList, line)
 		}
@@ -219,29 +177,23 @@ func (b Bubble) logView() string {
 		pagerStyle(b.bubbles.splashPaginator.View()),
 	)
 
-	return lipgloss.NewStyle().
-		Width(b.bubbles.splashPaginator.Width).
+	return styleWidth(b.bubbles.splashPaginator.Width).
 		Height(b.bubbles.splashPaginator.Height).
 		Render(body)
 }
 
 func (b Bubble) queueView() string {
 	var content = ""
-	titleStyle := lipgloss.NewStyle().
-		Padding(2, 0, 1, 2).
-		Bold(true).
+	titleStyle := style.QueueTitle.
 		Width(b.bubbles.secondaryViewport.Width)
 
-	pageStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryPaginator.Width).
+	pageStyle := styleWidth(b.bubbles.primaryPaginator.Width).
 		Height(b.bubbles.primaryPaginator.PerPage + 1).Render
 
-	pagerStyle := lipgloss.NewStyle().
-		Width(b.bubbles.primaryPaginator.Width).
+	pagerStyle := styleWidth(b.bubbles.primaryPaginator.Width).
 		Align(lipgloss.Center).Render
 
-	entryStyle := lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width-1).
+	entryStyle := styleWidth(b.bubbles.secondaryViewport.Width-1).
 		Padding(0, 0, 0, 4)
 
 	/* removeStyle := entryStyle.Copy().
@@ -259,10 +211,10 @@ func (b Bubble) queueView() string {
 			Background(theme.AppTheme.SelectedListItemColor)
 
 		trimName := func(s string) string {
-			return truncate.StringWithTail(
+			return trunc(
 				s,
-				uint(b.bubbles.primaryPaginator.Width-6),
-				internal.EllipsisStyle)
+				b.bubbles.primaryPaginator.Width-6,
+			)
 		}
 
 		applyLineStyle := func(i int, mod ckan.Ckan) string {
@@ -349,10 +301,9 @@ func (b Bubble) queueView() string {
 			common.LogError("Unable to parse queue")
 		}
 	}
-	return lipgloss.NewStyle().
+	return styleWidth(b.bubbles.primaryPaginator.Width).
 		Padding(2).
 		Align(lipgloss.Center).
-		Width(b.bubbles.primaryPaginator.Width).
 		Height(b.bubbles.primaryPaginator.PerPage + 2).
 		Render("No mods in queue")
 }
@@ -395,24 +346,23 @@ func (b Bubble) settingsView() string {
 		compat = b.drawKV("Hide Incompatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods), true)
 	}
 
-	sortOrder = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(sortOrder)
-	sortBy = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(sortBy)
-	compat = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(compat)
+	sortOrder = styleWidth(b.bubbles.secondaryViewport.Width).Render(sortOrder)
+	sortBy = styleWidth(b.bubbles.secondaryViewport.Width).Render(sortBy)
+	compat = styleWidth(b.bubbles.secondaryViewport.Width).Render(compat)
 
 	sortLines = append(sortLines, sortOrder, sortBy, compat)
 
 	for i := range sortLines {
-		sortLines[i] = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(sortLines[i])
+		sortLines[i] = styleWidth(b.bubbles.secondaryViewport.Width).Render(sortLines[i])
 	}
 
 	for i := range configLines {
-		configLines[i] = lipgloss.NewStyle().Width(b.bubbles.secondaryViewport.Width).Render(configLines[i])
+		configLines[i] = styleWidth(b.bubbles.secondaryViewport.Width).Render(configLines[i])
 	}
 
 	sortContent := connectVert(sortLines...)
 
-	sortContent = lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width).
+	sortContent = styleWidth(b.bubbles.secondaryViewport.Width).
 		Render(sortContent)
 
 	sortOptions := connectVert(
@@ -422,8 +372,7 @@ func (b Bubble) settingsView() string {
 
 	configContent := connectVert(configLines...)
 
-	configContent = lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width).
+	configContent = styleWidth(b.bubbles.secondaryViewport.Width).
 		Render(configContent)
 
 	configOptions := connectVert(
@@ -436,8 +385,7 @@ func (b Bubble) settingsView() string {
 		configOptions,
 	)
 
-	body = lipgloss.NewStyle().
-		Width(b.bubbles.secondaryViewport.Width).
+	body = styleWidth(b.bubbles.secondaryViewport.Width).
 		Height(b.bubbles.secondaryViewport.Height - 3).
 		Render(body)
 
@@ -450,21 +398,18 @@ func (b Bubble) statusBarView() string {
 	cfg := config.GetConfig()
 	width := lipgloss.Width
 
-	statusBarStyle := lipgloss.NewStyle().
-		Height(internal.StatusBarHeight)
-
 	fileCount := fmt.Sprintf("Mod: %d/%d", b.bubbles.primaryPaginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
 	if b.activeBox == internal.LogView {
 		fileCount = fmt.Sprintf("Mod: %d/%d", b.bubbles.splashPaginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
 	}
-	fileCount = statusBarStyle.
+	fileCount = style.StatusBar.
 		Align(lipgloss.Right).
 		PaddingRight(6).
 		PaddingLeft(2).
 		Render(fileCount)
 
 	sortOptions := fmt.Sprintf("Sort: %s by %s", b.registry.SortOptions.SortOrder, b.registry.SortOptions.SortTag)
-	sortOptions = statusBarStyle.
+	sortOptions = style.StatusBar.
 		Align(lipgloss.Right).
 		Padding(0, 1).
 		Render(sortOptions)
@@ -485,7 +430,7 @@ func (b Bubble) statusBarView() string {
 			installedLegend)
 	}
 
-	colorLegend = statusBarStyle.
+	colorLegend = style.StatusBar.
 		Align(lipgloss.Right).
 		Padding(0, 1).
 		Render(colorLegend)
@@ -493,7 +438,7 @@ func (b Bubble) statusBarView() string {
 	var status string
 	statusWidth := b.width - width(fileCount) - width(sortOptions) - width(colorLegend)
 	if b.searchInput {
-		status = statusBarStyle.
+		status = style.StatusBar.
 			Align(lipgloss.Left).
 			Padding(0, 2).
 			Width(statusWidth).
@@ -523,24 +468,21 @@ func (b Bubble) statusBarView() string {
 		status = "Status: " + bodyList[len(bodyList)-1]
 
 		// format status message
-		status = statusBarStyle.
+		status = style.StatusBar.
 			Align(lipgloss.Left).
 			Padding(0, 1).
 			Width(statusWidth).
-			Render(truncate.StringWithTail(
+			Render(trunc(
 				status,
-				uint(statusWidth-3),
-				internal.EllipsisStyle),
-			)
+				statusWidth-3,
+			))
 
-		spin := lipgloss.NewStyle().
-			Width(b.bubbles.spinner.Style.GetWidth()).
+		spin := styleWidth(b.bubbles.spinner.Style.GetWidth()).
 			Padding(0, 0, 0, 1).
 			Render("  ")
 
 		if !b.ready {
-			spin = lipgloss.NewStyle().
-				Width(b.bubbles.spinner.Style.GetWidth()).
+			spin = styleWidth(b.bubbles.spinner.Style.GetWidth()).
 				Padding(0, 0, 0, 1).
 				Render(b.bubbles.spinner.View())
 		}
@@ -572,15 +514,13 @@ func (b Bubble) commandView() string {
 				return commandStyle.Render(b.helpView())
 			}
 		} else {
-			loading := lipgloss.NewStyle().
+			loading := styleWidth(b.bubbles.commandViewport.Width).
 				Bold(true).
 				Align(lipgloss.Center).
-				Width(b.bubbles.commandViewport.Width).
 				Padding(1, 2, 0).
 				Render("Loading...")
 
-			return lipgloss.NewStyle().
-				Width(b.bubbles.commandViewport.Width).
+			return styleWidth(b.bubbles.commandViewport.Width).
 				Height(b.bubbles.commandViewport.Height).
 				Render(loading)
 		}
