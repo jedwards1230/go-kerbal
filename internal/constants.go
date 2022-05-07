@@ -1,6 +1,7 @@
 package internal
 
 const LogPath = "./logs/debug.log"
+const DBPath = "./data.db"
 
 const (
 	CommandView     = 0

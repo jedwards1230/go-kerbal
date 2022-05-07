@@ -10,7 +10,6 @@ import (
 	"github.com/jedwards1230/go-kerbal/internal/config"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/jedwards1230/go-kerbal/internal/queue"
-	"github.com/tidwall/buntdb"
 )
 
 var reg *Registry
@@ -50,10 +49,7 @@ func TestMain(m *testing.M) {
 
 	config.LoadConfig("../../")
 	log.Printf("Initializing test-db")
-	db, err = GetTestDB()
-	if err != nil {
-		log.Fatal(err)
-	}
+	db = GetDB("../../test-data.db")
 
 	sortOpts := SortOptions{
 		SortTag:   "name",
@@ -71,23 +67,6 @@ func TestMain(m *testing.M) {
 
 	DeleteTestDB()
 	os.Exit(code)
-}
-
-// Open database file
-func GetTestDB() (*CkanDB, error) {
-	var db *CkanDB
-	data, err := buntdb.Open("../../test-data.db")
-	if err != nil {
-		return db, err
-	}
-	db = &CkanDB{DB: data}
-
-	/* err = db.UpdateDB(true)
-	if err != nil {
-		return db, err
-	} */
-
-	return db, err
 }
 
 func DeleteTestDB() {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/segmentio/encoding/json"
 
+	"github.com/jedwards1230/go-kerbal/internal"
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
 	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
@@ -41,7 +42,7 @@ type ModIndex []Entry
 
 // Initializes database and registry
 func New() Registry {
-	db := GetDB()
+	db := GetDB(internal.DBPath)
 	q := queue.New()
 
 	sortOpts := SortOptions{

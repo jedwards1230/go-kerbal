@@ -28,8 +28,8 @@ type CkanDB struct {
 }
 
 // Open database file
-func GetDB() *CkanDB {
-	database, _ := buntdb.Open("./data.db")
+func GetDB(s string) *CkanDB {
+	database, _ := buntdb.Open(s)
 	db := &CkanDB{DB: database}
 	return db
 }
