@@ -5,16 +5,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-git/go-billy/v5"
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
 	"github.com/jedwards1230/go-kerbal/internal/config"
-	"github.com/jedwards1230/go-kerbal/internal/dirfs"
+	"github.com/jedwards1230/go-kerbal/internal/database"
 	"github.com/jedwards1230/go-kerbal/internal/queue"
 )
 
 var reg *Registry
-var db *CkanDB
-var fs billy.Filesystem
+var db *database.CkanDB
 var logPath = "../../logs/registry_test.log"
 
 func TestMain(m *testing.M) {
@@ -49,7 +47,7 @@ func TestMain(m *testing.M) {
 
 	config.LoadConfig("../../")
 	log.Printf("Initializing test-db")
-	db = GetDB("../../test-data.db")
+	db = database.GetDB("../../test-data.db")
 
 	sortOpts := SortOptions{
 		SortTag:   "name",
@@ -73,73 +71,6 @@ func DeleteTestDB() {
 	err := os.Remove("../../test-data.db")
 	if err != nil {
 		log.Print(err)
-	}
-}
-
-func TestUpdateDB(t *testing.T) {
-	err := reg.UpdateDB(true)
-	if err != nil {
-		t.Errorf("Error updating database %v", err)
-	}
-}
-
-/* func BenchmarkUpdateDB(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		err := db.UpdateDB(true)
-		if err != nil {
-			b.Error(err)
-		}
-	}
-} */
-
-/* func TestCheckRepoChanges(t *testing.T) {
-	_ = checkRepoChanges()
-} */
-
-func BenchmarkCheckRepoChanges(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		_ = checkRepoChanges()
-	}
-}
-
-/* func TestCloneRepo(t *testing.T) {
-	var err error
-	repo, err := cloneRepo()
-	if err != nil {
-		t.Error(err)
-	}
-	fs = repo
-} */
-
-func BenchmarkCloneRepo(b *testing.B) {
-	var err error
-	for n := 0; n < b.N; n++ {
-		fs, err = cloneRepo()
-		if err != nil {
-			b.Error(err)
-		}
-	}
-}
-
-/* func TestUpdateDBDirect(t *testing.T) {
-	var filesToScan []string
-	testReg := reg
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
-	err := testReg.updateDB(&fs, filesToScan)
-	if err != nil {
-		t.Error(err)
-	}
-	reg = testReg
-} */
-
-func BenchmarkUpdateDBDirect(b *testing.B) {
-	var filesToScan []string
-	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
-	for n := 0; n < b.N; n++ {
-		err := reg.updateDB(&fs, filesToScan)
-		if err != nil {
-			b.Error(err)
-		}
 	}
 }
 

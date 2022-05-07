@@ -14,6 +14,7 @@ import (
 	"github.com/jedwards1230/go-kerbal/internal/ckan"
 	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
+	"github.com/jedwards1230/go-kerbal/internal/database"
 	"github.com/jedwards1230/go-kerbal/internal/dirfs"
 	"github.com/jedwards1230/go-kerbal/internal/queue"
 	"github.com/tidwall/buntdb"
@@ -26,7 +27,7 @@ type Registry struct {
 	SortedModMap     map[string]ckan.Ckan
 	ModMapIndex      ModIndex
 	InstalledModList map[string]ckan.Ckan
-	DB               *CkanDB
+	DB               *database.CkanDB
 	SortOptions      SortOptions
 	Queue            queue.Queue
 
@@ -42,7 +43,7 @@ type ModIndex []Entry
 
 // Initializes database and registry
 func New() Registry {
-	db := GetDB(internal.DBPath)
+	db := database.GetDB(internal.DBPath)
 	q := queue.New()
 
 	sortOpts := SortOptions{

@@ -1,4 +1,4 @@
-package registry
+package database
 
 import (
 	// Using standard json encoder here because benchmarks showed segmentio to be slightly slower
@@ -35,7 +35,7 @@ func GetDB(s string) *CkanDB {
 }
 
 // Update the database by checking the repo and applying any new changes
-func (r *Registry) UpdateDB(force_update bool) error {
+func (c *CkanDB) UpdateDB(force_update bool) error {
 	log.Printf("Updating DB. Force Update: %v", force_update)
 	// Check if update is required
 	if !force_update {
@@ -58,12 +58,12 @@ func (r *Registry) UpdateDB(force_update bool) error {
 	var filesToScan []string
 	filesToScan = append(filesToScan, dirfs.FindFilePaths(fs, ".ckan")...)
 
-	err = r.updateDB(&fs, filesToScan)
+	err = c.updateDB(&fs, filesToScan)
 
 	return err
 }
 
-func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
+func (c *CkanDB) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	var mods []ckan.Ckan
 
 	goodCount := 0
@@ -81,7 +81,7 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 
 			mod, err := parseCKAN(*fs, filesToScan[i])
 			if err != nil || !mod.Valid {
-				if r.viewParseErrors(mod) {
+				if c.viewParseErrors(mod) {
 					ignoredCount++
 				} else {
 					errCount++
@@ -97,7 +97,7 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 	wg.Wait()
 	log.Printf("Scanned mod files | %d good | %d errors | %d missing info", goodCount, errCount, ignoredCount)
 
-	err := r.DB.Update(func(tx *buntdb.Tx) error {
+	err := c.Update(func(tx *buntdb.Tx) error {
 		for i := range mods {
 			byteValue, err := json.Marshal(mods[i])
 			if err != nil {
@@ -115,7 +115,7 @@ func (r *Registry) updateDB(fs *billy.Filesystem, filesToScan []string) error {
 // Return true if errors but ignored
 //
 // Errors would be ignored if they don't satisfy the required fields
-func (r *Registry) viewParseErrors(mod ckan.Ckan) bool {
+func (c *CkanDB) viewParseErrors(mod ckan.Ckan) bool {
 	if len(mod.Errors) > 0 {
 		if mod.Errors["ignored"] == true {
 			return true
