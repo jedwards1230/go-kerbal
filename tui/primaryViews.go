@@ -402,16 +402,18 @@ func (b Bubble) statusBarView() string {
 	if b.activeBox == internal.LogView {
 		fileCount = fmt.Sprintf("Mod: %d/%d", b.bubbles.splashPaginator.GetCursorIndex()+1, len(b.registry.ModMapIndex))
 	}
-	fileCount = style.StatusBar.
+	fileCount = style.StatusBar.Copy().
 		Align(lipgloss.Right).
 		PaddingRight(6).
 		PaddingLeft(2).
+		Width(22).
 		Render(fileCount)
 
 	sortOptions := fmt.Sprintf("Sort: %s by %s", b.registry.SortOptions.SortOrder, b.registry.SortOptions.SortTag)
-	sortOptions = style.StatusBar.
+	sortOptions = style.StatusBar.Copy().
 		Align(lipgloss.Right).
 		Padding(0, 1).
+		Width(22).
 		Render(sortOptions)
 
 	installedLegend := lipgloss.NewStyle().
@@ -430,15 +432,16 @@ func (b Bubble) statusBarView() string {
 			installedLegend)
 	}
 
-	colorLegend = style.StatusBar.
+	colorLegend = style.StatusBar.Copy().
 		Align(lipgloss.Right).
 		Padding(0, 1).
+		Width(30).
 		Render(colorLegend)
 
 	var status string
-	statusWidth := b.width - width(fileCount) - width(sortOptions) - width(colorLegend)
+	statusWidth := b.width - width(fileCount) - width(sortOptions) - width(colorLegend) - 1
 	if b.searchInput {
-		status = style.StatusBar.
+		status = style.StatusBar.Copy().
 			Align(lipgloss.Left).
 			Padding(0, 2).
 			Width(statusWidth).

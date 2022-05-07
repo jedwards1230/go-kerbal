@@ -109,7 +109,7 @@ func InitialModel() Bubble {
 
 func (b Bubble) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick, b.MyTickCmd())
+	cmds = append(cmds, b.getAvailableModsCmd(), b.bubbles.spinner.Tick, b.TickCmd())
 
 	return tea.Batch(cmds...)
 }

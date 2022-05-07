@@ -82,7 +82,7 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.height = msg.Height
 
 		b.bubbles.secondaryViewport.Width = (msg.Width / 3) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize()
-		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 4
+		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 3
 
 		b.bubbles.commandViewport.Width = (msg.Width / 3) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize()
 		b.bubbles.commandViewport.Height = (msg.Height / 3) - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
@@ -104,8 +104,8 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			b.scrollView("down")
 		}
 
-	case MyTickMsg:
-		cmds = append(cmds, b.MyTickCmd())
+	case TickMsg:
+		cmds = append(cmds, b.TickCmd())
 		//log.Print("tick")
 
 	default:

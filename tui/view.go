@@ -142,7 +142,7 @@ func (b Bubble) styleSecondaryTitle(s string) string {
 }
 
 func (b Bubble) drawKV(k, v string, color bool) string {
-	keyStyle := style.KeyStyle.Width((b.bubbles.secondaryViewport.Width / 4) + 3)
+	keyStyle := style.KeyStyle.Width((b.bubbles.secondaryViewport.Width / 4))
 
 	valueStyle := style.ValueStyle
 

@@ -21,7 +21,7 @@ type (
 	ErrorMsg            error
 	SearchMsg           registry.ModIndex
 	SortedMsg           map[string]interface{}
-	MyTickMsg           map[string]interface{}
+	TickMsg             map[string]interface{}
 )
 
 // Request the mod list from the database
@@ -115,9 +115,9 @@ func (b Bubble) searchCmd(s string) tea.Cmd {
 	}
 }
 
-func (b Bubble) MyTickCmd() tea.Cmd {
+func (b Bubble) TickCmd() tea.Cmd {
 	return func() tea.Msg {
 		time.Sleep(500 * time.Millisecond)
-		return MyTickMsg{}
+		return TickMsg{}
 	}
 }
