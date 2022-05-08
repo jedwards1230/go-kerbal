@@ -324,10 +324,12 @@ func (b Bubble) settingsView() string {
 	sortBy := b.drawKV("Sort By", b.registry.SortOptions.SortTag, false)
 	compat := b.drawKV("Hide Incompatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods), false)
 
+	kspDir := trunc(cfg.Settings.KerbalDir, (b.bubbles.secondaryViewport.Width*2/3)-3)
+
 	if b.nav.menuCursor == internal.MenuKspDir {
-		configLines = append(configLines, b.drawKV("Kerbal Directory", cfg.Settings.KerbalDir, true))
+		configLines = append(configLines, b.drawKV("Kerbal Directory", kspDir, true))
 	} else {
-		configLines = append(configLines, b.drawKV("Kerbal Directory", cfg.Settings.KerbalDir, false))
+		configLines = append(configLines, b.drawKV("Kerbal Directory", kspDir, false))
 	}
 
 	configLines = append(configLines, b.drawKV("Kerbal Version", cfg.Settings.KerbalVer, false))

@@ -31,7 +31,9 @@ func (b Bubble) homeView() string {
 		content = "" +
 			"To do:\n " +
 			"- New layout, probably\n " +
+			"- Split options screen with a more button \n " +
 			"- Display error messages\n " +
+			"- Better KSP version check on Windows/Linux \n " +
 			"- Map dependencies for uninstalls\n " +
 			"- Window resizing on Windows\n " +
 			"- Better mod info formatting\n " +
@@ -99,7 +101,7 @@ func (b Bubble) helpView() string {
 		Render(content)
 
 	return styleWidth(b.bubbles.commandViewport.Width).
-		Align(lipgloss.Center).
+		Align(lipgloss.Left).
 		Padding(1, 3).
 		Render(content)
 }
