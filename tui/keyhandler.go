@@ -17,6 +17,14 @@ import (
 func (b *Bubble) handleKeys(msg tea.KeyMsg) tea.Cmd {
 	var cmds []tea.Cmd
 
+	if b.outOfBounds() {
+		if key.Matches(msg, b.keyMap.Quit) {
+			log.Print("Quitting")
+			return tea.Quit
+		}
+		return tea.Batch(cmds...)
+	}
+
 	switch {
 	// Quit
 	case key.Matches(msg, b.keyMap.Quit):

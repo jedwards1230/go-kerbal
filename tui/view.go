@@ -13,6 +13,20 @@ func (b Bubble) View() string {
 
 	splashStyle := style.SplashVP.Render
 
+	if b.outOfBounds() {
+		title := style.PrimaryTitle.
+			Width(b.bubbles.splashPaginator.Width + 2).
+			Render("Out of Bounds")
+		body = connectVert(
+			title,
+			splashStyle(b.getOutOfBoundsView()),
+		)
+		return connectVert(
+			body,
+			b.statusBarView(),
+		)
+	}
+
 	switch b.activeBox {
 	case internal.LogView:
 		body = connectVert(
@@ -100,21 +114,7 @@ func (b Bubble) View() string {
 
 func (b Bubble) styleTitle(s string) string {
 	switch b.activeBox {
-	case internal.EnterKspDirView:
-		s = trunc(
-			s,
-			b.bubbles.splashPaginator.Width-2,
-		)
-
-		return style.PrimaryTitle.
-			Width(b.bubbles.splashPaginator.Width + 2).
-			Render(s)
-	case internal.LogView:
-		s = trunc(
-			s,
-			b.bubbles.splashPaginator.Width-2,
-		)
-
+	case internal.EnterKspDirView, internal.LogView:
 		return style.PrimaryTitle.
 			Width(b.bubbles.splashPaginator.Width + 2).
 			Render(s)
@@ -168,6 +168,13 @@ func (b Bubble) drawHelpKV(k, v string) string {
 		PaddingRight(2)
 
 	return connectHorz(keyStyle.Render(k), valueStyle.Render(v))
+}
+
+func (b Bubble) outOfBounds() bool {
+	if b.width < internal.MinWidth || b.height < internal.MinHeight {
+		return true
+	}
+	return false
 }
 
 func connectHorz(strs ...string) string {

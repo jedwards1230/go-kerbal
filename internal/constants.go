@@ -1,7 +1,14 @@
 package internal
 
-const LogPath = "./logs/debug.log"
-const DBPath = "./data.db"
+const (
+	LogPath = "./logs/debug.log"
+	DBPath  = "./data.db"
+)
+
+const (
+	MinWidth  = 115
+	MinHeight = 20
+)
 
 const (
 	CommandView     = 0

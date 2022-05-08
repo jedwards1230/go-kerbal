@@ -81,11 +81,11 @@ func (b Bubble) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		b.width = msg.Width
 		b.height = msg.Height
 
-		b.bubbles.secondaryViewport.Width = (msg.Width / 3) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize() + 8
-		b.bubbles.secondaryViewport.Height = (msg.Height * 2 / 3) - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 3
-
 		b.bubbles.commandViewport.Width = (msg.Width / 3) - b.bubbles.commandViewport.Style.GetHorizontalFrameSize() + 8
-		b.bubbles.commandViewport.Height = (msg.Height / 3) - b.bubbles.commandViewport.Style.GetVerticalFrameSize() - 1
+		b.bubbles.commandViewport.Height = 7
+
+		b.bubbles.secondaryViewport.Width = (msg.Width / 3) - b.bubbles.secondaryViewport.Style.GetHorizontalFrameSize() + 8
+		b.bubbles.secondaryViewport.Height = msg.Height - b.bubbles.commandViewport.Height - internal.StatusBarHeight - b.bubbles.secondaryViewport.Style.GetVerticalFrameSize() - 7
 
 		b.bubbles.primaryPaginator.SetWidth(msg.Width - b.bubbles.secondaryViewport.Width - 8)
 		b.bubbles.primaryPaginator.SetHeight(b.bubbles.secondaryViewport.Height + b.bubbles.commandViewport.Height)

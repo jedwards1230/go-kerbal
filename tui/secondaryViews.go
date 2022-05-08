@@ -107,8 +107,17 @@ func (b Bubble) helpView() string {
 
 	return styleWidth(b.bubbles.commandViewport.Width).
 		Align(lipgloss.Left).
-		Padding(1, 1).
+		Padding(0, 1).
 		Render(content)
+}
+
+func (b Bubble) getOutOfBoundsView() string {
+	content := lipgloss.NewStyle().
+		Width(b.bubbles.splashPaginator.Width).
+		Height(b.bubbles.splashPaginator.Height + 2).
+		Align(lipgloss.Center).
+		Render("Please adjust window size")
+	return content
 }
 
 func (b Bubble) getBoolOptionsView() string {
