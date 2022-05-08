@@ -10,7 +10,7 @@ import (
 
 func (b Bubble) homeView() string {
 	contentStyle := styleWidth(b.bubbles.commandViewport.Width).
-		Padding(2).
+		PaddingLeft(1).
 		Render
 
 	var content string
@@ -94,7 +94,12 @@ func (b Bubble) helpView() string {
 		b.drawHelpKV("shift+o", "Logs"),
 	}
 
-	content := connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
+	var content string
+	if b.bubbles.commandViewport.Width >= 49 {
+		content = connectHorz(connectVert(leftColumn...), connectVert(rightColumn...))
+	} else {
+		content = connectVert(connectVert(leftColumn...), connectVert(rightColumn...))
+	}
 
 	content = lipgloss.NewStyle().
 		Margin(1, 0).
