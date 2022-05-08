@@ -15,8 +15,11 @@ import (
 	"runtime"
 	"strings"
 
+	"howett.net/plist"
+
 	"github.com/go-git/go-billy/v5"
 	"github.com/hashicorp/go-version"
+	"github.com/jedwards1230/go-kerbal/internal/common"
 	"github.com/jedwards1230/go-kerbal/internal/config"
 )
 
@@ -50,17 +53,18 @@ func FindFilePaths(repo billy.Filesystem, ext string) []string {
 // Find root directory of KSP
 func FindKspPath(home string) (string, error) {
 	if home == "" {
-		if runtime.GOOS == "darwin" {
+		switch runtime.GOOS {
+		case "darwin":
 			log.Printf("MacOS detected")
 			home, _ = os.UserHomeDir()
 			home += "/Library/Application Support/Steam/steamapps"
 
-		} else if runtime.GOOS == "windows" {
+		case "windows":
 			log.Printf("Windows OS detected")
 			home = "C:\\Program Files (x86)\\steam\\SteamApps\\common"
 
+		case "linux":
 			// TODO: add paths for linux
-		} else if runtime.GOOS == "linux" {
 			log.Printf("Linux OS detected")
 			return "", nil
 		}
@@ -91,44 +95,60 @@ func FindKspPath(home string) (string, error) {
 }
 
 // Find version of installed KSP.
-// Refers to readme.txt in game directory
-//
-// TODO: Find more reliable source for version number
-func FindKspVersion(filePath string) *version.Version {
+func FindKspVersion(fp string) *version.Version {
 	var result *version.Version
+	var rawVersion string
 
-	// parse readme.txt
-	file, err := os.Open(filePath + "/readme.txt")
-	if err != nil {
-		return result
-	}
-	defer file.Close()
-
-	// version is one of the first lines in the file
-	v := ""
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "Version") {
-			v = scanner.Text()
-			break
+	switch runtime.GOOS {
+	case "darwin":
+		kspPlist, err := os.Open(fp + "/KSP.app/Contents/info.plist")
+		if err != nil {
+			common.LogErrorf("Error reading: %v", err)
+			return result
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
+		defer kspPlist.Close()
 
-	// regex the version
-	re := regexp.MustCompile(`\d+(\.\d+)+`)
-	v = fmt.Sprint(re.FindAllString(v, -1))
-	if strings.Contains(v, "[") {
-		v = strings.ReplaceAll(v, "[", "")
-	}
-	if strings.Contains(v, "]") {
-		v = strings.ReplaceAll(v, "]", "")
+		var data map[string]interface{}
+		decoder := plist.NewDecoder(kspPlist)
+		err = decoder.Decode(&data)
+		if err != nil {
+			log.Println(err)
+		}
+		rawVersion = data["CFBundleShortVersionString"].(string)
+
+	case "windows", "linux":
+		// parse readme.txt
+		file, err := os.Open(fp + "/readme.txt")
+		if err != nil {
+			return result
+		}
+		defer file.Close()
+
+		// version is one of the first lines in the file
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			if strings.Contains(scanner.Text(), "Version") {
+				rawVersion = scanner.Text()
+				break
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		// regex the version
+		re := regexp.MustCompile(`\d+(\.\d+)+`)
+		rawVersion = fmt.Sprint(re.FindAllString(rawVersion, -1))
+		if strings.Contains(rawVersion, "[") {
+			rawVersion = strings.ReplaceAll(rawVersion, "[", "")
+		}
+		if strings.Contains(rawVersion, "]") {
+			rawVersion = strings.ReplaceAll(rawVersion, "]", "")
+		}
 	}
 
 	// create proper version
-	result, err = version.NewVersion(v)
+	result, err := version.NewVersion(rawVersion)
 	if err != nil {
 		log.Printf("Error writing KSP Version: %v", err)
 		return nil

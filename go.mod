@@ -15,6 +15,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/tidwall/buntdb v1.2.9
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	howett.net/plist v1.0.0
 )
 
 require (
