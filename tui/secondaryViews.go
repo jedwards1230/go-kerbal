@@ -9,7 +9,7 @@ import (
 )
 
 func (b Bubble) homeView() string {
-	contentStyle := styleWidth(b.bubbles.commandViewport.Width - 5).
+	contentStyle := styleWidth(b.bubbles.commandViewport.Width).
 		Padding(2).
 		Render
 
@@ -25,7 +25,7 @@ func (b Bubble) homeView() string {
 			"\n" +
 			"Press tab to get back to the confirmation window \n"
 		content = styleWidth(b.bubbles.secondaryViewport.Width).
-			Align(lipgloss.Center).
+			Align(lipgloss.Left).
 			Render(content)
 	default:
 		content = "" +
@@ -83,7 +83,7 @@ func (b Bubble) helpView() string {
 		b.drawHelpKV("down", "Move down"),
 		b.drawHelpKV("space", "Toggle mod info"),
 		b.drawHelpKV("enter", "Add to queue"),
-		b.drawHelpKV("tab", "Swap active windows"),
+		b.drawHelpKV("tab", "Swap windows"),
 	}
 
 	rightColumn := []string{
@@ -102,7 +102,7 @@ func (b Bubble) helpView() string {
 
 	return styleWidth(b.bubbles.commandViewport.Width).
 		Align(lipgloss.Left).
-		Padding(1, 3).
+		Padding(1, 1).
 		Render(content)
 }
 

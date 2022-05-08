@@ -138,7 +138,9 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 
 	switch b.activeBox {
 	case internal.ModListView, internal.SearchView:
-		b.toggleSelectedItem()
+		if !b.nav.listCursorHide {
+			b.toggleSelectedItem()
+		}
 	case internal.EnterKspDirView:
 		cmds = append(cmds, b.updateKspDirCmd(b.bubbles.textInput.Value()))
 	case internal.SettingsView:
@@ -158,7 +160,6 @@ func (b *Bubble) handleEnterKey() tea.Cmd {
 			}
 		} else {
 			b.toggleSelectedItem()
-
 			b.prepareQueueView()
 		}
 	}

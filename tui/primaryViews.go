@@ -65,9 +65,10 @@ func (b Bubble) modInfoView() string {
 	if !b.nav.listCursorHide {
 		mod := b.nav.activeMod
 
-		keyStyle := style.KeyStyle.Width(b.bubbles.secondaryViewport.Width / 4)
+		keyStyle := style.KeyStyle.Width((b.bubbles.secondaryViewport.Width / 4) + 3)
 
-		valueStyle := style.ValueStyle.Width(b.bubbles.secondaryViewport.Width * 3 / 4)
+		//valueStyle := style.ValueStyle.Width(b.bubbles.secondaryViewport.Width * 3 / 4)
+		valueStyle := style.ValueStyle
 
 		abstractStyle := style.AbstractInfo.Width(b.bubbles.secondaryViewport.Width)
 
@@ -99,7 +100,8 @@ func (b Bubble) modInfoView() string {
 			installed = drawKVColor("Installed", "Installed", theme.AppTheme.InstalledColor)
 		}
 		installDir := drawKV("Install dir", mod.Install.InstallTo)
-		download := drawKV("Download", mod.Download.URL)
+		download := trunc(mod.Download.URL, (b.bubbles.secondaryViewport.Width*2/3)-3)
+		download = drawKV("Download", download)
 		dependencies := drawKVColor("Dependencies", "None", theme.AppTheme.Green)
 		if len(mod.ModDepends) > 0 {
 			dependencies = drawKVColor("Dependencies", strings.Join(mod.ModDepends, ", "), theme.AppTheme.Orange)
@@ -325,6 +327,8 @@ func (b Bubble) settingsView() string {
 	compat := b.drawKV("Hide Incompatible", fmt.Sprintf("%v", cfg.Settings.HideIncompatibleMods), false)
 
 	kspDir := trunc(cfg.Settings.KerbalDir, (b.bubbles.secondaryViewport.Width*2/3)-3)
+	metaRepo := trunc(cfg.Settings.MetaRepo, (b.bubbles.secondaryViewport.Width*2/3)-3)
+	hash := trunc(cfg.Settings.LastRepoHash, (b.bubbles.secondaryViewport.Width*2/3)-3)
 
 	if b.nav.menuCursor == internal.MenuKspDir {
 		configLines = append(configLines, b.drawKV("Kerbal Directory", kspDir, true))
@@ -335,8 +339,8 @@ func (b Bubble) settingsView() string {
 	configLines = append(configLines, b.drawKV("Kerbal Version", cfg.Settings.KerbalVer, false))
 	configLines = append(configLines, b.drawKV("Logging", fmt.Sprintf("%v", cfg.Settings.EnableLogging), false))
 	configLines = append(configLines, b.drawKV("Mousewheel", fmt.Sprintf("%v", cfg.Settings.EnableMouseWheel), false))
-	configLines = append(configLines, b.drawKV("Metadata Repo", cfg.Settings.MetaRepo, false))
-	configLines = append(configLines, b.drawKV("Last Repo Hash", cfg.Settings.LastRepoHash, false))
+	configLines = append(configLines, b.drawKV("Metadata Repo", metaRepo, false))
+	configLines = append(configLines, b.drawKV("Last Repo Hash", hash, false))
 	configLines = append(configLines, b.drawKV("Theme", cfg.AppTheme, false))
 
 	switch b.nav.menuCursor {

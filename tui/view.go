@@ -160,12 +160,12 @@ func (b Bubble) drawKV(k, v string, color bool) string {
 }
 
 func (b Bubble) drawHelpKV(k, v string) string {
-	keyStyle := style.KeyStyle.Width(b.bubbles.commandViewport.Width / 5)
+	keyStyle := style.KeyStyle.Copy().Width(11)
 
 	valueStyle := lipgloss.NewStyle().
 		Align(lipgloss.Center).
 		Faint(true).
-		PaddingRight(4)
+		PaddingRight(2)
 
 	return connectHorz(keyStyle.Render(k), valueStyle.Render(v))
 }
